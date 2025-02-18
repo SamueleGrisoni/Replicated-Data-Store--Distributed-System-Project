@@ -1,0 +1,43 @@
+@startuml design/class.puml
+
+class VectorClock {
+  - clock: int[]
+
+  + Vector(Size: int)
+  + getVector(): int[]
+  + updateClocks(Clocks: int[]): void
+  + incrementSelfClocks(selfIndex: int): void
+}
+
+interface Key {
+  equals(key: Key): boolean
+}
+
+class Server {
+  - HashMap<Key, Object> data
+  - vector: Vector
+  - id: int
+
+  + Server(clock : VectorClock, selfIndex: int)
+  + read(key: Key): Object
+  + write(key: Key, value: Object): void
+
+  - persist(): void
+  - recover(): HashMap<Key, Object>
+}
+
+class ServerConnectionMan {
+  - otherServers: Stream[]
+
+  + ServerConnectionMan(servers: Stream[])
+}
+
+class Stream {
+  - in: BufferReader
+  - out: PrintWriter
+
+  +stream(socket: Socket)
+}
+
+
+@enduml
