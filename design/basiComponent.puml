@@ -1,0 +1,59 @@
+@startuml component
+
+left to right direction
+
+actor User
+component "Client" as C
+package "Server" {
+  ' propagate both messages from the client and the other servers
+  ' ordering the out que so that all the preceding messages necessary have been received
+  ' it would be nice to pack together the messages that are related to the same update. 
+  ' Compatting messages the most
+  ' maybe wait a little to pack more messages together
+  ' FIFO channels
+  component "OutputSync" as OutSyn
+  component "InputSync" as InSyn
+  component "Rout" as ServerFront
+  ' in this que messages from the client have always precedence
+  ' append client msg to the top
+  ' append server msg to the bottom 
+  ' if the server msg can't be processed?
+  component "Queue" as Que
+  component "StableStorage" as Storage  
+  component "PersistentStorage" as PS
+  interface "ReadFromStore" as RS
+  interface "WriteToStore" as WS
+  interface "Persist" as P
+}
+
+interface "Read" as R
+interface "Write" as W
+interface "NotifyUpdate" as NU
+
+
+User -down-> C
+C -down-> R
+C -down-> W
+
+R -down- ServerFront
+W -down- ServerFront
+
+Storage -up- RS
+Storage -right- WS
+Storage -left-> P
+P -left- PS
+
+ServerFront -down-> OutSyn
+ServerFront --> Que
+InSyn -up-> Que
+InSyn -down- NU
+
+ServerFront -left-> RS
+Que -left-> WS
+
+OutSyn -> ()"."
+
+
+'the undelrine network protocol must be some sort of multicast
+
+@enduml
