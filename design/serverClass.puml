@@ -1,0 +1,183 @@
+@startuml design/class.puml
+
+' clock++; persist; sync;
+class Server {
+  - id: int
+  - clock: VectorClock
+  - primaryIndex: LinkedHashMap<Key, Object> 
+  - secondaryIndex: LinkedHashMap<VectorClock, Key> 
+
+
+  + Server()
+  + synchronized updateAndPersist(data: ClockedData): void 
+  + synchronized getCurrentClock(): VectorClock
+  + synchronized getOffsettedClock(offset: int): VectorClock
+  + stop(): void
+}
+
+class Persist {
+  + Persist(path: String)
+  + persist(data: ClockedData): void
+  + recoverPrimary(): LinkedHashMap<Key, Object>
+  + recoverSecondary(): LinkedHashMap<VectorClock, Key>
+}
+
+class VectorClock {
+  - clock: int[]
+
+  + VectorClock(Size: int)
+  + getVector(): int[]
+  + updateClocks(Clocks: int[]): void
+  + incrementSelfClocks(selfIndex: int): void
+  + Comparator<VectorClock>(): int
+  + equals(clock: VectorClock): boolean 
+}
+
+interface Key {
+  equals(key: Key): boolean
+}
+
+' add a method save() for modular persistence
+' when a write is an update
+' delete and recreate the entry
+' check in the secondary index and update it
+class DataManagerWrite extends Thread {
+  - server: Server
+  - que: ClientServerPriorityQue
+
+  + DataManagerWrite(server: Server)
+  - synchronized write(key Key, value Object): void
+  + run(): void
+}
+
+class DataManagerRead {
+  - server: Server
+  
+  + DataManagerRead(server: Server)
+  + clientRead(key: Key): Object
+  + recoverData(otherClock: VectorClock): List<ClockedData>
+}
+
+Class ClockedData {
+  + final clock: VectorClock
+  + fianl key: Key
+  + final value: Object
+
+  + ClockedData(clock: VectorClock, key: Key, value: Object)
+  + Comparator<ClockedData>(): int
+}
+
+Class ClientWrite {
+  + final key: Key
+  + final value: Object
+
+  + ClientData(key: Key, value: Object)
+}
+
+class ClientServerPriorityQue {
+  - server: Server
+  - clientQue: PriorityQue<ClockedData>
+  - serverQue: PriorityQue<ClockedData>
+  + final newDataLock: Object 
+
+  + ClientServerPriorityQue()
+  + synchronized addClientData(data: ClientWrite): void
+  + addServerData(data: ClockeData): void
+  + pop(): ClockedData
+}
+
+class ConnectionManager {
+  - connectionAcceptorThread: ConnectionAcceptor
+  - final routingTable: HashMap<String, Runnable>
+
+  + GetRoutes()
+}
+
+class ServerConnectionManager extends ConnectionManager {
+  - serverConnectionAcceptorThread: ConnectionAcceptor
+  - outChannels: ObjectOutputStream[]
+  - inChannels: InputReader[]
+  - final routingTable: HashMap<String, Runnable>
+  - final que: ClientServerPriorityQue
+  - final sync: TimeTravel
+
+  + ServerConnectionManager(port: int)
+  + addOutChannel(channel: Stream, id: int): void
+  + addInChannel(channel: Stream, id: int): void
+}
+
+class ClientConnectionManager extends ConnectionManager{
+  - clientConnectionAcceptorThread: ConnectionAcceptor
+  - clientConnections: List<ConnectedClient>
+  - que: ClientServerPriorityQue
+  - readData: DataManagerRead
+
+  + ClientConnectionManager(port: int)
+  + read(key: Key): Object
+  + write(key: Key, value: Object): void
+}
+
+class ClientConnected extends Thread {
+  - out: ObjectOutputStream
+  - in: InputReader
+
+  + ClientConnected(client: Socket, manager: ClientConnectionManager)
+  + run(): void
+}
+
+class TimeTravel {
+  - server: Server
+  - connManager: ServerConnectionManager
+  - readData: DataManagerRead
+  - lightPusher: Thread
+  
+  + checkMySync(otherClock: VectorClock): void
+  + helpOther(otherClock: VectorClock): void
+}
+
+class ConnectionAcceptor extends Thread {
+  - serverSocket: ServerSocket
+  - manager: ServerConnectionManager
+
+  + ConnectionAcceptor(server: Server)
+  + run(): void
+}
+
+' heavy_push
+' light_push
+' fetch
+class InputReader extends Thread {
+  - in: ObjectInputStream
+  - manager: ConnectionManager
+
+  + InputReader(in: ObjectInputStream, manager: ConnectionManager)
+  + run(): void
+}
+
+class AbstractMsg extends Serializable {
+  + method: String
+  + payLoad: Serializable
+}
+
+class ReadMsg extends AbstractMsg{
+  + key: Key
+}
+
+class WriteMsg extends AbstractMsg{
+  + key: Key
+  + value: Object
+}
+
+class HeavyPush extends AbstractMsg{
+  payload: List<ClockedData>
+}
+
+class LightPush extends AbstractMsg{
+  payLoad: VectorClock
+}
+
+class Fetch extends AbstractMsg{
+  payLoad: VectorClock
+}
+
+@enduml
