@@ -2,6 +2,7 @@
 
 ' clock++; persist; sync;
 class Server {
+  - addresses: HashMap<int, Pair>
   - id: int
   - clock: VectorClock
   - primaryIndex: LinkedHashMap<Key, Object> 
