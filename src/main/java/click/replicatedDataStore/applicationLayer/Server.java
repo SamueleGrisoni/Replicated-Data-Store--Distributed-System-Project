@@ -7,7 +7,7 @@ import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
 import click.replicatedDataStore.applicationLayer.serverComponents.VectorClock;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.utlis.Key;
-import click.replicatedDataStore.utlis.Pair;
+import click.replicatedDataStore.dataStructures.Pair;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

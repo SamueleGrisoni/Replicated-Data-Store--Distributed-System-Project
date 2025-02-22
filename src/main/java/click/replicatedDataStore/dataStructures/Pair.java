@@ -1,4 +1,4 @@
-package click.replicatedDataStore.utlis;
+package click.replicatedDataStore.dataStructures;
 
 /** a pair of objects
  * @param <A> the first object
