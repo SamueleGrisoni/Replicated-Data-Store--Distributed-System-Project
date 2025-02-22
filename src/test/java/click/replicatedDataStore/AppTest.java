@@ -1,4 +1,4 @@
-package click.studendandcompany;
+package click.replicatedDataStore;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
