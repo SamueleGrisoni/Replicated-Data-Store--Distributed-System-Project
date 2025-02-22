@@ -46,7 +46,7 @@ class DataManagerWrite extends Thread {
   - server: Server
   - que: ClientServerPriorityQue
 
-  + DataManagerWrite(server: Server)
+  + DataManagerWrite(server: Server, que: ClientServerPriorityQue)
   - synchronized write(key Key, value Object): void
   + run(): void
 }
@@ -61,7 +61,7 @@ class DataManagerRead {
 
 Class ClockedData {
   + final clock: VectorClock
-  + fianl key: Key
+  + final key: Key
   + final value: Object
 
   + ClockedData(clock: VectorClock, key: Key, value: Object)
@@ -83,7 +83,7 @@ class ClientServerPriorityQue {
 
   + ClientServerPriorityQue()
   + synchronized addClientData(data: ClientWrite): void
-  + addServerData(data: ClockeData): void
+  + addServerData(data: ClockedData): void
   + pop(): ClockedData
 }
 
