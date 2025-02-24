@@ -1,6 +1,7 @@
 package click.replicatedDataStore.applicationLayer.serverComponents;
 
 import click.replicatedDataStore.dataStructures.ClockedData;
+import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utlis.Key;
 
 import java.util.LinkedHashMap;

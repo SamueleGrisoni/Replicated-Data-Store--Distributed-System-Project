@@ -2,6 +2,7 @@ package click.replicatedDataStore.applicationLayer.serverComponents;
 
 import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.DataManager.DataManagerReader;
+import click.replicatedDataStore.dataStructures.VectorClock;
 
 public class TimeTravel {
     private final Server server;

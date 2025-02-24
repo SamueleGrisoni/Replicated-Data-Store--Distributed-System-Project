@@ -1,6 +1,6 @@
 package click.replicatedDataStore.connectionLayer.messages;
 
-import click.replicatedDataStore.applicationLayer.serverComponents.VectorClock;
+import click.replicatedDataStore.dataStructures.VectorClock;
 
 public class LightPushMsg extends AbstractMsg {
     public final VectorClock payLoad;

@@ -4,7 +4,7 @@ import click.replicatedDataStore.applicationLayer.serverComponents.DataManager.D
 import click.replicatedDataStore.applicationLayer.serverComponents.DataManager.DataManagerWriter;
 import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
-import click.replicatedDataStore.applicationLayer.serverComponents.VectorClock;
+import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.utlis.Key;
 import click.replicatedDataStore.dataStructures.Pair;
@@ -26,7 +26,7 @@ public class Server {
 
     public Server(int ID, int serverNumber) {
         this.ID = ID;
-        this.vectorClock = new VectorClock(serverNumber);
+        this.vectorClock = new VectorClock(serverNumber, ID);
         //todo
         this.addresses = null;
         this.primaryIndex = null;

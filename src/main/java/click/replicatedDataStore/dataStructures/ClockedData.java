@@ -1,6 +1,5 @@
 package click.replicatedDataStore.dataStructures;
 
-import click.replicatedDataStore.applicationLayer.serverComponents.VectorClock;
 import click.replicatedDataStore.utlis.Key;
 
 public class ClockedData {
