@@ -1,79 +1,94 @@
 package click.replicatedDataStore.applicationLayer.serverComponents;
 
-import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utlis.Key;
 
 import java.io.*;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class Persist {
     private final String folderPath;
     private final String dataFilePath;
     private final String indexFilePath;
     //Flag to check if the file is new. If so, the recovery methods will not access the disk to recover an empty file
-    private final boolean newDataFile;
-    private final boolean newIndexFile;
+    private boolean newDataFile;
+    private boolean newIndexFile;
 
     public Persist(String dataFolderName, String dataFileName, String indexFileName) {
         this.folderPath = getOSDataFolderPath() + dataFolderName + File.separator;
         this.dataFilePath = folderPath + dataFileName;
         this.indexFilePath = folderPath + indexFileName;
+
         //create the data folder and file if it does not exist
         if (!new File(folderPath).exists()) {
-            newDataFile = true;
-            newIndexFile = true;
-            new File(folderPath).mkdir();
-            try {
-                new File(dataFilePath).createNewFile();
-                new File(indexFilePath).createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            createDataFolderAndFile(folderPath, dataFilePath, indexFilePath);
         } else { //Data folder exists
-            File dataFile = new File(dataFilePath);
-            File indexFile = new File(indexFilePath);
-            //check if data file exists
-            if(!dataFile.exists()) {
-                newDataFile = true;
-                try {
-                    dataFile.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                newDataFile = false;
-            }
-            //check if index file exists
-            if(!indexFile.exists()) {
-                newIndexFile = true;
-                try {
-                    indexFile.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                newIndexFile = false;
-            }
+            checkOrCreateDataFile(dataFilePath);
+            checkOrCreateIndexFile(indexFilePath);
         }
     }
 
-    public void persist(ClockedData clockedData) {
-        //todo
+    //Persist the primary index to the data file
+    public void persist(Map<Key, Object> primaryIndex) {
+        File dataFile = new File(dataFilePath);
+        if (!dataFile.exists()) {
+            throw new IllegalCallerException("Data file does not exist");
+        }
+        dataFile.delete();
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dataFilePath))) {
+            for (Map.Entry<Key, Object> entry : primaryIndex.entrySet()) {
+                oos.writeObject(entry.getKey());
+                oos.writeObject(entry.getValue());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //Persist the secondary index to the index file
+    public void persist(Map<Key, Object> primaryIndex, Map<VectorClock, Key> secondaryIndex) {
+        File dataFile = new File(dataFilePath);
+        File indexFile = new File(indexFilePath);
+        if (!dataFile.exists() || !indexFile.exists()) {
+            throw new IllegalCallerException("Data file or secondary index file do not exist");
+        }
+        dataFile.delete();
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dataFilePath))) {
+            for (Map.Entry<Key, Object> entry : primaryIndex.entrySet()) {
+                oos.writeObject(entry.getKey());
+                oos.writeObject(entry.getValue());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        indexFile.delete();
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(indexFilePath))) {
+            for (Map.Entry<VectorClock, Key> entry : secondaryIndex.entrySet()) {
+                oos.writeObject(entry.getKey());
+                oos.writeObject(entry.getValue());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public LinkedHashMap<Key, Object> recoverPrimaryIndex() {
         LinkedHashMap<Key, Object> primaryIndex = new LinkedHashMap<>();
         if (!newDataFile) {
-            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(dataFilePath))) {
+            File dataFile = new File(dataFilePath);
+            if (dataFile.length() == 0) {
+                // File is empty; return an empty map without opening the stream.
+                return primaryIndex;
+            }
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(dataFile))) {
                 while (true) {
-                    try {
-                        ClockedData clockedData = (ClockedData) ois.readObject();
-                        primaryIndex.put(clockedData.key(), clockedData.value());
-                    } catch (EOFException e) {
-                        break; // End of file reached
-                    }
+                    Key key = (Key) ois.readObject();
+                    Object value = ois.readObject();
+                    primaryIndex.put(key, value);
                 }
+            } catch (EOFException ignored) {
+                //either the file was empty or the end of the file was reached
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
@@ -83,16 +98,19 @@ public class Persist {
 
     public LinkedHashMap<VectorClock, Key> recoverSecondaryIndex() {
         LinkedHashMap<VectorClock, Key> secondaryIndex = new LinkedHashMap<>();
-        if (!newDataFile) {
-            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(indexFilePath))) {
+        if (!newIndexFile) {
+            File indexFile = new File(indexFilePath);
+            if(indexFile.length() == 0){
+                return secondaryIndex;
+            }
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(indexFile))) {
                 while (true) {
-                    try {
-                        ClockedData clockedData = (ClockedData) ois.readObject();
-                        secondaryIndex.put(clockedData.vectorClock(), clockedData.key());
-                    } catch (EOFException e) {
-                        break; // End of file reached
-                    }
+                    VectorClock vectorClock = (VectorClock) ois.readObject();
+                    Key key = (Key) ois.readObject();
+                    secondaryIndex.put(vectorClock, key);
                 }
+            } catch (EOFException ignored) {
+                //Either the file was empty or the end of the file was reached. Normal behavior no action needed
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
@@ -116,6 +134,48 @@ public class Persist {
         } else {
             //In a Unix system, data will be saved in the home directory as a hidden folder
             return System.getProperty("user.home") + File.separator + ".";
+        }
+    }
+
+    private void checkOrCreateDataFile(String dataFilePath) {
+        File dataFile = new File(dataFilePath);
+        if (!dataFile.exists()) {
+            newDataFile = true;
+            try {
+                dataFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            newDataFile = false;
+        }
+    }
+
+    private void checkOrCreateIndexFile(String indexFilePath) {
+        File indexFile = new File(indexFilePath);
+        if (!indexFile.exists()) {
+            newIndexFile = true;
+            try {
+                indexFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            newIndexFile = false;
+        }
+    }
+
+    private void createDataFolderAndFile(String folderPath, String dataFilePath, String indexFilePath) {
+        if (!new File(folderPath).exists()) {
+            newDataFile = true;
+            newIndexFile = true;
+            new File(folderPath).mkdir();
+            try {
+                new File(dataFilePath).createNewFile();
+                new File(indexFilePath).createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

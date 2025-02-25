@@ -143,12 +143,16 @@ public class VectorClockTest {
         vc1.incrementSelfClock(); // vc1: [1, 0, 0]
         assertNotEquals(vc1, vc2);
 
-        vc2.incrementSelfClock(); // vc2: [0, 1, 0]
+        vc2.incrementSelfClock(); // vc2: [1, 0, 0]
         assertEquals(vc1, vc2);
 
         VectorClock vc3 = new VectorClock(4, 0);
         vc3.incrementSelfClock(); // vc3: [1, 0, 0, 0]
         assertNotEquals(vc1, vc3); // Different size should not be equal
+
+        VectorClock vc4 = new VectorClock(3, 1);
+        vc4.updateClock(vc1); // vc4: [1, 0, 0]
+        assertEquals(vc1, vc4); // Different serverID should not affect equality
     }
 
     @Test

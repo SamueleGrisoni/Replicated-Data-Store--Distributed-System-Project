@@ -1,7 +1,9 @@
 package click.replicatedDataStore.dataStructures;
+import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Objects;
 
-public class VectorClock implements Comparable<VectorClock> {
+public class VectorClock implements Comparable<VectorClock>, Serializable {
     private final int[] clock;
     private final int serverID;
     public VectorClock(int serverNumber, int serverID) {
@@ -91,5 +93,18 @@ public class VectorClock implements Comparable<VectorClock> {
         if (object == null || getClass() != object.getClass()) return false;
         VectorClock that = (VectorClock) object;
         return Objects.deepEquals(clock, that.clock);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(clock);
+    }
+
+    @Override
+    public String toString() {
+        return "VectorClock{" +
+                "clock=" + Arrays.toString(clock) +
+                ", serverID=" + serverID +
+                '}';
     }
 }

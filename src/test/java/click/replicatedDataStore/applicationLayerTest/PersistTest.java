@@ -1,0 +1,179 @@
+package click.replicatedDataStore.applicationLayerTest;
+
+import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
+import click.replicatedDataStore.dataStructures.VectorClock;
+import click.replicatedDataStore.utlis.Config;
+import click.replicatedDataStore.utlis.Key;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.File;
+import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+public class PersistTest implements Serializable {
+    private Persist persist;
+    private String folderName;
+    private File persistFolder;
+    private File dataFile;
+    private File indexFile;
+
+    private File getBaseFolder() {
+        String os = System.getProperty("os.name").toUpperCase();
+        if (os.contains("WIN")) {
+            return new File(System.getenv("APPDATA") + File.separator);
+        } else if (os.contains("MAC")) {
+            return new File(System.getProperty("user.home") + "/Library/Application Support/");
+        } else {
+            return new File(System.getProperty("user.home") + File.separator + ".");
+        }
+    }
+
+    private File getPersistFolder(String dataFolderName) {
+        return new File(getBaseFolder(), dataFolderName);
+    }
+
+    //Before each test create a temporary dataFolder and files
+    @Before
+    public void setUp() throws Exception {
+        // Use a unique folder name so we do not interfere with any existing data.
+        folderName = Config.DATA_FOLDER_NAME + "-" + System.currentTimeMillis();
+        persistFolder = getPersistFolder(folderName);
+
+        // Create the folder and files
+        persistFolder.mkdirs();
+        dataFile = new File(persistFolder, Config.PRIMARY_INDEX_FILE_NAME + Config.FILES_EXTENSION);
+        dataFile.createNewFile();
+        indexFile = new File(persistFolder, Config.SECONDARY_INDEX_FILE_NAME + Config.FILES_EXTENSION);
+        indexFile.createNewFile();
+
+        //Create a new persist object
+        persist = new Persist(folderName, dataFile.getName(), indexFile.getName());
+    }
+
+    //After each recursively remove the temporary folder and files
+    @After
+    public void tearDown() {
+        if (persistFolder.exists()) {
+            File[] files = persistFolder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    file.delete();
+                }
+            }
+            persistFolder.delete();
+        }
+        //check if the dataFolder is deleted (if it is deleted also the files are deleted)
+        Assert.assertFalse(persistFolder.exists());
+    }
+
+    //Test if temp folder and files are created correctly
+    @Test
+    public void testFolderAndFileCreation() {
+        assertTrue(persistFolder.exists());
+        assertTrue(dataFile.exists());
+        assertTrue(indexFile.exists());
+    }
+
+    //File exists, but it is empty, it should still return an empty map
+    @Test
+    public void testRecoverPrimaryIndexEmpty() {
+        LinkedHashMap<Key, Object> recovered = persist.recoverPrimaryIndex();
+        assertTrue(recovered.isEmpty());
+    }
+
+    @Test
+    public void testRecoverSecondaryIndexEmpty() {
+        LinkedHashMap<VectorClock, Key> recovered = persist.recoverSecondaryIndex();
+        assertTrue(recovered.isEmpty());
+    }
+
+    // Test persisting and recovering a primary index.
+    @Test
+    public void testPrimaryIndexPersist() {
+        LinkedHashMap<Key, Object> primaryIndex = new LinkedHashMap<>();
+        //populate the primary Index
+        TestKey key = new TestKey("key1");
+        primaryIndex.put(key, "value1");
+        TestKey key2 = new TestKey("key2");
+        primaryIndex.put(key2, "value2");
+        persist.persist(primaryIndex);
+
+        LinkedHashMap<Key, Object> recovered = persist.recoverPrimaryIndex();
+        for (Map.Entry<Key, Object> entry : recovered.entrySet()) {
+            System.out.println("Key: " + entry.getKey() + " Object: " + entry.getValue());
+        }
+        assertTrue(recovered.containsKey(key));
+        assertEquals("value1", recovered.get(key));
+        assertTrue(recovered.containsKey(key2));
+        assertEquals("value2", recovered.get(key2));
+    }
+
+    //Test persisting of primary and secondary index
+    @Test
+    public void testPrimarySecondaryIndex() {
+        LinkedHashMap<Key, Object> primaryIndex = new LinkedHashMap<>();
+        LinkedHashMap<VectorClock, Key> secondaryIndex = new LinkedHashMap<>();
+
+        //populate the primary Index
+        TestKey key = new TestKey("key1");
+        primaryIndex.put(key, "value1");
+        //populate the secondary Index
+        VectorClock vectorClock = new VectorClock(3, 0);
+        vectorClock.incrementSelfClock(); //vc = [1, 0, 0]
+        secondaryIndex.put(vectorClock, key);
+
+        persist.persist(primaryIndex, secondaryIndex);
+
+        LinkedHashMap<Key, Object> recoveredPrimary = persist.recoverPrimaryIndex();
+        for (Map.Entry<Key, Object> entry : recoveredPrimary.entrySet()) {
+            System.out.println("Key: " + entry.getKey() + " Object: " + entry.getValue());
+        }
+        assertTrue(recoveredPrimary.containsKey(key));
+        assertEquals("value1", recoveredPrimary.get(key));
+
+        LinkedHashMap<VectorClock, Key> recoveredSecondary = persist.recoverSecondaryIndex();
+        for (Map.Entry<VectorClock, Key> entry : recoveredSecondary.entrySet()) {
+            System.out.println("VectorClock: " + entry.getKey() + " Key: " + entry.getValue());
+        }
+        assertTrue(recoveredSecondary.containsKey(vectorClock));
+        assertEquals(recoveredSecondary.get(vectorClock), key);
+    }
+
+    //Test exception is thrown when the primary data file is missing.
+    @Test(expected = IllegalCallerException.class)
+    public void testPersistThrowsExceptionWhenPrimaryDataFileMissing() {
+        // Delete the data file.
+        assertTrue(dataFile.delete());
+        Map<Key, Object> primaryIndex = new LinkedHashMap<>();
+        primaryIndex.put(new TestKey("key"), "value");
+        persist.persist(primaryIndex);
+    }
+
+    //Dummy key used for testing
+    private record TestKey(String keyValue) implements Key {
+
+        @Override
+        public String toString() {
+            return keyValue;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            TestKey testKey = (TestKey) o;
+            return testKey.keyValue().equals(keyValue);
+        }
+
+        @Override
+        public int hashCode() {
+            return keyValue.hashCode();
+        }
+    }
+}

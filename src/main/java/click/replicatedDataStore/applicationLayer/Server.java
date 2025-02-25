@@ -43,8 +43,6 @@ public class Server {
         this.primaryIndex = persist.recoverPrimaryIndex();
         this.secondaryIndex = persist.recoverSecondaryIndex();
 
-
-
         System.out.println("Server " + serverID + " started on " + Config.getServerAddress(serverID).first() + ":" + Config.getServerAddress(serverID).second());
     }
 

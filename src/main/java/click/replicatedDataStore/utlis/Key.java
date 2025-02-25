@@ -1,6 +1,8 @@
 package click.replicatedDataStore.utlis;
 
-public interface Key {
+import java.io.Serializable;
+
+public interface Key extends Serializable {
     int hashCode();
     boolean equals(Object obj);
     String toString();
