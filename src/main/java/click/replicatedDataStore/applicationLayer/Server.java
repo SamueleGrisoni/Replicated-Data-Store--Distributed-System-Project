@@ -4,8 +4,8 @@ import click.replicatedDataStore.applicationLayer.serverComponents.DataManager.D
 import click.replicatedDataStore.applicationLayer.serverComponents.DataManager.DataManagerWriter;
 import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
-import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.dataStructures.ClockedData;
+import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utlis.Config;
 import click.replicatedDataStore.utlis.Key;
 import click.replicatedDataStore.dataStructures.Pair;
@@ -46,9 +46,30 @@ public class Server {
         System.out.println("Server " + serverID + " started on " + Config.getServerAddress(serverID).first() + ":" + Config.getServerAddress(serverID).second());
     }
 
-    public void updateAndPersist(ClockedData clockedData) {
-        //todo
-        writeLock.notify();
+    //Locking on the function parameters is not a good practice.
+    // The server will be responsible for updating and locking its own maps and vectorClock
+    public void updateAndPersist(ClockedData clockedData, Map<Key, Object> primaryIndexUpdate) {
+        synchronized (primaryIndex){
+            primaryIndex.clear();
+            primaryIndex.putAll(primaryIndexUpdate);
+            persist.persist(primaryIndex);
+            vectorClock.updateClock(clockedData.vectorClock());
+        }
+        primaryIndex.notifyAll();
+    }
+
+    public void updateAndPersist(ClockedData clockedData, Map<Key, Object> primaryIndexUpdate, Map<VectorClock, Key> secondaryIndexUpdate) {
+        synchronized (primaryIndex){
+            synchronized (secondaryIndex){
+                primaryIndex.clear();
+                primaryIndex.putAll(primaryIndexUpdate);
+                secondaryIndex.clear();
+                secondaryIndex.putAll(secondaryIndexUpdate);
+                persist.persist(primaryIndex, secondaryIndex);
+                vectorClock.updateClock(clockedData.vectorClock());
+            }
+        }
+        primaryIndex.notifyAll();
     }
 
     public synchronized VectorClock getVectorClock() {
@@ -61,5 +82,19 @@ public class Server {
 
     public void stopThreads() {
         //todo
+    }
+
+    //return a COPY of the primary index
+    public LinkedHashMap<Key, Object> getPrimaryIndex() {
+        synchronized (primaryIndex){
+            return new LinkedHashMap<>(primaryIndex);
+        }
+    }
+
+    //return a COPY of the secondary index
+    public LinkedHashMap<VectorClock, Key> getSecondaryIndex() {
+        synchronized (secondaryIndex){
+            return new LinkedHashMap<>(secondaryIndex);
+        }
     }
 }
