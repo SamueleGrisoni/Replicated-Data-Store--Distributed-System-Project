@@ -14,7 +14,7 @@ public class ServerConnectionManager extends ConnectionManager{
     private final Object sync; //TODO make it the server timeTravel component
 
     //TODO get as parameter the hashmap with the routes
-    ServerConnectionManager(String ip, Integer port) {
+    public ServerConnectionManager(String ip, Integer port) {
         //TODO create connection acceptor thread
         this.routingTable = new HashMap<>(); //TODO add routing
         try {

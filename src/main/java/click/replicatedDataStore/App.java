@@ -1,10 +1,28 @@
 package click.replicatedDataStore;
 
+import click.replicatedDataStore.applicationLayer.Server;
+import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
+import click.replicatedDataStore.utlis.Config;
+
+import java.sql.Time;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Hello world!
  */
 public class App {
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        /*if(args.length != 1){
+            System.out.println("Please specify the amount of server u want to create");
+        }
+        int serverNumber = Integer.parseInt(args[0]);
+        if(serverNumber < 1){
+            System.out.println("U must create at least 1 server");
+        }
+        Config.createServer(serverNumber);
+        for(int serverID = 0; serverID < serverNumber; serverID++){
+            new Server(serverID, serverNumber);
+        }*/
     }
 }

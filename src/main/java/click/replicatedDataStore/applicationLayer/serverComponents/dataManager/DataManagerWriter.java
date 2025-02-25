@@ -1,4 +1,4 @@
-package click.replicatedDataStore.applicationLayer.serverComponents.DataManager;
+package click.replicatedDataStore.applicationLayer.serverComponents.dataManager;
 
 import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;

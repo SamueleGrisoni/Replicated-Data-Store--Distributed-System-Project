@@ -8,4 +8,11 @@ public class LightPushMsg extends AbstractMsg {
     public LightPushMsg(VectorClock payLoad){
         this.payLoad = payLoad;
     }
+
+    @Override
+    public String toString() {
+        return "LightPushMsg{" +
+                payLoad +
+                '}';
+    }
 }

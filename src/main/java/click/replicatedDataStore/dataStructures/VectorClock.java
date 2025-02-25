@@ -1,4 +1,6 @@
 package click.replicatedDataStore.dataStructures;
+import click.replicatedDataStore.utlis.ClockTooFarAhead;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
@@ -34,27 +36,27 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
     }
 
     public void updateClock(VectorClock incomingClock) throws IllegalCallerException{
-        checkIfUpdatable(incomingClock);
+        checkIfUpdatable(this, incomingClock);
         for(int i = 0; i < clock.length; i++){
             clock[i] = Math.max(clock[i], incomingClock.clock[i]);
         }
     }
 
-    private void checkIfUpdatable(VectorClock incomingClock) {
-        if (incomingClock == null || incomingClock.clock == null) {
+    public static void checkIfUpdatable(VectorClock serverVectorClock, VectorClock incomingVectorClock) {
+        if (incomingVectorClock == null || incomingVectorClock.clock == null) {
             throw new IllegalArgumentException("The incoming vector clock is null");
         }
-        if (this.clock.length != incomingClock.clock.length) {
+        if (serverVectorClock.clock.length != incomingVectorClock.clock.length) {
             throw new IllegalArgumentException("Vector clocks must be of the same size");
         }
 
         int count = 0;
-        for (int i = 0; i < clock.length; i++) {
-            if (clock[i] < incomingClock.clock[i]) {
-                count = incomingClock.clock[i] - clock[i];
+        for (int i = 0; i < serverVectorClock.clock.length; i++) {
+            if (serverVectorClock.clock[i] < incomingVectorClock.clock[i]) {
+                count = incomingVectorClock.clock[i] - serverVectorClock.clock[i];
             }
             if (count > 1) {
-                throw new IllegalCallerException("Incoming clock is too far ahead");
+                throw new ClockTooFarAhead("Incoming clock is " + count + " steps ahead");
             }
         }
     }

@@ -1,7 +1,7 @@
 package click.replicatedDataStore.applicationLayer;
 
-import click.replicatedDataStore.applicationLayer.serverComponents.DataManager.DataManagerReader;
-import click.replicatedDataStore.applicationLayer.serverComponents.DataManager.DataManagerWriter;
+import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
+import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerWriter;
 import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
 import click.replicatedDataStore.dataStructures.ClockedData;
@@ -13,7 +13,7 @@ import click.replicatedDataStore.dataStructures.Pair;
 import java.util.*;
 
 public class Server {
-    private final Map<Integer, Pair<Integer, Integer>> addresses;
+    private final Map<Integer, Pair<String, Integer>> addresses;
     private final int serverID;
     private final VectorClock vectorClock;
     private final LinkedHashMap<Key, Object> primaryIndex;
@@ -30,7 +30,7 @@ public class Server {
         this.serverID = serverID;
         this.vectorClock = new VectorClock(serverNumber, serverID);
         //todo
-        this.addresses = null;
+        this.addresses = Config.addresses;
         this.dataManagerReader = null;
         this.dataManagerWriter = null;
         this.timeTravel = null;
@@ -96,5 +96,9 @@ public class Server {
         synchronized (secondaryIndex){
             return new LinkedHashMap<>(secondaryIndex);
         }
+    }
+
+    public Pair<String, Integer> getMyAddressAndPortPair(){
+        return addresses.get(serverID);
     }
 }
