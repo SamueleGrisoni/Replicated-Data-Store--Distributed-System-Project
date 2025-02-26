@@ -6,6 +6,7 @@ import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
+import click.replicatedDataStore.utlis.ClockTooFarAhead;
 import click.replicatedDataStore.utlis.Config;
 import click.replicatedDataStore.utlis.Key;
 import click.replicatedDataStore.dataStructures.Pair;
@@ -17,7 +18,7 @@ public class Server {
     private final int serverID;
     private final VectorClock vectorClock;
     private final LinkedHashMap<Key, Object> primaryIndex;
-    private final LinkedHashMap<VectorClock, Key> secondaryIndex;
+    private final TreeMap<VectorClock, Key> secondaryIndex;
     private final DataManagerReader dataManagerReader;
     private final DataManagerWriter dataManagerWriter;
 
@@ -42,18 +43,26 @@ public class Server {
 
         this.primaryIndex = persist.recoverPrimaryIndex();
         this.secondaryIndex = persist.recoverSecondaryIndex();
+        if(!secondaryIndex.isEmpty()){
+            vectorClock.updateClock(secondaryIndex.lastKey());
+        }
 
         System.out.println("Server " + serverID + " started on " + Config.getServerAddress(serverID).first() + ":" + Config.getServerAddress(serverID).second());
     }
 
     //Locking on the function parameters is not a good practice.
-    // The server will be responsible for updating and locking its own maps and vectorClock
+    //The server will be responsible for updating and locking its own maps and vectorClock
     public void updateAndPersist(ClockedData clockedData, Map<Key, Object> primaryIndexUpdate) {
         synchronized (primaryIndex){
             primaryIndex.clear();
             primaryIndex.putAll(primaryIndexUpdate);
             persist.persist(primaryIndex);
-            vectorClock.updateClock(clockedData.vectorClock());
+            try{
+                vectorClock.updateClock(clockedData.vectorClock());
+            }catch (ClockTooFarAhead e){
+                //this should never happen, because clockedData was already applied to the primaryIndexUpdate
+                e.printStackTrace();
+            }
         }
         primaryIndex.notifyAll();
     }
@@ -66,7 +75,12 @@ public class Server {
                 secondaryIndex.clear();
                 secondaryIndex.putAll(secondaryIndexUpdate);
                 persist.persist(primaryIndex, secondaryIndex);
-                vectorClock.updateClock(clockedData.vectorClock());
+                try{
+                    vectorClock.updateClock(clockedData.vectorClock());
+                }catch (ClockTooFarAhead e){
+                    //this should never happen, because clockedData was already applied to the primaryIndexUpdate
+                    e.printStackTrace();
+                }
             }
         }
         primaryIndex.notifyAll();
@@ -99,6 +113,10 @@ public class Server {
     }
 
     public Pair<String, Integer> getMyAddressAndPortPair(){
+        return addresses.get(serverID);
+    }
+
+    public Pair<String, Integer> getAddressAndPortPairOf(int serverID){
         return addresses.get(serverID);
     }
 }

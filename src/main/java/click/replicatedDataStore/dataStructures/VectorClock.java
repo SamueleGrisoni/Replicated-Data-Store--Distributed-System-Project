@@ -35,14 +35,19 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
         clock[serverID]++;
     }
 
-    public void updateClock(VectorClock incomingClock) throws IllegalCallerException{
-        checkIfUpdatable(this, incomingClock);
+    public void updateClock(VectorClock incomingClock) throws ClockTooFarAhead{
+        try{
+            checkIfUpdatable(this, incomingClock);
+        }catch (IllegalArgumentException e){
+            e.printStackTrace();
+        }
         for(int i = 0; i < clock.length; i++){
             clock[i] = Math.max(clock[i], incomingClock.clock[i]);
         }
     }
 
-    public static void checkIfUpdatable(VectorClock serverVectorClock, VectorClock incomingVectorClock) {
+    //Compare the incoming clock with the server's clock. If the incoming clock is too far ahead, throw an exception
+    public static void checkIfUpdatable(VectorClock serverVectorClock, VectorClock incomingVectorClock) throws ClockTooFarAhead, IllegalArgumentException {
         if (incomingVectorClock == null || incomingVectorClock.clock == null) {
             throw new IllegalArgumentException("The incoming vector clock is null");
         }
@@ -50,13 +55,13 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
             throw new IllegalArgumentException("Vector clocks must be of the same size");
         }
 
-        int count = 0;
+        int delta = 0;
         for (int i = 0; i < serverVectorClock.clock.length; i++) {
             if (serverVectorClock.clock[i] < incomingVectorClock.clock[i]) {
-                count = incomingVectorClock.clock[i] - serverVectorClock.clock[i];
+                delta = incomingVectorClock.clock[i] - serverVectorClock.clock[i];
             }
-            if (count > 1) {
-                throw new ClockTooFarAhead("Incoming clock is " + count + " steps ahead");
+            if (delta > 1) {
+                throw new ClockTooFarAhead("Incoming clock is " + delta + " steps ahead");
             }
         }
     }

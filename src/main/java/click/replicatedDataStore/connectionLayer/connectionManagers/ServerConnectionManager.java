@@ -39,4 +39,13 @@ public class ServerConnectionManager extends ConnectionManager{
     public void addOutChannels(ObjectOutputStream out, int index){
         this.outChannels[index] = out;
     }
+
+    public void sendToAll(Object msg){
+        //todo remove
+    }
+
+    public void sendTo(String ip, Object msg){
+        System.out.println("invoked sent to");
+        //todo remove
+    }
 }

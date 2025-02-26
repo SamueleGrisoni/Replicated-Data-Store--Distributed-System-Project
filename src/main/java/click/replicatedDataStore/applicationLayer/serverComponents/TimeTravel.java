@@ -16,7 +16,7 @@ import java.util.*;
 
 public class TimeTravel {
     private final Server server;
-    private final ServerConnectionManager serverConnectionManager;
+    private ServerConnectionManager serverConnectionManager;
     //todo why we need this here?
     private final DataManagerReader dataManagerReader;
     private final Thread lightPusher;
@@ -47,6 +47,7 @@ public class TimeTravel {
     public void checkMySync(VectorClock otherVectorClock) {
         VectorClock serverVectorClock = server.getVectorClock();
         try{
+            //todo fix case in which the other clock is ahead of 1.
             VectorClock.checkIfUpdatable(serverVectorClock, otherVectorClock);
         }catch (ClockTooFarAhead e){
             computeFetch(serverVectorClock, otherVectorClock);
@@ -60,6 +61,7 @@ public class TimeTravel {
         //todo i'm not so sure what the communication layer need in order to respond to the sender
         FetchMsg fetchMsg = new FetchMsg(serverVectorClock);
         System.out.println("Fetch: " + fetchMsg);
+        serverConnectionManager.sendTo(server.getMyAddressAndPortPair().first(), fetchMsg);
     }
 
     //Function called when the sending server realized that he is not up to date, and ask for a fetch
@@ -102,5 +104,14 @@ public class TimeTravel {
 
     public void stopLightPusher() {
         stopLightPusher = true;
+    }
+
+    //atm used only for testing
+    public ServerConnectionManager getServerConnectionManager() {
+        return serverConnectionManager;
+    }
+    //atm used only for testing
+    public void setServerConnectionManager(ServerConnectionManager serverConnectionManager) {
+        this.serverConnectionManager = serverConnectionManager;
     }
 }

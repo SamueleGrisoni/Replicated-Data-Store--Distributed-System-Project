@@ -1,6 +1,7 @@
 package click.replicatedDataStore.applicationLayerTest;
 
 import click.replicatedDataStore.dataStructures.VectorClock;
+import click.replicatedDataStore.utlis.ClockTooFarAhead;
 import org.junit.Test;
 
 import java.util.PriorityQueue;
@@ -78,11 +79,10 @@ public class VectorClockTest {
         vc2.incrementSelfClock();  // vc2: [0, 1, 0]
         vc2.incrementSelfClock();  // vc2: [0, 2, 0]
 
-        IllegalCallerException exception = assertThrows(IllegalCallerException.class, () -> {
+        ClockTooFarAhead exception = assertThrows(ClockTooFarAhead.class, () -> {
             // vc2 is too far ahead of vc1, vc1 should not be updated
             vc1.updateClock(vc2);
         });
-        assertTrue(exception.getMessage().contains("Incoming clock is too far ahead"));
         // Ensure vc1 remains unchanged
         int[] clock = vc1.getClock();
         assertEquals(1, clock[0]);

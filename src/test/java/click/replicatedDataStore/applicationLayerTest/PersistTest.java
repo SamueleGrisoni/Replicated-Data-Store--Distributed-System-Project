@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -90,7 +91,7 @@ public class PersistTest implements Serializable {
 
     @Test
     public void testRecoverSecondaryIndexEmpty() {
-        LinkedHashMap<VectorClock, Key> recovered = persist.recoverSecondaryIndex();
+        TreeMap<VectorClock, Key> recovered = persist.recoverSecondaryIndex();
         assertTrue(recovered.isEmpty());
     }
 
@@ -138,7 +139,7 @@ public class PersistTest implements Serializable {
         assertTrue(recoveredPrimary.containsKey(key));
         assertEquals("value1", recoveredPrimary.get(key));
 
-        LinkedHashMap<VectorClock, Key> recoveredSecondary = persist.recoverSecondaryIndex();
+        TreeMap<VectorClock, Key> recoveredSecondary = persist.recoverSecondaryIndex();
         for (Map.Entry<VectorClock, Key> entry : recoveredSecondary.entrySet()) {
             System.out.println("VectorClock: " + entry.getKey() + " Key: " + entry.getValue());
         }

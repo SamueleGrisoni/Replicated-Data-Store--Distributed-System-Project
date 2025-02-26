@@ -6,6 +6,7 @@ import click.replicatedDataStore.utlis.Key;
 import java.io.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Persist {
     private final String folderPath;
@@ -96,8 +97,8 @@ public class Persist {
         return primaryIndex;
     }
 
-    public LinkedHashMap<VectorClock, Key> recoverSecondaryIndex() {
-        LinkedHashMap<VectorClock, Key> secondaryIndex = new LinkedHashMap<>();
+    public TreeMap<VectorClock, Key> recoverSecondaryIndex() {
+        TreeMap<VectorClock, Key> secondaryIndex = new TreeMap<>();
         if (!newIndexFile) {
             File indexFile = new File(indexFilePath);
             if(indexFile.length() == 0){
