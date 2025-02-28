@@ -1,6 +1,7 @@
 package click.replicatedDataStore.applicationLayerTest;
 
 import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
+import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utlis.Config;
 import click.replicatedDataStore.utlis.Key;
@@ -98,13 +99,17 @@ public class PersistTest implements Serializable {
     // Test persisting and recovering a primary index.
     @Test
     public void testPrimaryIndexPersist() {
-        LinkedHashMap<Key, Object> primaryIndex = new LinkedHashMap<>();
-        //populate the primary Index
-        TestKey key = new TestKey("key1");
-        primaryIndex.put(key, "value1");
-        TestKey key2 = new TestKey("key2");
-        primaryIndex.put(key2, "value2");
-        persist.persist(primaryIndex);
+        //Create clockedData
+        VectorClock vectorClock = new VectorClock(3, 0);
+        Key key = new TestKey("key");
+        Key key2 = new TestKey("key2");
+        ClockedData clockedData = new ClockedData(vectorClock, key , "value1");
+
+        //Persist the clockedData (basically updating the primary index file)
+        persist.persist(clockedData);
+        vectorClock.incrementSelfClock();
+        ClockedData clockedData2 = new ClockedData(vectorClock, key2, "value2");
+        persist.persist(clockedData2);
 
         LinkedHashMap<Key, Object> recovered = persist.recoverPrimaryIndex();
         for (Map.Entry<Key, Object> entry : recovered.entrySet()) {
@@ -120,17 +125,19 @@ public class PersistTest implements Serializable {
     @Test
     public void testPrimarySecondaryIndex() {
         LinkedHashMap<Key, Object> primaryIndex = new LinkedHashMap<>();
-        LinkedHashMap<VectorClock, Key> secondaryIndex = new LinkedHashMap<>();
+        TreeMap<VectorClock, Key> secondaryIndex = new TreeMap<>();
 
-        //populate the primary Index
-        TestKey key = new TestKey("key1");
-        primaryIndex.put(key, "value1");
-        //populate the secondary Index
+        //Create clockedData
         VectorClock vectorClock = new VectorClock(3, 0);
         vectorClock.incrementSelfClock(); //vc = [1, 0, 0]
+        TestKey key = new TestKey("key1");
+        ClockedData clockedData = new ClockedData(vectorClock, key, "value1");
+        //populate the primary Index
+        primaryIndex.put(key, "value1");
+        //populate the secondary Index
         secondaryIndex.put(vectorClock, key);
 
-        persist.persist(primaryIndex, secondaryIndex);
+        persist.persist(clockedData, secondaryIndex);
 
         LinkedHashMap<Key, Object> recoveredPrimary = persist.recoverPrimaryIndex();
         for (Map.Entry<Key, Object> entry : recoveredPrimary.entrySet()) {
@@ -147,14 +154,18 @@ public class PersistTest implements Serializable {
         assertEquals(recoveredSecondary.get(vectorClock), key);
     }
 
-    //Test exception is thrown when the primary data file is missing.
-    @Test(expected = IllegalCallerException.class)
-    public void testPersistThrowsExceptionWhenPrimaryDataFileMissing() {
-        // Delete the data file.
-        assertTrue(dataFile.delete());
-        Map<Key, Object> primaryIndex = new LinkedHashMap<>();
-        primaryIndex.put(new TestKey("key"), "value");
-        persist.persist(primaryIndex);
+    @Test
+    public void testUpdatePrimaryIndex(){
+        VectorClock vectorClock = new VectorClock(3, 0);
+        Key key = new TestKey("key");
+        ClockedData clockedData = new ClockedData(vectorClock, key , "value1");
+        persist.persist(clockedData);
+        vectorClock.incrementSelfClock();
+        ClockedData clockedData2 = new ClockedData(vectorClock, key, "value2");
+        persist.persist(clockedData2);
+        LinkedHashMap<Key, Object> recovered = persist.recoverPrimaryIndex();
+        assertEquals(1, recovered.size());
+        assertEquals("value2", recovered.get(key));
     }
 
     //Dummy key used for testing

@@ -43,6 +43,8 @@ public class Server {
 
         this.primaryIndex = persist.recoverPrimaryIndex();
         this.secondaryIndex = persist.recoverSecondaryIndex();
+
+        //If secondary index is not empty, update the vector clock with the latest clock. Useful for recovery
         if(!secondaryIndex.isEmpty()){
             vectorClock.updateClock(secondaryIndex.lastKey());
         }
@@ -50,40 +52,24 @@ public class Server {
         System.out.println("Server " + serverID + " started on " + Config.getServerAddress(serverID).first() + ":" + Config.getServerAddress(serverID).second());
     }
 
-    //Locking on the function parameters is not a good practice.
-    //The server will be responsible for updating and locking its own maps and vectorClock
-    public void updateAndPersist(ClockedData clockedData, Map<Key, Object> primaryIndexUpdate) {
-        synchronized (primaryIndex){
-            primaryIndex.clear();
-            primaryIndex.putAll(primaryIndexUpdate);
-            persist.persist(primaryIndex);
-            try{
-                vectorClock.updateClock(clockedData.vectorClock());
-            }catch (ClockTooFarAhead e){
-                //this should never happen, because clockedData was already applied to the primaryIndexUpdate
-                e.printStackTrace();
-            }
+    public void updateAndPersist(ClockedData clockedData) {
+        synchronized (primaryIndex) {
+            persist.persist(clockedData);
+            primaryIndex.put(clockedData.key(), clockedData.value());
+            vectorClock.updateClock(clockedData.vectorClock());
         }
-        primaryIndex.notifyAll();
     }
 
-    public void updateAndPersist(ClockedData clockedData, Map<Key, Object> primaryIndexUpdate, Map<VectorClock, Key> secondaryIndexUpdate) {
-        synchronized (primaryIndex){
-            synchronized (secondaryIndex){
-                primaryIndex.clear();
-                primaryIndex.putAll(primaryIndexUpdate);
+    public void updateAndPersist(ClockedData clockedData, TreeMap<VectorClock, Key> secondaryIndexUpdated) {
+        synchronized (primaryIndex) {
+            synchronized (secondaryIndex) {
+                persist.persist(clockedData, secondaryIndexUpdated);
+                primaryIndex.put(clockedData.key(), clockedData.value());
                 secondaryIndex.clear();
-                secondaryIndex.putAll(secondaryIndexUpdate);
-                persist.persist(primaryIndex, secondaryIndex);
-                try{
-                    vectorClock.updateClock(clockedData.vectorClock());
-                }catch (ClockTooFarAhead e){
-                    //this should never happen, because clockedData was already applied to the primaryIndexUpdate
-                    e.printStackTrace();
-                }
+                secondaryIndex.putAll(secondaryIndexUpdated);
+                vectorClock.updateClock(clockedData.vectorClock());
             }
         }
-        primaryIndex.notifyAll();
     }
 
     public synchronized VectorClock getVectorClock() {

@@ -1,11 +1,13 @@
 package click.replicatedDataStore.applicationLayer.serverComponents;
 
+import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utlis.Key;
 
 import java.io.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 public class Persist {
@@ -30,15 +32,59 @@ public class Persist {
         }
     }
 
-    //Persist the primary index to the data file
-    public void persist(Map<Key, Object> primaryIndex) {
+    //Append the clocked data to the data file
+    public void persist(ClockedData clockedData) {
         File dataFile = new File(dataFilePath);
         if (!dataFile.exists()) {
             throw new IllegalCallerException("Data file does not exist");
         }
-        dataFile.delete();
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dataFilePath))) {
-            for (Map.Entry<Key, Object> entry : primaryIndex.entrySet()) {
+
+        ObjectOutputStream oos = createObjectOutputStream(dataFile);
+
+        try {
+            oos.writeObject(clockedData.key());
+            oos.writeObject(clockedData.value());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                oos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private ObjectOutputStream createObjectOutputStream(File file){
+        ObjectOutputStream oos = null;
+        if(file.length() == 0){
+            try{
+                oos = new ObjectOutputStream(new FileOutputStream(file));
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+        }else { //if the file is not empty create an oos in appended mode
+            try {
+                oos = new ObjectOutputStream(new FileOutputStream(file, true)) {
+                    @Override
+                    protected void writeStreamHeader() {
+                        //Do not write the stream header when appending to the file
+                    }
+                };
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return oos;
+    }
+
+    public void persist(ClockedData clockedData, TreeMap<VectorClock, Key> secondaryIndex){
+        persist(clockedData);
+        compactPrimaryIndex();
+
+        //overwrite the index file with the new secondary index
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(indexFilePath))) {
+            for (Map.Entry<VectorClock, Key> entry : secondaryIndex.entrySet()) {
                 oos.writeObject(entry.getKey());
                 oos.writeObject(entry.getValue());
             }
@@ -47,25 +93,15 @@ public class Persist {
         }
     }
 
-    //Persist the secondary index to the index file
-    public void persist(Map<Key, Object> primaryIndex, Map<VectorClock, Key> secondaryIndex) {
-        File dataFile = new File(dataFilePath);
-        File indexFile = new File(indexFilePath);
-        if (!dataFile.exists() || !indexFile.exists()) {
-            throw new IllegalCallerException("Data file or secondary index file do not exist");
+    //Compact the primary index by reading the data file and writing the updated key-value pairs to a new file
+    private void compactPrimaryIndex() {
+        Map<Key, Object> newPrimaryIndex = recoverPrimaryIndex();
+        if(newPrimaryIndex.isEmpty()){
+            return;
         }
-        dataFile.delete();
+        //overwrite the data file with the new primary index. Because it's a map the key-value is already updated to the latest value
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dataFilePath))) {
-            for (Map.Entry<Key, Object> entry : primaryIndex.entrySet()) {
-                oos.writeObject(entry.getKey());
-                oos.writeObject(entry.getValue());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        indexFile.delete();
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(indexFilePath))) {
-            for (Map.Entry<VectorClock, Key> entry : secondaryIndex.entrySet()) {
+            for (Map.Entry<Key, Object> entry : newPrimaryIndex.entrySet()) {
                 oos.writeObject(entry.getKey());
                 oos.writeObject(entry.getValue());
             }
