@@ -1,26 +1,26 @@
 package click.replicatedDataStore.connectionLayer.connectionManagers;
 
+import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;
+import click.replicatedDataStore.applicationLayer.serverComponents.DataManager.DataManagerReader;
 import click.replicatedDataStore.connectionLayer.connectionThreads.ConnectedClients;
 
 import java.util.HashMap;
 import java.util.List;
 
 public class ClientConnectionManager extends ConnectionManager {
-    private HashMap<String, Runnable> routingTable;
     private List<ConnectedClients> connectedClientsList;
-    private final Object que; //TODO make it the server queue
-    private final Object dataRead; //TODO make it the server dataRead component
+    private final ClientServerPriorityQueue que;
+    private final DataManagerReader dataRead;
 
-    ClientConnectionManager(String ip, Integer port) {
-        this.routingTable = new HashMap<>();
+    ClientConnectionManager(String ip, Integer port, ClientServerPriorityQueue serverQueue, DataManagerReader dataRead) {
         //TODO create connection acceptor thread
 
-        que = new Object(); //TODO make it the server queue
-        dataRead = new Object(); //TODO make it the server dataRead component
-    }
 
-    public HashMap<String, Runnable> getRoutes() {
-        return routingTable;
+        super();
+        this.que = serverQueue;
+        this.dataRead = dataRead;
+
+
     }
 
     //TODO implement read

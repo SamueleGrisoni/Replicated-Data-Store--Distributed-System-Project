@@ -2,11 +2,10 @@ package click.replicatedDataStore.connectionLayer.messages;
 
 import click.replicatedDataStore.dataStructures.VectorClock;
 
-public class LightPushMsg extends AbstractMsg {
-    public final VectorClock payLoad;
+public class ServerLightPushMsg extends AbstractMsg {
 
-    public LightPushMsg(VectorClock payLoad){
-        this.payLoad = payLoad;
+    public ServerLightPushMsg(){
+        super(null, null);
     }
 
     @Override
