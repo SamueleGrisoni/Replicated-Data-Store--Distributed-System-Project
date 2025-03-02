@@ -76,6 +76,7 @@ public class Persist {
         return oos;
     }
 
+    //Save the clocked data to the (primary) data file, compact the primary index and overwrite the secondary index
     public void persist(ClockedData clockedData, TreeMap<VectorClock, Key> secondaryIndex){
         persist(clockedData);
         compactPrimaryIndex();

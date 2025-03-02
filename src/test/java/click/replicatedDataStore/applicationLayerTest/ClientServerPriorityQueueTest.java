@@ -39,12 +39,13 @@ public class ClientServerPriorityQueueTest {
         compareVC.incrementSelfClock(); //vc = [1, 0, 0]
 
         queue.addClientData(clientData);
-        ClockedData result = queue.popData();
+        ClockedData result = queue.peekData();
 
         assertNotNull(result);
         assertEquals(key, result.key());
         assertEquals("value1", result.value());
         assertEquals(compareVC, result.vectorClock());
+        queue.popData();
     }
 
     @Test
@@ -54,12 +55,13 @@ public class ClientServerPriorityQueueTest {
 
         ClockedData serverData = new ClockedData(otherServerVC, key, "serverValue");
         queue.addServerData(serverData);
-        ClockedData result = queue.popData();
+        ClockedData result = queue.peekData();
 
         assertNotNull(result);
         assertEquals(key, result.key());
         assertEquals("serverValue", result.value());
         assertEquals(otherServerVC, result.vectorClock());
+        queue.popData();
     }
 
     @Test
@@ -75,15 +77,16 @@ public class ClientServerPriorityQueueTest {
         queue.addClientData(clientData);
 
         //clientData should be popped first
-        ClockedData result = queue.popData();
+        ClockedData result = queue.peekData();
         assertNotNull(result);
         assertEquals(clientKey, result.key());
         assertEquals("clientValue", result.value());
-
-        result = queue.popData();
+        queue.popData();
+        result = queue.peekData();
         assertNotNull(result);
         assertEquals(serverKey, result.key());
         assertEquals("serverValue", result.value());
+        queue.popData();
     }
 
     @Test
@@ -102,11 +105,11 @@ public class ClientServerPriorityQueueTest {
 
         //Queue is empty, popData should block until data is added
         System.out.println("Blocking popData");
-        ClockedData result = queue.popData();
+        ClockedData result = queue.peekData();
         assertNotNull(result);
         assertEquals(key, result.key());
         assertEquals("delayedValue", result.value());
-
+        queue.popData();
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.SECONDS);
     }
