@@ -19,8 +19,10 @@ public class ClientServerPriorityQueue {
         this.newDataLock = new Object();
     }
 
-    public synchronized void addClientData(ClientWrite clientData){
+    //return true if the operation was successful
+    public synchronized boolean addClientData(ClientWrite clientData){
         //todo
+        return false;
     }
 
     public void addServerData(ClockedData serverData){

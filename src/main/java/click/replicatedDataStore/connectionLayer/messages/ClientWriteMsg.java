@@ -15,6 +15,10 @@ public class ClientWriteMsg extends AbstractMsg{
         super(CommunicationMethods.CLIENT_WRITE, new ClientWrite(key, value));
     }
 
+    public ClientWriteMsg(ClientWrite clientWrite){
+        super(CommunicationMethods.CLIENT_WRITE, clientWrite);
+    }
+
     public ClientWrite getPayload(){
         return (ClientWrite) this.payLoad;
     }

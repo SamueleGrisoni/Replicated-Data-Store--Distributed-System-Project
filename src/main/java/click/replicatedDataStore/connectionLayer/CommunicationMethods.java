@@ -5,6 +5,4 @@ public enum CommunicationMethods {
     CLIENT_READ,
     CLIENT_WRITE,
 
-
-    RETURN_DATA,
 }

@@ -15,6 +15,7 @@ public class ServerConnectionManager extends ConnectionManager{
 
     //TODO get as parameter the hashmap with the routes
     public ServerConnectionManager(String ip, Integer port) {
+        super(port, null);
         //TODO create connection acceptor thread
         this.routingTable = new HashMap<>(); //TODO add routing
         try {
@@ -47,5 +48,15 @@ public class ServerConnectionManager extends ConnectionManager{
     public void sendTo(String ip, Object msg){
         System.out.println("invoked sent to");
         //todo remove
+    }
+
+    @Override
+    public void setupRouting() {
+
+    }
+
+    @Override
+    public void handleNewConnection(Socket newConnection) {
+
     }
 }
