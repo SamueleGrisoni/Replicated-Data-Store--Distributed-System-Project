@@ -7,11 +7,9 @@ import click.replicatedDataStore.utlis.Key;
 import java.io.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 
 public class Persist {
-    private final String folderPath;
     private final String dataFilePath;
     private final String indexFilePath;
     //Flag to check if the file is new. If so, the recovery methods will not access the disk to recover an empty file
@@ -19,7 +17,7 @@ public class Persist {
     private boolean newIndexFile;
 
     public Persist(String dataFolderName, String dataFileName, String indexFileName) {
-        this.folderPath = getOSDataFolderPath() + dataFolderName + File.separator;
+        String folderPath = getOSDataFolderPath() + dataFolderName + File.separator;
         this.dataFilePath = folderPath + dataFileName;
         this.indexFilePath = folderPath + indexFileName;
 
