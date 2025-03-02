@@ -227,6 +227,47 @@ public class DataManagerWriterTest {
         assertFalse(mockServer.getSecondaryIndex().containsKey(oldestVC));
     }
 
+    @Test
+    public void testSecondaryUpdateWithKeyLastInPrimaryIndex() {
+        injectNUMBER_OF_WRITE_SECONDARY_INTERVAL(1);
+
+        TestKey key = new TestKey("keyLast");
+        ClientWrite initialWrite = new ClientWrite(key, "initialValue");
+        mockServer.addClientData(initialWrite);
+
+        // Wait for the writer thread to process the data.
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Now update the same key.
+        ClientWrite updateWrite = new ClientWrite(key, "updatedValue");
+        mockServer.addClientData(updateWrite);
+
+        // Wait for the writer thread to process the update.
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Verify that the primary index has one entry with the updated value.
+        assertEquals(1, mockServer.getPrimaryIndex().size());
+        assertEquals("updatedValue", mockServer.getPrimaryIndex().get(key));
+
+        // Verify that the secondary index does not have any mapping with a null key.
+        // The expectation is that if computeNewPossibleKey returns null (because the key is last),
+        // the old mapping should be removed rather than replaced with a null value.
+        // The only entry in the secondary index should be the updated key.
+        assertEquals(1, mockServer.getSecondaryIndex().size());
+        for (Key secondaryKey : mockServer.getSecondaryIndex().values()){
+            assertNotNull("Secondary index should not contain null keys", secondaryKey);
+            assertEquals("Secondary index should map to the updated key", key, secondaryKey);
+        }
+    }
+
     private record TestKey(String keyValue) implements Key {
 
         @Override

@@ -50,7 +50,8 @@ public class DataManagerWriter extends Thread{
             for(Map.Entry<VectorClock, Key> currSecondaryEntry : secondaryIndex.entrySet()){
                 if(currSecondaryEntry.getValue().equals(updatingKey)){
                     Key newPossibleKey = computeNewPossibleKey(updatingKey);
-                    if(secondaryIndex.containsValue(newPossibleKey)) {
+                    //The newPossibleKey is null iff is the last entry in the primary index.
+                    if(newPossibleKey == null || secondaryIndex.containsValue(newPossibleKey)) {
                         secondaryIndex.remove(currSecondaryEntry.getKey());
                     }else {
                         secondaryIndex.put(currSecondaryEntry.getKey(), newPossibleKey);
