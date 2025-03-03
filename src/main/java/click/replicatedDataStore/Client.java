@@ -1,9 +1,8 @@
-package click.replicatedDataStore.applicationLayer;
+package click.replicatedDataStore;
 
 import click.replicatedDataStore.applicationLayer.clientComponents.RequestSender;
 import click.replicatedDataStore.applicationLayer.clientComponents.view.ClientErrorManager;
 import click.replicatedDataStore.dataStructures.keyImplementations.StringKey;
-import click.replicatedDataStore.utlis.Key;
 
 import java.util.Scanner;
 

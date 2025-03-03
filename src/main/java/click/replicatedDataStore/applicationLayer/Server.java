@@ -4,6 +4,7 @@ import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.D
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerWriter;
 import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
+import click.replicatedDataStore.connectionLayer.connectionManagers.ServerConnectionManager;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
@@ -22,16 +23,17 @@ public class Server {
     private final TreeMap<VectorClock, Key> secondaryIndex;
     private final DataManagerReader dataManagerReader;
     private final DataManagerWriter dataManagerWriter;
-
+    private final ServerConnectionManager serverConnectionManager;
+    private final Logger logger;
     private final TimeTravel timeTravel;
     private final Persist persist;
 
-    public Server(int serverID, int serverNumber) {
+    public Server(int serverID, Map<Integer, Pair<String, Integer>> addresses) {
         this.serverID = serverID;
+        this.addresses = addresses;
+        int serverNumber = addresses.size();
         this.vectorClock = new VectorClock(serverNumber, serverID);
-
-        this.addresses = ServerConfig.addresses;
-        this.timeTravel = null;
+        this.logger = new Logger();
 
         String dataFolderName = ServerConfig.DATA_FOLDER_NAME+serverID;
         String primaryIndexFileName = ServerConfig.PRIMARY_INDEX_FILE_NAME + serverID + ServerConfig.FILES_EXTENSION;
@@ -50,6 +52,8 @@ public class Server {
         this.dataManagerWriter.start();
 
         this.dataManagerReader = new DataManagerReader(this);
+        this.serverConnectionManager = new ServerConnectionManager()
+        TimeTravel timeTravel = new TimeTravel(this, dataManagerReader, );
         System.out.println("Server " + serverID + " started on " + ServerConfig.getServerAddress(serverID).first() + ":" + ServerConfig.getServerAddress(serverID).second());
     }
 
@@ -129,5 +133,9 @@ public class Server {
 
     public void addServerData(List<ClockedData> serverData){
         dataManagerWriter.addServerData(serverData);
+    }
+
+    public ServerConnectionManager getServerConnectionManager() {
+        return serverConnectionManager;
     }
 }

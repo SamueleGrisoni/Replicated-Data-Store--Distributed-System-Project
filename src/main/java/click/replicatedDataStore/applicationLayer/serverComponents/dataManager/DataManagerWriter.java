@@ -24,8 +24,11 @@ public class DataManagerWriter extends Thread{
     public void run() {
         System.out.println("Writer thread started");
         while(true){
-            write(queue.peekData());
-            //Pop the data after it has been written
+            List<ClockedData> data = queue.peekData();
+            write(data);
+            if(data.size() == 1) {
+                server.getServerConnectionManager().heavyPush(data); //Send user input to other servers
+            }
             queue.popData();
         }
     }
