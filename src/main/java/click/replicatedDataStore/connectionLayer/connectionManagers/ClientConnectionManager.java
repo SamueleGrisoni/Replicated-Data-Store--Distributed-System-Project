@@ -23,7 +23,7 @@ public class ClientConnectionManager extends ConnectionManager {
      * @param dataRead the data manager reader
      * @param logger the server logger
      */
-    ClientConnectionManager(int port, ClientServerPriorityQueue serverQueue,
+    public ClientConnectionManager(int port, ClientServerPriorityQueue serverQueue,
                             DataManagerReader dataRead, Logger logger) {
         super(port, logger);
         this.clientsHandlerList = new LinkedList<>();
