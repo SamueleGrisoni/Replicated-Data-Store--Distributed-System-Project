@@ -61,6 +61,8 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
                 delta = incomingVectorClock.clock[i] - serverVectorClock.clock[i];
             }
             if (delta > 1) {
+                System.out.println("Server clock: " + serverVectorClock);
+                System.out.println("Incoming clock: " + incomingVectorClock);
                 throw new ClockTooFarAhead("Incoming clock is " + delta + " steps ahead");
             }
         }

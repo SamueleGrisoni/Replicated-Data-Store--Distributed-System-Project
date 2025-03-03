@@ -26,5 +26,7 @@ public class Config {
     public static final String SECONDARY_INDEX_FILE_NAME = "Data-Secondary-Index-Server-";
     public static final String FILES_EXTENSION = ".bin";
 
-    public static final Integer LIGHT_PUSH_DELAY_MILLIS = 1000;
+    public static final int LIGHT_PUSH_DELAY_MILLIS = 1000;
+
+    public static int NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE = 5;
 }
