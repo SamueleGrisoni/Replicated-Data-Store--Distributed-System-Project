@@ -4,7 +4,7 @@ import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerP
 import click.replicatedDataStore.applicationLayer.serverComponents.Logger;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
 import click.replicatedDataStore.connectionLayer.CommunicationMethods;
-import click.replicatedDataStore.connectionLayer.connectionThreads.ConnectedClients;
+import click.replicatedDataStore.connectionLayer.connectionThreads.ClientsHandler;
 import click.replicatedDataStore.connectionLayer.messages.*;
 
 import java.io.IOException;
@@ -13,7 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ClientConnectionManager extends ConnectionManager {
-    private final List<ConnectedClients> connectedClientsList;
+    private final List<ClientsHandler> clientsHandlerList;
     private final ClientServerPriorityQueue que;
     private final DataManagerReader dataRead;
 
@@ -25,9 +25,8 @@ public class ClientConnectionManager extends ConnectionManager {
      */
     ClientConnectionManager(int port, ClientServerPriorityQueue serverQueue,
                             DataManagerReader dataRead, Logger logger) {
-        //TODO create connection acceptor thread
         super(port, logger);
-        this.connectedClientsList = new LinkedList<>();
+        this.clientsHandlerList = new LinkedList<>();
         this.que = serverQueue;
         this.dataRead = dataRead;
     }
@@ -46,7 +45,9 @@ public class ClientConnectionManager extends ConnectionManager {
      */
     public synchronized void handleNewConnection(Socket newConnection){
         try {
-            connectedClientsList.add(new ConnectedClients(newConnection, this));
+            ClientsHandler newClient = new ClientsHandler(newConnection, this);
+            newClient.start();
+            clientsHandlerList.add(newClient);
         } catch (IOException e){
             this.logger.logErr(this.getClass(), "error while creating a new connected client\n" + e.getMessage());
         }
@@ -65,7 +66,7 @@ public class ClientConnectionManager extends ConnectionManager {
 
     public void stop(){
         super.stop();
-        for(ConnectedClients client: connectedClientsList){
+        for(ClientsHandler client: clientsHandlerList){
             client.stopRunning();
         }
     }

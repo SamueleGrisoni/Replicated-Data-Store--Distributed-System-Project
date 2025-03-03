@@ -8,13 +8,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class ConnectedClients extends Thread{
+public class ClientsHandler extends Thread{
     private final ObjectOutputStream out;
     private final ObjectInputStream in;
     private final ClientConnectionManager manager;
     private boolean running = true;
 
-    public ConnectedClients(Socket clientSocket, ClientConnectionManager manager) throws IOException{
+    public ClientsHandler(Socket clientSocket, ClientConnectionManager manager) throws IOException{
         out = new ObjectOutputStream(clientSocket.getOutputStream());
         in = new ObjectInputStream(clientSocket.getInputStream());
         this.manager = manager;
@@ -26,9 +26,11 @@ public class ConnectedClients extends Thread{
                 AbstractMsg request = (AbstractMsg) in.readObject();
                 out.writeObject(manager.resolveRequest(request));
             }catch (IOException e){
-                manager.logger.logErr(this.getClass(), "error while processing a request\n" + e.getMessage());
+                if(running)
+                    manager.logger.logErr(this.getClass(), "error while processing a request\n" + e.getMessage());
             }catch (ClassNotFoundException e){
-                manager.logger.logErr(this.getClass(), "error the input from the socket isn't an AbstractMsg\n" + e.getMessage());
+                if(running)
+                    manager.logger.logErr(this.getClass(), "error the input from the socket isn't an AbstractMsg\n" + e.getMessage());
             }
         }
     }

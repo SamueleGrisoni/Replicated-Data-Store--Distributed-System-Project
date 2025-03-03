@@ -39,10 +39,11 @@ public class ConnectionAcceptor extends Thread{
     public void run() {
         while(running) {
             try {
-                Socket newClientConnection = serverSocket.accept(); //todo: if i get two connection at the same time?
+                Socket newClientConnection = serverSocket.accept();
                 connectionManager.handleNewConnection(newClientConnection);
             } catch (IOException e) {
-                connectionManager.logger.logErr(this.getClass(), "error while accepting client connection\n" + e.getMessage());
+                if(running)
+                    connectionManager.logger.logErr(this.getClass(), "error while accepting client connection\n" + e.getMessage());
             }
         }
     }

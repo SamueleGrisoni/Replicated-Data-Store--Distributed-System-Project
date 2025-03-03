@@ -4,7 +4,7 @@ import click.replicatedDataStore.dataStructures.VectorClock;
 
 public class ServerFetchMsg extends AbstractMsg {
 
-    public ServerFetchMsg(){
+    public ServerFetchMsg(VectorClock vectorClock){
         super(null, null);
     }
 }

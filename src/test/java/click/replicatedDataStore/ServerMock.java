@@ -10,6 +10,7 @@ import java.util.function.Function;
 
 public class ServerMock {
     private final Thread serverThread;
+    private ServerSocket socket;
 
     private final BiFunction<ObjectInputStream, ObjectOutputStream, Void> callbackFunction;
 
@@ -37,12 +38,24 @@ public class ServerMock {
                 e.printStackTrace();
             }
 
+            this.socket = serverSocket;
             callbackFunction.apply(in, out);
+
+            try {
+                socket.close();
+            } catch (IOException e) {}
         });
     }
 
     public void start() {
         serverThread.start();
     }
-    public void stop() { serverThread.interrupt(); }
+    public void stop() {
+        serverThread.interrupt();
+        try {
+            if(socket!=null)
+                this.socket.close();
+        } catch (IOException e) {
+        }
+    }
 }

@@ -70,6 +70,19 @@ public class InjectionUtils {
         return result;
     }
 
+    public static Object getPrivateField(Object obj, String fieldName){
+        Object result = null;
+        try {
+            Field field = obj.getClass().getDeclaredField(fieldName);
+            makeFieldPublic(field);
+            result = field.get(obj);
+            resetFieldAccess(field);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
     private static void makeFieldPublic(Field field) throws NoSuchFieldException {
         field.setAccessible(true);
     }

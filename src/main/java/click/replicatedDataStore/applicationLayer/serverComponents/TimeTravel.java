@@ -3,9 +3,9 @@ package click.replicatedDataStore.applicationLayer.serverComponents;
 import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
 import click.replicatedDataStore.connectionLayer.connectionManagers.ServerConnectionManager;
-import click.replicatedDataStore.connectionLayer.messages.FetchMsg;
-import click.replicatedDataStore.connectionLayer.messages.HeavyPushMsg;
-import click.replicatedDataStore.connectionLayer.messages.LightPushMsg;
+import click.replicatedDataStore.connectionLayer.messages.ServerFetchMsg;
+import click.replicatedDataStore.connectionLayer.messages.ServerHeavyPushMsg;
+import click.replicatedDataStore.connectionLayer.messages.ServerLightPushMsg;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utlis.ClockTooFarAhead;
@@ -31,7 +31,7 @@ public class TimeTravel {
 
     private void lightPusherFunction() {
         while (!stopLightPusher) {
-            LightPushMsg lightPushMsg = new LightPushMsg(server.getVectorClock());
+            ServerLightPushMsg lightPushMsg = new ServerLightPushMsg(server.getVectorClock());
             //todo implement a method to send msg to all servers
             //serverConnectionManager.sendToAll(lightPushMsg);
             System.out.println("LightPusher: " + lightPushMsg);
@@ -59,7 +59,7 @@ public class TimeTravel {
 
     private void computeFetch(VectorClock serverVectorClock, VectorClock otherVectorClock) {
         //todo i'm not so sure what the communication layer need in order to respond to the sender
-        FetchMsg fetchMsg = new FetchMsg(serverVectorClock);
+        ServerFetchMsg fetchMsg = new ServerFetchMsg(serverVectorClock);
         System.out.println("Fetch: " + fetchMsg);
         serverConnectionManager.sendTo(server.getMyAddressAndPortPair().first(), fetchMsg);
     }
@@ -77,7 +77,7 @@ public class TimeTravel {
 
         //create a list of ClockedData that will be pushed
         List<ClockedData> missingData = computeMissingData(primaryIndex, serverVectorClock, maxSmallerKey);
-        HeavyPushMsg heavyPushMsg = new HeavyPushMsg(missingData);
+        ServerHeavyPushMsg heavyPushMsg = new ServerHeavyPushMsg(missingData);
         //todo implement a method to send msg to the server that requested the fetch
         //serverConnectionManager.sendToServer(heavyPushMsg, otherAddress);
     }

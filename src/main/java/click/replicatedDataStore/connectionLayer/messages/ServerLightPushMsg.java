@@ -4,7 +4,7 @@ import click.replicatedDataStore.dataStructures.VectorClock;
 
 public class ServerLightPushMsg extends AbstractMsg {
 
-    public ServerLightPushMsg(){
+    public ServerLightPushMsg(VectorClock vectorClock){
         super(null, null);
     }
 
