@@ -5,18 +5,20 @@ import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.PriorityQueue;
 
 public class ClientServerPriorityQueue {
     private final Server server;
     private final PriorityQueue<ClockedData> clientQueue;
-    private final PriorityQueue<ClockedData> serversQueue;
+    private final PriorityQueue<List<ClockedData>> serversQueue;
     private final Object lock = new Object();
 
     public ClientServerPriorityQueue(Server server) {
         this.server = server;
         this.clientQueue = new PriorityQueue<>();
-        this.serversQueue = new PriorityQueue<>();
+        this.serversQueue = new PriorityQueue<>(Comparator.comparing(list -> list.get(0).vectorClock()));
     }
 
     //Synchronized because the offset vector clock is calculated based on the current size of the clientQueue and current vector clock
@@ -31,7 +33,7 @@ public class ClientServerPriorityQueue {
         }
     }
 
-    public void addServerData(ClockedData serverData) {
+    public void addServerData(List<ClockedData> serverData) {
         synchronized (lock) {
             serversQueue.add(serverData);
             lock.notify();
@@ -39,7 +41,7 @@ public class ClientServerPriorityQueue {
     }
 
     //Prefer user update to server update. If both queues are empty, update the lock so the writerThread requesting pops is blocked
-    public ClockedData peekData() {
+    public List<ClockedData> peekData() {
         synchronized (lock) {
             while (clientQueue.isEmpty() && serversQueue.isEmpty()) {
                 try {
@@ -49,13 +51,17 @@ public class ClientServerPriorityQueue {
                     Thread.currentThread().interrupt();
                 }
             }
-            return !clientQueue.isEmpty() ? clientQueue.peek() : serversQueue.peek();
+            return !clientQueue.isEmpty() ? List.of(clientQueue.peek()) : serversQueue.peek();
         }
     }
 
-    public ClockedData popData() {
+    public void popData() {
         synchronized (lock) {
-            return !clientQueue.isEmpty() ? clientQueue.poll() : serversQueue.poll();
+            if(!clientQueue.isEmpty()){
+                clientQueue.poll();
+            }else{
+                serversQueue.poll();
+            }
         }
     }
 }

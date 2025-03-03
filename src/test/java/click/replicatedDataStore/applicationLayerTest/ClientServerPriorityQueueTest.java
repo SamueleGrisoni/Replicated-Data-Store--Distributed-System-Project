@@ -8,6 +8,8 @@ import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utlis.Key;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +41,7 @@ public class ClientServerPriorityQueueTest {
         compareVC.incrementSelfClock(); //vc = [1, 0, 0]
 
         queue.addClientData(clientData);
-        ClockedData result = queue.peekData();
+        ClockedData result = queue.peekData().get(0);
 
         assertNotNull(result);
         assertEquals(key, result.key());
@@ -54,8 +56,8 @@ public class ClientServerPriorityQueueTest {
         VectorClock otherServerVC = createOtherServerVC();
 
         ClockedData serverData = new ClockedData(otherServerVC, key, "serverValue");
-        queue.addServerData(serverData);
-        ClockedData result = queue.peekData();
+        queue.addServerData(List.of(serverData));
+        ClockedData result = queue.peekData().get(0);
 
         assertNotNull(result);
         assertEquals(key, result.key());
@@ -71,18 +73,18 @@ public class ClientServerPriorityQueueTest {
         TestKey clientKey = new TestKey("clientKey");
         ClockedData serverData = new ClockedData(otherServerVC, serverKey, "serverValue");
 
-        queue.addServerData(serverData);
+        queue.addServerData(List.of(serverData));
 
         ClientWrite clientData = new ClientWrite(clientKey, "clientValue");
         queue.addClientData(clientData);
 
         //clientData should be popped first
-        ClockedData result = queue.peekData();
+        ClockedData result = queue.peekData().get(0);
         assertNotNull(result);
         assertEquals(clientKey, result.key());
         assertEquals("clientValue", result.value());
         queue.popData();
-        result = queue.peekData();
+        result = queue.peekData().get(0);
         assertNotNull(result);
         assertEquals(serverKey, result.key());
         assertEquals("serverValue", result.value());
@@ -105,7 +107,7 @@ public class ClientServerPriorityQueueTest {
 
         //Queue is empty, popData should block until data is added
         System.out.println("Blocking popData");
-        ClockedData result = queue.peekData();
+        ClockedData result = queue.peekData().get(0);
         assertNotNull(result);
         assertEquals(key, result.key());
         assertEquals("delayedValue", result.value());
