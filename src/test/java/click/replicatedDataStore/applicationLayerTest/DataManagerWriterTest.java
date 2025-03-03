@@ -15,6 +15,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -80,7 +81,7 @@ public class DataManagerWriterTest {
         VectorClock otherServerClock = new VectorClock(2, 1);
         otherServerClock.incrementSelfClock(); // [0, 1]
         ClockedData serverData = new ClockedData(otherServerClock, key, "value1");
-        mockServer.addServerData(serverData);
+        mockServer.addServerData(List.of(serverData));
         // Wait for the writer thread to process the data
         Thread.sleep(100);
         assertEquals(1, mockServer.getPrimaryIndex().size());

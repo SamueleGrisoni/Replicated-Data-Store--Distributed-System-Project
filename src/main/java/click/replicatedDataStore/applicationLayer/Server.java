@@ -52,26 +52,37 @@ public class Server {
         System.out.println("Server " + serverID + " started on " + Config.getServerAddress(serverID).first() + ":" + Config.getServerAddress(serverID).second());
     }
 
-    public void updateAndPersist(ClockedData clockedData) {
+    public void updateAndPersist(List<ClockedData> clockedDataList) {
         synchronized (primaryIndex) {
-            persist.persist(clockedData);
-            //add the update as the latest entry in the primary index
-            primaryIndex.remove(clockedData.key());
-            primaryIndex.put(clockedData.key(), clockedData.value());
-            vectorClock.updateClock(clockedData.vectorClock());
+            for(ClockedData clockedData : clockedDataList){
+                updatePersistPrimaryIndex(clockedData);
+            }
+            vectorClock.updateClock(clockedDataList.get(clockedDataList.size()-1).vectorClock());
         }
     }
 
-    public void updateAndPersist(ClockedData clockedData, TreeMap<VectorClock, Key> secondaryIndexUpdated) {
+    public void updateAndPersist(List<ClockedData> clockedDataList, TreeMap<VectorClock, Key> secondaryIndexUpdated) {
         synchronized (primaryIndex) {
+            for(int i = 0; i<clockedDataList.size()-1; i++){
+                updatePersistPrimaryIndex(clockedDataList.get(i));
+            }
+            ClockedData lastClockedData = clockedDataList.get(clockedDataList.size()-1);
             synchronized (secondaryIndex) {
-                persist.persist(clockedData, secondaryIndexUpdated);
-                primaryIndex.remove(clockedData.key());
-                primaryIndex.put(clockedData.key(), clockedData.value());
+                persist.persist(lastClockedData, secondaryIndexUpdated);
+                primaryIndex.remove(lastClockedData.key());
+                primaryIndex.put(lastClockedData.key(), lastClockedData.value());
                 secondaryIndex.clear();
                 secondaryIndex.putAll(secondaryIndexUpdated);
-                vectorClock.updateClock(clockedData.vectorClock());
             }
+            vectorClock.updateClock(lastClockedData.vectorClock());
+        }
+    }
+
+    private void updatePersistPrimaryIndex(ClockedData clockedData){
+        synchronized (primaryIndex) {
+            persist.persist(clockedData);
+            primaryIndex.remove(clockedData.key());
+            primaryIndex.put(clockedData.key(), clockedData.value());
         }
     }
 
@@ -115,7 +126,7 @@ public class Server {
         dataManagerWriter.addClientData(clientWrite);
     }
 
-    public void addServerData(ClockedData serverData){
+    public void addServerData(List<ClockedData> serverData){
         dataManagerWriter.addServerData(serverData);
     }
 }

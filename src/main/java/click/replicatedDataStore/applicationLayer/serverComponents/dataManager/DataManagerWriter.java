@@ -30,18 +30,19 @@ public class DataManagerWriter extends Thread{
         }
     }
 
-    private void write(ClockedData clockedData){
+    private void write(List<ClockedData> clockedDataList){
         numberOfWrites++;
         if (numberOfWrites % Config.NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE == 0) {
-            writeSecondaryIndex(clockedData);
+            writeSecondaryIndex(clockedDataList);
             numberOfWrites = 0;
         }else{
-            server.updateAndPersist(clockedData);
+            server.updateAndPersist(clockedDataList);
         }
     }
 
-    private void writeSecondaryIndex(ClockedData clockedData){
-        Key updatingKey = clockedData.key();
+    private void writeSecondaryIndex(List<ClockedData> clockedDataList){
+        ClockedData lastClockedData = clockedDataList.get(clockedDataList.size()-1);
+        Key updatingKey = lastClockedData.key();
         TreeMap<VectorClock, Key> secondaryIndex = server.getSecondaryIndex();
         //Iterate through the secondary index to find the key that is being updated.
         //Try to update that secondary index entry with the next entry in the primary index
@@ -60,8 +61,8 @@ public class DataManagerWriter extends Thread{
                 }
             }
         }
-        secondaryIndex.put(clockedData.vectorClock(), updatingKey);
-        server.updateAndPersist(clockedData, secondaryIndex);
+        secondaryIndex.put(lastClockedData.vectorClock(), updatingKey);
+        server.updateAndPersist(clockedDataList, secondaryIndex);
     }
 
     //Return the entry after the updatingKey in the primary index
@@ -81,7 +82,7 @@ public class DataManagerWriter extends Thread{
         queue.addClientData(clientWrite);
     }
 
-    public void addServerData(ClockedData serverData){
+    public void addServerData(List<ClockedData> serverData){
         queue.addServerData(serverData);
     }
 }
