@@ -7,4 +7,5 @@ public enum CommunicationMethods {
     SERVER_H_PUSH,
     SERVER_L_PUSH,
     SERVER_FETCH,
+    SERVER_INDEX,
 }

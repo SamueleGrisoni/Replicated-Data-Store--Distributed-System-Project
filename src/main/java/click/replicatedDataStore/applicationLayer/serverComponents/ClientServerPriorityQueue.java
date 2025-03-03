@@ -34,11 +34,12 @@ public class ClientServerPriorityQueue {
         return true;
     }
 
-    public void addServerData(List<ClockedData> serverData) {
+    public boolean addServerData(List<ClockedData> serverData) {
         synchronized (lock) {
             serversQueue.add(serverData);
             lock.notify();
         }
+        return true;
     }
 
     //Prefer user update to server update. If both queues are empty, update the lock so the writerThread requesting pops is blocked

@@ -48,13 +48,15 @@ public class TimeTravel {
     }
 
     //Function call each time I receive a LightPushMsg
-    public void checkMySync(VectorClock otherVectorClock) {
+    public boolean checkOutOfDate(VectorClock otherVectorClock) {
+        boolean outDate = false;
         VectorClock myVectorClock = server.getVectorClock();
         int compareRes = myVectorClock.compareTo(otherVectorClock);
         if(compareRes == VectorClockComparation.CONCURRENT.getCompareResult()
         || compareRes == VectorClockComparation.LESS_THAN.getCompareResult()){
-            serverConnectionManager.fetch(myVectorClock);
+            outDate = true;
         }
+        return outDate;
     }
 
     public List<ClockedData> computeFetch(VectorClock otherVectorClock) {

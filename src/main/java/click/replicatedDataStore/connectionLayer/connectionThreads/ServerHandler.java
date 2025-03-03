@@ -1,17 +1,16 @@
 package click.replicatedDataStore.connectionLayer.connectionThreads;
 
-import click.replicatedDataStore.connectionLayer.connectionManagers.ClientConnectionManager;
+import click.replicatedDataStore.connectionLayer.connectionManagers.ServerConnectionManager;
 import click.replicatedDataStore.connectionLayer.messages.AbstractMsg;
+import click.replicatedDataStore.connectionLayer.messages.ServerIndexMsg;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class ClientsHandler extends ConnectionHandler{
+public abstract class ServerHandler extends ConnectionHandler{
 
-    public ClientsHandler(Socket clientSocket, ClientConnectionManager manager) throws IOException{
-        super(clientSocket, manager);
+    public ServerHandler(Socket serverSocket, ServerConnectionManager manager) throws IOException {
+        super(serverSocket, manager);
     }
 
     public void run(){
@@ -27,6 +26,16 @@ public class ClientsHandler extends ConnectionHandler{
                     manager.logger.logErr(this.getClass(), "error the input from the socket isn't an AbstractMsg\n" + e.getMessage());
             }
         }
+    }
+
+    public void sendMessage(AbstractMsg msg){
+        new Thread(() -> {
+            try {
+                out.writeObject(msg);
+            } catch (IOException e) {
+                manager.logger.logErr(this.getClass(), "error: sending message" + e.getMessage());
+            }
+        });
     }
 
     public void stopRunning(){

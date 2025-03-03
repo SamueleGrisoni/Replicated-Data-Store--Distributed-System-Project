@@ -123,6 +123,17 @@ public class Server {
         return addresses.get(serverID);
     }
 
+    //todo remove this and substitute the one made by @author Sam
+    public List<Integer> getLowerServers(){
+        return null;
+    }
+
+    public Set<Integer> getOtherIndexes(){
+        Set<Integer> list = addresses.keySet();
+        list.remove(this.serverID);
+        return list;
+    }
+
     public void addClientData(ClientWrite clientWrite){
         dataManagerWriter.addClientData(clientWrite);
     }
