@@ -1,7 +1,7 @@
 package click.replicatedDataStore.connectionLayer.connectionThreads;
 
-import click.replicatedDataStore.ServerGlobalParameters;
 import click.replicatedDataStore.connectionLayer.connectionManagers.ConnectionManager;
+import click.replicatedDataStore.utlis.ServerConfig;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -26,7 +26,7 @@ public class ConnectionAcceptor extends Thread{
                 connectionManager.logger.logErr(this.getClass(), "error while opening server socket on port " + port + "\n" + e.getMessage());
 
                 try {
-                    sleep(ServerGlobalParameters.retryToOpenServerSocketMilliseconds);
+                    sleep(ServerConfig.retryToOpenServerSocketMilliseconds);
                 } catch (InterruptedException ex) {
                     throw new RuntimeException("error while sleeping\n" + ex.getMessage());
                 }

@@ -4,7 +4,7 @@ import click.replicatedDataStore.dataStructures.Pair;
 
 import java.util.Map;
 
-public class Config {
+public class ServerConfig {
     public static Map<Integer, Pair<String, Integer>> addresses = Map.of(
             0, new Pair<>("127.0.0.1", 4416)
     );
@@ -27,6 +27,9 @@ public class Config {
     public static final String FILES_EXTENSION = ".bin";
 
     public static final int LIGHT_PUSH_DELAY_MILLIS = 1000;
+    public static final int RANDOM_DELAY = 1000;
 
     public static int NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE = 5;
+    public static final boolean debug = true;
+    public static final int retryToOpenServerSocketMilliseconds = 500;
 }

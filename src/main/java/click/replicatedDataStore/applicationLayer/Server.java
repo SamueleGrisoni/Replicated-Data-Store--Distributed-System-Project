@@ -7,17 +7,18 @@ import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utlis.Config;
+import click.replicatedDataStore.utlis.ServerConfig;
 import click.replicatedDataStore.utlis.Key;
 import click.replicatedDataStore.dataStructures.Pair;
 
+import java.io.Serializable;
 import java.util.*;
 
 public class Server {
     private final Map<Integer, Pair<String, Integer>> addresses;
     private final int serverID;
     private final VectorClock vectorClock;
-    private final LinkedHashMap<Key, Object> primaryIndex;
+    private final LinkedHashMap<Key, Serializable> primaryIndex;
     private final TreeMap<VectorClock, Key> secondaryIndex;
     private final DataManagerReader dataManagerReader;
     private final DataManagerWriter dataManagerWriter;
@@ -29,12 +30,12 @@ public class Server {
         this.serverID = serverID;
         this.vectorClock = new VectorClock(serverNumber, serverID);
 
-        this.addresses = Config.addresses;
+        this.addresses = ServerConfig.addresses;
         this.timeTravel = null;
 
-        String dataFolderName = Config.DATA_FOLDER_NAME+serverID;
-        String primaryIndexFileName = Config.PRIMARY_INDEX_FILE_NAME + serverID + Config.FILES_EXTENSION;
-        String secondaryIndexFileName = Config.SECONDARY_INDEX_FILE_NAME + serverID + Config.FILES_EXTENSION;
+        String dataFolderName = ServerConfig.DATA_FOLDER_NAME+serverID;
+        String primaryIndexFileName = ServerConfig.PRIMARY_INDEX_FILE_NAME + serverID + ServerConfig.FILES_EXTENSION;
+        String secondaryIndexFileName = ServerConfig.SECONDARY_INDEX_FILE_NAME + serverID + ServerConfig.FILES_EXTENSION;
         this.persist = new Persist(dataFolderName, primaryIndexFileName, secondaryIndexFileName);
 
         this.primaryIndex = persist.recoverPrimaryIndex();
@@ -49,7 +50,7 @@ public class Server {
         this.dataManagerWriter.start();
 
         this.dataManagerReader = new DataManagerReader(this);
-        System.out.println("Server " + serverID + " started on " + Config.getServerAddress(serverID).first() + ":" + Config.getServerAddress(serverID).second());
+        System.out.println("Server " + serverID + " started on " + ServerConfig.getServerAddress(serverID).first() + ":" + ServerConfig.getServerAddress(serverID).second());
     }
 
     public void updateAndPersist(List<ClockedData> clockedDataList) {
@@ -101,7 +102,7 @@ public class Server {
     }
 
     //return a COPY of the primary index
-    public LinkedHashMap<Key, Object> getPrimaryIndex() {
+    public LinkedHashMap<Key, Serializable> getPrimaryIndex() {
         synchronized (primaryIndex){
             return new LinkedHashMap<>(primaryIndex);
         }

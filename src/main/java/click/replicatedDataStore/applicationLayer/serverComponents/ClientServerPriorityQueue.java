@@ -22,7 +22,7 @@ public class ClientServerPriorityQueue {
     }
 
     //Synchronized because the offset vector clock is calculated based on the current size of the clientQueue and current vector clock
-    public void addClientData(ClientWrite clientData) {
+    public boolean addClientData(ClientWrite clientData) {
         //Offset = current size of the clientQueue + this clientData (current size + 1)
         synchronized (lock) {
             VectorClock offsetVectorClock = server.getOffsetVectorClock(clientQueue.size() + 1);
@@ -31,6 +31,7 @@ public class ClientServerPriorityQueue {
             clientQueue.add(clockedData);
             lock.notify();
         }
+        return true;
     }
 
     public void addServerData(List<ClockedData> serverData) {

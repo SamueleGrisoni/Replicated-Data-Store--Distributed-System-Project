@@ -1,53 +1,31 @@
 package click.replicatedDataStore.connectionLayer.connectionManagers;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import click.replicatedDataStore.applicationLayer.Server;
+import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;
+import click.replicatedDataStore.applicationLayer.serverComponents.Logger;
+import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
+import click.replicatedDataStore.connectionLayer.CommunicationMethods;
+import click.replicatedDataStore.connectionLayer.messages.AbstractMsg;
+import click.replicatedDataStore.connectionLayer.messages.ServerFetchMsg;
+import click.replicatedDataStore.connectionLayer.messages.ServerHeavyPushMsg;
+import click.replicatedDataStore.dataStructures.ClockedData;
+import click.replicatedDataStore.dataStructures.VectorClock;
+
 import java.net.Socket;
-import java.util.HashMap;
+import java.util.List;
 
 public class ServerConnectionManager extends ConnectionManager{
-    private HashMap<String, Runnable> routingTable;
-    private ObjectOutputStream[] outChannels;
-    private ObjectInputStream[] inChannels;
-    private final Object que; //TODO make it the server queue
-    private final Object sync; //TODO make it the server timeTravel component
+    private final ClientServerPriorityQueue que;
+    private final TimeTravel sync;
+    private final Server server;
 
-    //TODO get as parameter the hashmap with the routes
-    public ServerConnectionManager(String ip, Integer port) {
-        super(port, null);
-        //TODO create connection acceptor thread
-        this.routingTable = new HashMap<>(); //TODO add routing
-        try {
-            Socket s = new Socket(ip, port);
-            //TODO add input and output streams
-        }catch (IOException e) {
-            e.getMessage(); //TODO handle exception
-        }
+    public ServerConnectionManager(Integer port, ClientServerPriorityQueue que, TimeTravel sync,
+                                   Logger logger, Server server) {
+        super(port, logger);
 
-        que = new Object(); //TODO make it the server queue
-        sync = new Object(); //TODO make it the server timeTravel component
-    }
-
-    public HashMap<String, Runnable> getRoutes() {
-        return routingTable;
-    }
-
-    public void addInChannels(ObjectInputStream in, int index){
-        this.inChannels[index] = in;
-    }
-
-    public void addOutChannels(ObjectOutputStream out, int index){
-        this.outChannels[index] = out;
-    }
-
-    public void sendToAll(Object msg){
-        //todo remove
-    }
-
-    public void sendTo(String ip, Object msg){
-        System.out.println("invoked sent to");
-        //todo remove
+        this.que = que;
+        this.sync = sync;
+        this.server = server;
     }
 
     @Override
@@ -57,6 +35,31 @@ public class ServerConnectionManager extends ConnectionManager{
 
     @Override
     public void handleNewConnection(Socket newConnection) {
+        this.routingTable.put(CommunicationMethods.SERVER_H_PUSH, this::heavyPush);
+        this.routingTable.put(CommunicationMethods.SERVER_L_PUSH, this::lightPush);
+        this.routingTable.put(CommunicationMethods.SERVER_FETCH, this::fetch);
+    }
+
+    public AbstractMsg heavyPush(AbstractMsg msg){
+        return null;
+    }
+    public void heavyPush(List<ClockedData> heavier){
+
+    }
+
+    public AbstractMsg lightPush(AbstractMsg msg){
+        return null;
+    }
+    public void lightPush(VectorClock light){
+
+    }
+
+    public AbstractMsg fetch(AbstractMsg msg){
+        ServerFetchMsg fetch = (ServerFetchMsg) msg;
+        List<ClockedData> list = sync.computeFetch(fetch.getPayload().first());
+        return new ServerHeavyPushMsg(list);
+    }
+    public void fetch(VectorClock current){
 
     }
 }

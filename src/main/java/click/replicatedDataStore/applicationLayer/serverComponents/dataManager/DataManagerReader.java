@@ -6,6 +6,7 @@ import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utlis.Key;
 
+import java.io.Serializable;
 import java.util.*;
 
 public class DataManagerReader{
@@ -18,20 +19,20 @@ public class DataManagerReader{
     }
 
     //A client request to read a key
-    public Object clientRead(Key key){
+    public Serializable clientRead(Key key){
         return server.getPrimaryIndex().get(key);
     }
 
     // Recover Data return a List of ClockedData.
     // If I have the right VectorClock use that, else, use max vectorClock in secondaryIndex older than the update
     public List<ClockedData> recoverData(VectorClock otherVectorClock){
-        LinkedHashMap<Key, Object> primaryIndex = server.getPrimaryIndex();
+        LinkedHashMap<Key, Serializable> primaryIndex = server.getPrimaryIndex();
         TreeMap<VectorClock, Key> secondaryIndex = server.getSecondaryIndex();
         Key startKey = secondaryIndex.get(otherVectorClock);
         List<ClockedData> dataToRecover = new ArrayList<>();
-        Iterator<Map.Entry<Key, Object>> primaryIndexIterator = primaryIndex.entrySet().iterator();
+        Iterator<Map.Entry<Key, Serializable>> primaryIndexIterator = primaryIndex.entrySet().iterator();
         while(primaryIndexIterator.hasNext()){
-            Map.Entry<Key, Object> entry = primaryIndexIterator.next();
+            Map.Entry<Key, Serializable> entry = primaryIndexIterator.next();
             //Iterate until the startKey is found, after that add every entry to the dataToRecover list
             if(entry.getKey().equals(startKey)){
                 VectorClock maxSecondaryInClock = computeSecondaryIndexClock(secondaryIndex, startKey);

@@ -74,7 +74,7 @@ public class RequestSenderTest {
             try {
                 ClientReadMsg input = ((ClientReadMsg) in.readObject());
                 assertEquals(key, input.getPayload());
-                out.writeObject(new ClientWriteMsg(key, value));
+                out.writeObject(new ClientWriteMsg(new ClientWrite(key, value)));
             } catch (Exception e) {
                 fail();
             }

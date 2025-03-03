@@ -1,6 +1,6 @@
 package click.replicatedDataStore.applicationLayer.serverComponents;
 
-import click.replicatedDataStore.ServerGlobalParameters;
+import click.replicatedDataStore.utlis.ServerConfig;
 
 public class Logger {
     /**
@@ -8,7 +8,7 @@ public class Logger {
      * @param msg message of the error to manage
      */
     public void logErr(Object classSource, String msg) {
-        if(ServerGlobalParameters.debug){
+        if(ServerConfig.debug){
             throw new RuntimeException("source: " + classSource + "\n" + "\n" + msg);
         }else{
             //todo log this on the view with some generic error message

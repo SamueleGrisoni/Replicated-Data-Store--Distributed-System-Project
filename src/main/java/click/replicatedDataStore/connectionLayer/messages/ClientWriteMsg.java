@@ -6,15 +6,10 @@ import click.replicatedDataStore.utlis.Key;
 
 import java.io.Serializable;
 
-public class ClientWriteMsg extends AbstractMsg{
+public class ClientWriteMsg extends AbstractMsg<ClientWrite>{
     /**
-     * @param key used to index
-     * @param value the value to store
+     * @param clientWrite the client write to package
      */
-    public ClientWriteMsg(Key key, Serializable value){
-        super(CommunicationMethods.CLIENT_WRITE, new ClientWrite(key, value));
-    }
-
     public ClientWriteMsg(ClientWrite clientWrite){
         super(CommunicationMethods.CLIENT_WRITE, clientWrite);
     }

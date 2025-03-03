@@ -5,7 +5,7 @@ import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utlis.Config;
+import click.replicatedDataStore.utlis.ServerConfig;
 import click.replicatedDataStore.utlis.Key;
 import org.junit.After;
 import org.junit.Assert;
@@ -306,14 +306,14 @@ public class DataManagerWriterTest {
 
     private Persist persistSetUp() throws IOException {
         // Use a unique folder name so we do not interfere with any existing data.
-        String folderName = Config.DATA_FOLDER_NAME + "-" + System.currentTimeMillis();
+        String folderName = ServerConfig.DATA_FOLDER_NAME + "-" + System.currentTimeMillis();
         persistFolder = getPersistFolder(folderName);
 
         // Create the folder and files
         persistFolder.mkdirs();
-        File dataFile = new File(persistFolder, Config.PRIMARY_INDEX_FILE_NAME + Config.FILES_EXTENSION);
+        File dataFile = new File(persistFolder, ServerConfig.PRIMARY_INDEX_FILE_NAME + ServerConfig.FILES_EXTENSION);
         dataFile.createNewFile();
-        File indexFile = new File(persistFolder, Config.SECONDARY_INDEX_FILE_NAME + Config.FILES_EXTENSION);
+        File indexFile = new File(persistFolder, ServerConfig.SECONDARY_INDEX_FILE_NAME + ServerConfig.FILES_EXTENSION);
         indexFile.createNewFile();
 
         //Create a new persist object
@@ -321,10 +321,10 @@ public class DataManagerWriterTest {
     }
 
     private void injectNUMBER_OF_WRITE_SECONDARY_INTERVAL(int value) {
-        System.out.println("Original NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE: " + Config.NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE);
+        System.out.println("Original NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE: " + ServerConfig.NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE);
         Field NUMBER_OF_WRITE_SECONDARY = null;
         try {
-            NUMBER_OF_WRITE_SECONDARY = Config.class.getDeclaredField("NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE");
+            NUMBER_OF_WRITE_SECONDARY = ServerConfig.class.getDeclaredField("NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE");
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
@@ -335,7 +335,7 @@ public class DataManagerWriterTest {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Injected NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE: " + Config.NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE);
+        System.out.println("Injected NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE: " + ServerConfig.NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE);
     }
 
     private VectorClock createComparableVectorClock(int serverNumber, int serverID, int offset){

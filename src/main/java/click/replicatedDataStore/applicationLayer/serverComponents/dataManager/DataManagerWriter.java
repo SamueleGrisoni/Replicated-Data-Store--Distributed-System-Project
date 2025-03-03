@@ -5,7 +5,7 @@ import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerP
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utlis.Config;
+import click.replicatedDataStore.utlis.ServerConfig;
 import click.replicatedDataStore.utlis.Key;
 
 import java.util.*;
@@ -32,7 +32,7 @@ public class DataManagerWriter extends Thread{
 
     private void write(List<ClockedData> clockedDataList){
         numberOfWrites++;
-        if (numberOfWrites % Config.NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE == 0) {
+        if (numberOfWrites % ServerConfig.NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE == 0) {
             writeSecondaryIndex(clockedDataList);
             numberOfWrites = 0;
         }else{

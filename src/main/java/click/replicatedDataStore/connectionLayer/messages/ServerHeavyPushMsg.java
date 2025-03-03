@@ -1,13 +1,20 @@
 package click.replicatedDataStore.connectionLayer.messages;
 
+import click.replicatedDataStore.connectionLayer.CommunicationMethods;
 import click.replicatedDataStore.dataStructures.ClockedData;
 
+import java.io.Serializable;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.List;
 
-public class ServerHeavyPushMsg extends AbstractMsg {
+public class ServerHeavyPushMsg extends AbstractMsg<List<ClockedData>> {
 
     public ServerHeavyPushMsg(List<ClockedData> clockedData){
-        super(null, null);
+        super(CommunicationMethods.SERVER_H_PUSH, clockedData);
+    }
+
+    public List<ClockedData> getPayload(){
+        return  payLoad;
     }
 }

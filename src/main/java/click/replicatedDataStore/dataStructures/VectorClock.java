@@ -1,4 +1,5 @@
 package click.replicatedDataStore.dataStructures;
+import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.VectorClockComparation;
 import click.replicatedDataStore.utlis.ClockTooFarAhead;
 
 import java.io.Serializable;
@@ -47,7 +48,7 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
     }
 
     //Compare the incoming clock with the server's clock. If the incoming clock is too far ahead, throw an exception
-    public static void checkIfUpdatable(VectorClock serverVectorClock, VectorClock incomingVectorClock) throws ClockTooFarAhead, IllegalArgumentException {
+    private void checkIfUpdatable(VectorClock serverVectorClock, VectorClock incomingVectorClock) throws ClockTooFarAhead, IllegalArgumentException {
         if (incomingVectorClock == null || incomingVectorClock.clock == null) {
             throw new IllegalArgumentException("The incoming vector clock is null");
         }
@@ -87,13 +88,13 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
             }
         }
         if(thisGreater && otherGreater){
-            return 1; //if clocks are concurrent, this.clock is considered greater
+            return VectorClockComparation.CONCURRENT.getCompareResult(); //if clocks are concurrent, this.clock is considered greater
         } else if(thisGreater){
-            return 1;
+            return VectorClockComparation.GREATER_THAN.getCompareResult();
         } else if(otherGreater){
-            return -1;
+            return -VectorClockComparation.LESS_THAN.getCompareResult();
         } else { //equal clocks
-            return 0;
+            return VectorClockComparation.EQUAL.getCompareResult();
         }
     }
 

@@ -6,6 +6,7 @@ import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.D
 import click.replicatedDataStore.connectionLayer.CommunicationMethods;
 import click.replicatedDataStore.connectionLayer.connectionThreads.ClientsHandler;
 import click.replicatedDataStore.connectionLayer.messages.*;
+import click.replicatedDataStore.dataStructures.ClientWrite;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -55,7 +56,7 @@ public class ClientConnectionManager extends ConnectionManager {
 
     private AbstractMsg readData(AbstractMsg msg){
         ClientReadMsg read = (ClientReadMsg) msg;
-        return new ClientWriteMsg(read.getPayload(), dataRead.read(read.getPayload()));
+        return new ClientWriteMsg(new ClientWrite(read.getPayload(), dataRead.clientRead(read.getPayload())));
     }
 
     private AbstractMsg writeData(AbstractMsg msg){

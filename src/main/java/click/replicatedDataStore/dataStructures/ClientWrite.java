@@ -4,5 +4,5 @@ import click.replicatedDataStore.utlis.Key;
 
 import java.io.Serializable;
 
-public record ClientWrite(Key key, Object value) implements Serializable {
+public record ClientWrite(Key key, Serializable value) implements Serializable {
 }

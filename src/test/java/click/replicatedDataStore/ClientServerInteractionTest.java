@@ -57,7 +57,7 @@ public class ClientServerInteractionTest {
             public Serializable answer(InvocationOnMock invocationOnMock) {
                 return value;
             }
-        }).when(mockDataRead).read(key);
+        }).when(mockDataRead).clientRead(key);
 
         // declare client and server communication classes
         ClientConnectionManager serverSide = new ClientConnectionManager(this.port, this.mockedQue, this.mockDataRead, this.serverLogger);

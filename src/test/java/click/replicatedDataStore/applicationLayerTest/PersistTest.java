@@ -3,7 +3,7 @@ package click.replicatedDataStore.applicationLayerTest;
 import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utlis.Config;
+import click.replicatedDataStore.utlis.ServerConfig;
 import click.replicatedDataStore.utlis.Key;
 import org.junit.After;
 import org.junit.Assert;
@@ -45,14 +45,14 @@ public class PersistTest implements Serializable {
     @Before
     public void setUp() throws Exception {
         // Use a unique folder name so we do not interfere with any existing data.
-        folderName = Config.DATA_FOLDER_NAME + "-" + System.currentTimeMillis();
+        folderName = ServerConfig.DATA_FOLDER_NAME + "-" + System.currentTimeMillis();
         persistFolder = getPersistFolder(folderName);
 
         // Create the folder and files
         persistFolder.mkdirs();
-        dataFile = new File(persistFolder, Config.PRIMARY_INDEX_FILE_NAME + Config.FILES_EXTENSION);
+        dataFile = new File(persistFolder, ServerConfig.PRIMARY_INDEX_FILE_NAME + ServerConfig.FILES_EXTENSION);
         dataFile.createNewFile();
-        indexFile = new File(persistFolder, Config.SECONDARY_INDEX_FILE_NAME + Config.FILES_EXTENSION);
+        indexFile = new File(persistFolder, ServerConfig.SECONDARY_INDEX_FILE_NAME + ServerConfig.FILES_EXTENSION);
         indexFile.createNewFile();
 
         //Create a new persist object
@@ -86,7 +86,7 @@ public class PersistTest implements Serializable {
     //File exists, but it is empty, it should still return an empty map
     @Test
     public void testRecoverPrimaryIndexEmpty() {
-        LinkedHashMap<Key, Object> recovered = persist.recoverPrimaryIndex();
+        LinkedHashMap<Key, Serializable> recovered = persist.recoverPrimaryIndex();
         assertTrue(recovered.isEmpty());
     }
 
@@ -111,8 +111,8 @@ public class PersistTest implements Serializable {
         ClockedData clockedData2 = new ClockedData(vectorClock, key2, "value2");
         persist.persist(clockedData2);
 
-        LinkedHashMap<Key, Object> recovered = persist.recoverPrimaryIndex();
-        for (Map.Entry<Key, Object> entry : recovered.entrySet()) {
+        LinkedHashMap<Key, Serializable> recovered = persist.recoverPrimaryIndex();
+        for (Map.Entry<Key, Serializable> entry : recovered.entrySet()) {
             System.out.println("Key: " + entry.getKey() + " Object: " + entry.getValue());
         }
         assertTrue(recovered.containsKey(key));
@@ -139,8 +139,8 @@ public class PersistTest implements Serializable {
 
         persist.persist(clockedData, secondaryIndex);
 
-        LinkedHashMap<Key, Object> recoveredPrimary = persist.recoverPrimaryIndex();
-        for (Map.Entry<Key, Object> entry : recoveredPrimary.entrySet()) {
+        LinkedHashMap<Key, Serializable> recoveredPrimary = persist.recoverPrimaryIndex();
+        for (Map.Entry<Key, Serializable> entry : recoveredPrimary.entrySet()) {
             System.out.println("Key: " + entry.getKey() + " Object: " + entry.getValue());
         }
         assertTrue(recoveredPrimary.containsKey(key));
@@ -163,7 +163,7 @@ public class PersistTest implements Serializable {
         vectorClock.incrementSelfClock();
         ClockedData clockedData2 = new ClockedData(vectorClock, key, "value2");
         persist.persist(clockedData2);
-        LinkedHashMap<Key, Object> recovered = persist.recoverPrimaryIndex();
+        LinkedHashMap<Key, Serializable> recovered = persist.recoverPrimaryIndex();
         assertEquals(1, recovered.size());
         assertEquals("value2", recovered.get(key));
     }

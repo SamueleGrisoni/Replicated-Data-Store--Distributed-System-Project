@@ -2,7 +2,9 @@ package click.replicatedDataStore.dataStructures;
 
 import click.replicatedDataStore.utlis.Key;
 
-public record ClockedData(VectorClock vectorClock, Key key, Object value) implements Comparable<ClockedData> {
+import java.io.Serializable;
+
+public record ClockedData(VectorClock vectorClock, Key key, Serializable value) implements Comparable<ClockedData> {
 
     @Override
     public int compareTo(ClockedData o) {

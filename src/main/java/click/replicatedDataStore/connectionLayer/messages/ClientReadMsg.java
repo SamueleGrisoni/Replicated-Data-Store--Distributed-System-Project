@@ -5,7 +5,7 @@ import click.replicatedDataStore.utlis.Key;
 
 import java.io.Serializable;
 
-public class ClientReadMsg extends AbstractMsg{
+public class ClientReadMsg extends AbstractMsg<Key>{
 
     /**
      * @param key to search

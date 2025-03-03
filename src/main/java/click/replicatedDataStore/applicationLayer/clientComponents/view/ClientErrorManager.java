@@ -1,6 +1,6 @@
 package click.replicatedDataStore.applicationLayer.clientComponents.view;
 
-import click.replicatedDataStore.ClientGlobalParameters;
+import click.replicatedDataStore.utlis.ClientGlobalParameters;
 
 public class ClientErrorManager {
 

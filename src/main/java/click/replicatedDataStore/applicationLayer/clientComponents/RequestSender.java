@@ -76,7 +76,8 @@ public class RequestSender {
      */
     public AnswerState write(Key key, Serializable value) {
         try {
-            out.writeObject(new ClientWriteMsg(key, value));
+            out.writeObject(new ClientWriteMsg(new ClientWrite(key, value
+            )));
             out.flush();
         }catch (IOException e){
             errorManager.logErr(this.getClass(),

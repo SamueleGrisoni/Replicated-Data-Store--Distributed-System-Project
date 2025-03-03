@@ -94,13 +94,13 @@ public class Persist {
 
     //Compact the primary index by reading the data file and writing the updated key-value pairs to a new file
     private void compactPrimaryIndex() {
-        Map<Key, Object> newPrimaryIndex = recoverPrimaryIndex();
+        Map<Key, Serializable> newPrimaryIndex = recoverPrimaryIndex();
         if(newPrimaryIndex.isEmpty()){
             return;
         }
         //overwrite the data file with the new primary index. Because it's a map the key-value is already updated to the latest value
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dataFilePath))) {
-            for (Map.Entry<Key, Object> entry : newPrimaryIndex.entrySet()) {
+            for (Map.Entry<Key, Serializable> entry : newPrimaryIndex.entrySet()) {
                 oos.writeObject(entry.getKey());
                 oos.writeObject(entry.getValue());
             }
@@ -109,8 +109,8 @@ public class Persist {
         }
     }
 
-    public LinkedHashMap<Key, Object> recoverPrimaryIndex() {
-        LinkedHashMap<Key, Object> primaryIndex = new LinkedHashMap<>();
+    public LinkedHashMap<Key, Serializable> recoverPrimaryIndex() {
+        LinkedHashMap<Key, Serializable> primaryIndex = new LinkedHashMap<>();
         if (!newDataFile) {
             File dataFile = new File(dataFilePath);
             if (dataFile.length() == 0) {
@@ -120,7 +120,7 @@ public class Persist {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(dataFile))) {
                 while (true) {
                     Key key = (Key) ois.readObject();
-                    Object value = ois.readObject();
+                    Serializable value = (Serializable) ois.readObject();
                     primaryIndex.put(key, value);
                 }
             } catch (EOFException ignored) {

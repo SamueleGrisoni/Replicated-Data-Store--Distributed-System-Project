@@ -159,7 +159,7 @@ public class ClientConnectionManagerTest {
             public Serializable answer(InvocationOnMock invocationOnMock) {
                 return value;
             }
-        }).when(mockDataRead).read(key);
+        }).when(mockDataRead).clientRead(key);
 
         try {
             out.writeObject(new ClientReadMsg(key));
