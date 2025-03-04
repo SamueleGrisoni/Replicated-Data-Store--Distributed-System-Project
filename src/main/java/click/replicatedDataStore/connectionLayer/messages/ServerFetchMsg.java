@@ -4,13 +4,13 @@ import click.replicatedDataStore.connectionLayer.CommunicationMethods;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.VectorClock;
 
-public class ServerFetchMsg extends AbstractMsg<Pair<VectorClock, Integer>> {
+public class ServerFetchMsg extends AbstractMsg<VectorClock> {
 
-    public ServerFetchMsg(VectorClock vectorClock, int serverIndex){
-        super(CommunicationMethods.SERVER_FETCH, new Pair<>(vectorClock, serverIndex));
+    public ServerFetchMsg(VectorClock vectorClock){
+        super(CommunicationMethods.SERVER_FETCH, vectorClock);
     }
 
-    public Pair<VectorClock, Integer> getPayload(){
+    public VectorClock getPayload(){
         return payLoad;
     }
 }
