@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 public class ClientConnectionManager extends ConnectionManager {
     private final List<ClientsHandler> clientsHandlerList;
@@ -54,14 +55,14 @@ public class ClientConnectionManager extends ConnectionManager {
         }
     }
 
-    private AbstractMsg readData(AbstractMsg msg){
+    private Optional<AbstractMsg> readData(AbstractMsg msg){
         ClientReadMsg read = (ClientReadMsg) msg;
-        return new ClientWriteMsg(new ClientWrite(read.getPayload(), dataRead.clientRead(read.getPayload())));
+        return Optional.of(new ClientWriteMsg(new ClientWrite(read.getPayload(), dataRead.clientRead(read.getPayload()))));
     }
 
-    private AbstractMsg writeData(AbstractMsg msg){
+    private Optional<AbstractMsg> writeData(AbstractMsg msg){
         ClientWriteMsg write = (ClientWriteMsg) msg;
-        return new StateAnswerMsg(que.addClientData(write.getPayload())? AnswerState.OK: AnswerState.FAIL);
+        return Optional.of(new StateAnswerMsg(que.addClientData(write.getPayload())? AnswerState.OK: AnswerState.FAIL));
     }
 
 

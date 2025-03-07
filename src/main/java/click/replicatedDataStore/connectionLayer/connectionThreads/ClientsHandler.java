@@ -14,21 +14,6 @@ public class ClientsHandler extends ConnectionHandler{
         super(clientSocket, manager);
     }
 
-    public void run(){
-        while(running){
-            try {
-                AbstractMsg request = (AbstractMsg) in.readObject();
-                out.writeObject(manager.resolveRequest(request));
-            }catch (IOException e){
-                if(running)
-                    manager.logger.logErr(this.getClass(), "error while processing a request\n" + e.getMessage());
-            }catch (ClassNotFoundException e){
-                if(running)
-                    manager.logger.logErr(this.getClass(), "error the input from the socket isn't an AbstractMsg\n" + e.getMessage());
-            }
-        }
-    }
-
     public void stopRunning(){
         running = false;
         try {

@@ -1,11 +1,13 @@
 package click.replicatedDataStore.connectionLayer.connectionThreads;
 
 import click.replicatedDataStore.connectionLayer.connectionManagers.ConnectionManager;
+import click.replicatedDataStore.connectionLayer.messages.AbstractMsg;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Optional;
 
 public abstract class ConnectionHandler extends Thread{
     protected final ObjectOutputStream out;
@@ -19,7 +21,31 @@ public abstract class ConnectionHandler extends Thread{
         this.manager = manager;
     }
 
-    public abstract void run();
+    public void run(){
+        while(running){
+            try {
+                AbstractMsg request = (AbstractMsg) in.readObject();
+                Thread response = new Thread(() -> {
+                    Optional<AbstractMsg> retMsg = manager.resolveRequest(request);
+                    if(retMsg.isPresent()) {
+                        try {
+                            out.writeObject(retMsg.get());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                });
+                response.start();
+            }catch (IOException e){
+                if(running)
+                    manager.logger.logErr(this.getClass(), "error while processing a request\n" + e.getMessage());
+            }catch (ClassNotFoundException e){
+                if(running)
+                    manager.logger.logErr(this.getClass(), "error the input from the socket isn't an AbstractMsg\n" + e.getMessage());
+            }
+        }
+    }
+
     protected void stopRunning(){
         running = false;
     }
