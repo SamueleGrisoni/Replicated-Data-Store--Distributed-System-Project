@@ -42,6 +42,7 @@ public class ServerMock {
             callbackFunction.apply(in, out);
 
             try {
+                assert socket != null;
                 socket.close();
             } catch (IOException e) {}
         });
