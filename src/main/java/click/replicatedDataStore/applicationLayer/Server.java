@@ -26,6 +26,7 @@ public class Server {
     private final TimeTravel timeTravel;
     private final Persist persist;
 
+    //todo make the serverNumber a config parameter. Vector clocks take it from config
     public Server(int serverID, int serverNumber) {
         this.serverID = serverID;
         this.vectorClock = new VectorClock(serverNumber, serverID);

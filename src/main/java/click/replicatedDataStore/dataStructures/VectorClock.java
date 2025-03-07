@@ -9,6 +9,7 @@ import java.util.Objects;
 public class VectorClock implements Comparable<VectorClock>, Serializable {
     private final int[] clock;
     private final int serverID;
+
     public VectorClock(int serverNumber, int serverID) {
         if(serverID > serverNumber-1){
             throw new IllegalArgumentException("serverID is greater than the max amount of server");
@@ -92,7 +93,7 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
         } else if(thisGreater){
             return VectorClockComparation.GREATER_THAN.getCompareResult();
         } else if(otherGreater){
-            return -VectorClockComparation.LESS_THAN.getCompareResult();
+            return VectorClockComparation.LESS_THAN.getCompareResult();
         } else { //equal clocks
             return VectorClockComparation.EQUAL.getCompareResult();
         }

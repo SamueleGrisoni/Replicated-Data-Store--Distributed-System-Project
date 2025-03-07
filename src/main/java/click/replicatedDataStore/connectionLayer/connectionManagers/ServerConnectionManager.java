@@ -18,12 +18,13 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class ServerConnectionManager extends ConnectionManager{
     private final ClientServerPriorityQueue que;
     private final TimeTravel sync;
     private final Server server;
-    private final Map<Integer, ServerHandler> serverHandler = new HashMap<>();
+    private final Map<Integer, ServerHandler> serverHandlersMap = new HashMap<>();
 
     //todo setup recovery mechanisms
     public ServerConnectionManager(Integer port, ClientServerPriorityQueue que, TimeTravel sync,
@@ -46,6 +47,7 @@ public class ServerConnectionManager extends ConnectionManager{
     @Override
     public void handleNewConnection(Socket newConnection) {
         try {
+            //the Server handler constructor will put itself in the map
             ServerHandler newServer = new PassiveServerHandler(newConnection, this);
             newServer.start();
         } catch (IOException e){
@@ -60,6 +62,7 @@ public class ServerConnectionManager extends ConnectionManager{
                 Pair<String, Integer> ipPort = server.getAddressAndPortPairOf(index);
                 try{
                     Socket socket = new Socket(ipPort.first(), ipPort.second());
+                    //the Server handler constructor will put itself in the map
                     ActiveServerHandler serverHandler = new ActiveServerHandler(socket, this, index);
                     serverHandler.start();
                 } catch (IOException e){
@@ -72,40 +75,46 @@ public class ServerConnectionManager extends ConnectionManager{
         });
     }
 
-    public AbstractMsg handleHeavyPush(AbstractMsg msg){
+    public Optional<AbstractMsg> handleHeavyPush(AbstractMsg msg){
         ServerHeavyPushMsg hPush = (ServerHeavyPushMsg) msg;
-        return new StateAnswerMsg(que.addServerData(hPush.getPayload())? AnswerState.OK: AnswerState.FAIL);
-    }
-    public void heavyPush(List<ClockedData> heavy){
-        for (Integer i : server.getOtherIndexes()){
-            serverHandler.get(i).sendMessage(new ServerHeavyPushMsg(heavy));
-        }
+        return Optional.empty();
     }
 
-    public AbstractMsg handleLightPush(AbstractMsg msg){
+    public Optional<AbstractMsg> handleLightPush(AbstractMsg msg){
         ServerLightPushMsg lPush = (ServerLightPushMsg) msg;
-         return sync.checkOutOfDate(lPush.getPayload())? new ServerFetchMsg(this.server.getVectorClock()) : new StateAnswerMsg(AnswerState.OK);
+        return sync.checkOutOfDate(lPush.getPayload())?
+                Optional.of(new ServerFetchMsg(this.server.getVectorClock())) :
+                Optional.empty();
+    }
+
+    public Optional<AbstractMsg> fetch(AbstractMsg msg){
+        ServerFetchMsg fetch = (ServerFetchMsg) msg;
+        List<ClockedData> list = sync.computeFetch(fetch.getPayload());
+        if(!list.isEmpty())
+            return Optional.of(new ServerHeavyPushMsg(list));
+        else
+            return Optional.empty();
+    }
+
+    public void heavyPush(List<ClockedData> heavy){
+        for (Integer i : server.getOtherIndexes()){
+            serverHandlersMap.get(i).sendMessage(new ServerHeavyPushMsg(heavy));
+        }
     }
     public void lightPush(VectorClock light){
         for (Integer i : server.getOtherIndexes()){
-            serverHandler.get(i).sendMessage(new ServerLightPushMsg(light));
+            serverHandlersMap.get(i).sendMessage(new ServerLightPushMsg(light));
         }
-    }
-
-    public AbstractMsg fetch(AbstractMsg msg){
-        ServerFetchMsg fetch = (ServerFetchMsg) msg;
-        List<ClockedData> list = sync.computeFetch(fetch.getPayload());
-        return new ServerHeavyPushMsg(list);
     }
 
     public void stop(){
         super.stop();
-        for(ServerHandler server: serverHandler.values()){
+        for(ServerHandler server: serverHandlersMap.values()){
             server.stopRunning();
         }
     }
 
     public void addIndexed(Integer index, ServerHandler serverHandler){
-        this.serverHandler.put(index, serverHandler);
+        this.serverHandlersMap.put(index, serverHandler);
     }
 }

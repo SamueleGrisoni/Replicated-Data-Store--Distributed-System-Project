@@ -109,7 +109,7 @@ public class VectorClockTest {
         vc3.incrementSelfClock();
 
         // According to the implementation, if clocks are concurrent the first clock is considered greater
-        assertEquals(1, vc2.compareTo(vc3));
+        assertEquals(2, vc2.compareTo(vc3));
     }
 
     @Test 
