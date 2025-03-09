@@ -37,12 +37,12 @@ public class TimeTravel {
 
     private void lightPusherFunction() {
         while (!stopLightPusher) {
-            this.lightPush(server.getVectorClock());
             try {
                 Thread.sleep(ServerConfig.LIGHT_PUSH_DELAY_MILLIS + rand.nextInt(ServerConfig.LIGHT_PUSH_RANDOM_DELAY_MILLIS));
             } catch (InterruptedException e) {
                 Thread.currentThread().start();
             }
+            this.lightPush(server.getVectorClock());
         }
     }
 
@@ -59,8 +59,14 @@ public class TimeTravel {
     }
 
     public List<ClockedData> computeFetch(VectorClock otherVectorClock) {
-        VectorClock calcClock = server.getSecondaryIndex().ceilingKey(otherVectorClock);
-        //todo null means send me all
+        TreeMap<VectorClock, Key> secInd = server.getSecondaryIndex();
+        VectorClock calcClock = new VectorClock(server.getNumberOfServers(), server.getServerID());
+        for (VectorClock thisClock : secInd.descendingKeySet()) {
+            if (thisClock.compareTo(otherVectorClock) <= 0)
+                break;
+            else
+                calcClock = thisClock;
+        }
         return this.dataManagerReader.recoverData(calcClock);
     }
 
