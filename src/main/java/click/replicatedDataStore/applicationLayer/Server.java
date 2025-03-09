@@ -27,6 +27,7 @@ public class Server {
     private final Persist persist;
 
     //todo make the serverNumber a config parameter. Vector clocks take it from config
+    //todo move the clock in a separate class. server just a holder and initializer
     public Server(int serverID, int serverNumber) {
         this.serverID = serverID;
         this.vectorClock = new VectorClock(serverNumber, serverID);
@@ -127,6 +128,14 @@ public class Server {
     //todo remove this and substitute the one made by @author Sam
     public List<Integer> getLowerServers(){
         return null;
+    }
+
+    public int getNumberOfServers(){
+        return addresses.size();
+    }
+
+    public int getServerID(){
+        return Integer.valueOf(this.serverID);
     }
 
     public Set<Integer> getOtherIndexes(){

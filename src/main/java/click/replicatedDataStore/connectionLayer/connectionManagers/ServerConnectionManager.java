@@ -19,19 +19,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 public class ServerConnectionManager extends ConnectionManager{
-    private final ClientServerPriorityQueue que;
     private final TimeTravel sync;
     private final Server server;
     private final Map<Integer, ServerHandler> serverHandlersMap = new HashMap<>();
 
     //todo setup recovery mechanisms
-    public ServerConnectionManager(Integer port, ClientServerPriorityQueue que, TimeTravel sync,
+    public ServerConnectionManager(Integer port, TimeTravel sync,
                                    Logger logger, Server server) {
         super(port, logger);
 
-        this.que = que;
         this.sync = sync;
         this.server = server;
         this.createConnections();
@@ -39,9 +38,9 @@ public class ServerConnectionManager extends ConnectionManager{
 
     @Override
     public void setupRouting() {
-        this.routingTable.put(CommunicationMethods.SERVER_H_PUSH, this::handleHeavyPush);
-        this.routingTable.put(CommunicationMethods.SERVER_L_PUSH, this::handleLightPush);
-        this.routingTable.put(CommunicationMethods.SERVER_FETCH, this::fetch);
+        this.routingTable.put(CommunicationMethods.SERVER_H_PUSH, sync::handleHeavyPush);
+        this.routingTable.put(CommunicationMethods.SERVER_L_PUSH, sync::handleLightPush);
+        this.routingTable.put(CommunicationMethods.SERVER_FETCH, sync::fetch);
     }
 
     @Override
@@ -56,8 +55,9 @@ public class ServerConnectionManager extends ConnectionManager{
     }
 
     private void createConnections(){
-        List<Integer> serverIndexes = server.getLowerServers();
-        serverIndexes.forEach(index -> {
+        IntStream serverIndexes = IntStream.range(0, server.getNumberOfServers());
+        int myId = server.getServerID();
+        serverIndexes.filter(index -> index != myId).forEach(index -> {
             Thread t = new Thread(() -> {
                 Pair<String, Integer> ipPort = server.getAddressAndPortPairOf(index);
                 try{
@@ -75,30 +75,13 @@ public class ServerConnectionManager extends ConnectionManager{
         });
     }
 
-    public Optional<AbstractMsg> handleHeavyPush(AbstractMsg msg){
-        ServerHeavyPushMsg hPush = (ServerHeavyPushMsg) msg;
-        return Optional.empty();
+    public void sendMessage(AbstractMsg msg, int recipientIndex){
+        serverHandlersMap.get(recipientIndex).sendMessage(msg);
     }
 
-    public Optional<AbstractMsg> handleLightPush(AbstractMsg msg){
-        ServerLightPushMsg lPush = (ServerLightPushMsg) msg;
-        return sync.checkOutOfDate(lPush.getPayload())?
-                Optional.of(new ServerFetchMsg(this.server.getVectorClock())) :
-                Optional.empty();
-    }
-
-    public Optional<AbstractMsg> fetch(AbstractMsg msg){
-        ServerFetchMsg fetch = (ServerFetchMsg) msg;
-        List<ClockedData> list = sync.computeFetch(fetch.getPayload());
-        if(!list.isEmpty())
-            return Optional.of(new ServerHeavyPushMsg(list));
-        else
-            return Optional.empty();
-    }
-
-    public void heavyPush(List<ClockedData> heavy){
+    public void broadcastMessage(AbstractMsg msg){
         for (Integer i : server.getOtherIndexes()){
-            serverHandlersMap.get(i).sendMessage(new ServerHeavyPushMsg(heavy));
+            serverHandlersMap.get(i).sendMessage(msg);
         }
     }
     public void lightPush(VectorClock light){
@@ -115,6 +98,10 @@ public class ServerConnectionManager extends ConnectionManager{
     }
 
     public void addIndexed(Integer index, ServerHandler serverHandler){
+        if(this.serverHandlersMap.containsKey(index)){
+            ServerHandler oldHandler = serverHandlersMap.get(index);
+            oldHandler.stopRunning();
+        }
         this.serverHandlersMap.put(index, serverHandler);
     }
 }
