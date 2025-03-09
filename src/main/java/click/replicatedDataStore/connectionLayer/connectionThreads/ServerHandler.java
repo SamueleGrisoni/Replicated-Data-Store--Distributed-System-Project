@@ -2,7 +2,6 @@ package click.replicatedDataStore.connectionLayer.connectionThreads;
 
 import click.replicatedDataStore.connectionLayer.connectionManagers.ServerConnectionManager;
 import click.replicatedDataStore.connectionLayer.messages.AbstractMsg;
-import click.replicatedDataStore.connectionLayer.messages.ServerIndexMsg;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -13,7 +12,7 @@ public abstract class ServerHandler extends ConnectionHandler{
         super(serverSocket, manager);
     }
 
-    public void sendMessage(AbstractMsg msg){
+    public void sendMessage(AbstractMsg<?> msg){
         new Thread(() -> {
             try {
                 out.writeObject(msg);

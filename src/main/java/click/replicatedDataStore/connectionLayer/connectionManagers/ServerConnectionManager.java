@@ -9,7 +9,6 @@ import click.replicatedDataStore.connectionLayer.connectionThreads.PassiveServer
 import click.replicatedDataStore.connectionLayer.connectionThreads.ServerHandler;
 import click.replicatedDataStore.connectionLayer.messages.*;
 import click.replicatedDataStore.dataStructures.Pair;
-import click.replicatedDataStore.dataStructures.VectorClock;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -22,7 +21,6 @@ public class ServerConnectionManager extends ConnectionManager{
     private final Server server;
     private final Map<Integer, ServerHandler> serverHandlersMap = new HashMap<>();
 
-    //todo setup recovery mechanisms
     public ServerConnectionManager(Integer port, TimeTravel sync,
                                    Logger logger, Server server) {
         super(port, logger);
@@ -78,11 +76,6 @@ public class ServerConnectionManager extends ConnectionManager{
     public void broadcastMessage(AbstractMsg<?> msg){
         for (Integer i : server.getOtherIndexes()){
             serverHandlersMap.get(i).sendMessage(msg);
-        }
-    }
-    public void lightPush(VectorClock light){
-        for (Integer i : server.getOtherIndexes()){
-            serverHandlersMap.get(i).sendMessage(new ServerLightPushMsg(light));
         }
     }
 
