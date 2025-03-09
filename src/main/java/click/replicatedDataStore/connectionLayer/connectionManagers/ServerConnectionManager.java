@@ -1,7 +1,6 @@
 package click.replicatedDataStore.connectionLayer.connectionManagers;
 
 import click.replicatedDataStore.applicationLayer.Server;
-import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;
 import click.replicatedDataStore.applicationLayer.serverComponents.Logger;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
 import click.replicatedDataStore.connectionLayer.CommunicationMethods;
@@ -9,16 +8,13 @@ import click.replicatedDataStore.connectionLayer.connectionThreads.ActiveServerH
 import click.replicatedDataStore.connectionLayer.connectionThreads.PassiveServerHandler;
 import click.replicatedDataStore.connectionLayer.connectionThreads.ServerHandler;
 import click.replicatedDataStore.connectionLayer.messages.*;
-import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.VectorClock;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.IntStream;
 
 public class ServerConnectionManager extends ConnectionManager{
@@ -40,7 +36,7 @@ public class ServerConnectionManager extends ConnectionManager{
     public void setupRouting() {
         this.routingTable.put(CommunicationMethods.SERVER_H_PUSH, sync::handleHeavyPush);
         this.routingTable.put(CommunicationMethods.SERVER_L_PUSH, sync::handleLightPush);
-        this.routingTable.put(CommunicationMethods.SERVER_FETCH, sync::fetch);
+        this.routingTable.put(CommunicationMethods.SERVER_FETCH, sync::handleFetch);
     }
 
     @Override
@@ -75,11 +71,11 @@ public class ServerConnectionManager extends ConnectionManager{
         });
     }
 
-    public void sendMessage(AbstractMsg msg, int recipientIndex){
+    public void sendMessage(AbstractMsg<?> msg, int recipientIndex){
         serverHandlersMap.get(recipientIndex).sendMessage(msg);
     }
 
-    public void broadcastMessage(AbstractMsg msg){
+    public void broadcastMessage(AbstractMsg<?> msg){
         for (Integer i : server.getOtherIndexes()){
             serverHandlersMap.get(i).sendMessage(msg);
         }
@@ -92,8 +88,8 @@ public class ServerConnectionManager extends ConnectionManager{
 
     public void stop(){
         super.stop();
-        for(ServerHandler server: serverHandlersMap.values()){
-            server.stopRunning();
+        for(ServerHandler serverHandler: serverHandlersMap.values()){
+            serverHandler.stopRunning();
         }
     }
 

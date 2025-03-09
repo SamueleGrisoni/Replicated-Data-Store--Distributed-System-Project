@@ -24,9 +24,9 @@ public abstract class ConnectionHandler extends Thread{
     public void run(){
         while(running){
             try {
-                AbstractMsg request = (AbstractMsg) in.readObject();
+                AbstractMsg<?> request = (AbstractMsg<?>) in.readObject();
                 Thread response = new Thread(() -> {
-                    Optional<AbstractMsg> retMsg = manager.resolveRequest(request);
+                    Optional<AbstractMsg<?>> retMsg = manager.resolveRequest(request);
                     if(retMsg.isPresent()) {
                         try {
                             out.writeObject(retMsg.get());

@@ -55,12 +55,12 @@ public class ClientConnectionManager extends ConnectionManager {
         }
     }
 
-    private Optional<AbstractMsg> readData(AbstractMsg msg){
+    private Optional<AbstractMsg<?>> readData(AbstractMsg<?> msg){
         ClientReadMsg read = (ClientReadMsg) msg;
         return Optional.of(new ClientWriteMsg(new ClientWrite(read.getPayload(), dataRead.clientRead(read.getPayload()))));
     }
 
-    private Optional<AbstractMsg> writeData(AbstractMsg msg){
+    private Optional<AbstractMsg<?>> writeData(AbstractMsg<?> msg){
         ClientWriteMsg write = (ClientWriteMsg) msg;
         return Optional.of(new StateAnswerMsg(que.addClientData(write.getPayload())? AnswerState.OK: AnswerState.FAIL));
     }

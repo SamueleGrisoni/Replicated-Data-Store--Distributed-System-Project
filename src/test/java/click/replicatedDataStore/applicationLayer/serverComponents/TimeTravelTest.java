@@ -257,8 +257,8 @@ public class TimeTravelTest {
         parallelClock.incrementSelfClock();
         ServerLightPushMsg lightPushMsg1 = new ServerLightPushMsg(this.myVectorClock);
         ServerLightPushMsg lightPushMsg2 = new ServerLightPushMsg(parallelClock);
-        Optional<AbstractMsg> abstractMsg1 = this.sync.handleLightPush(lightPushMsg1);
-        Optional<AbstractMsg> abstractMsg2 = this.sync.handleLightPush(lightPushMsg2);
+        Optional<AbstractMsg<?>> abstractMsg1 = this.sync.handleLightPush(lightPushMsg1);
+        Optional<AbstractMsg<?>> abstractMsg2 = this.sync.handleLightPush(lightPushMsg2);
         Assert.assertTrue(abstractMsg1.isEmpty());
         Assert.assertTrue(abstractMsg2.isPresent());
     }
