@@ -1,6 +1,7 @@
 package click.replicatedDataStore.connectionLayer.connectionManagers;
 
 import click.replicatedDataStore.InjectionUtils;
+import click.replicatedDataStore.TestUtils;
 import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.Logger;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
@@ -34,8 +35,8 @@ public class ServerConnectionManagerTest {
     private TimeTravel sync;
 
     private final String ip = "localhost";
-    private int port0 = 8085;
-    private int port1 = 8089;
+    private int port0 = TestUtils.getPort();
+    private int port1 = TestUtils.getPort();
     private int nServer = 2;
     Map<Integer, Pair<String, Integer>> portsIpIndexes = new HashMap<>();
 
@@ -148,7 +149,7 @@ public class ServerConnectionManagerTest {
         Mockito.verify(sync1).handleFetch(fetch);
     }
 
-    int port2 = 8095;
+    int port2 = TestUtils.getPort();;
     Server server2 = Mockito.mock(Server.class);
     TimeTravel sync1 = Mockito.mock(TimeTravel.class);
     TimeTravel sync2 = Mockito.mock(TimeTravel.class);
