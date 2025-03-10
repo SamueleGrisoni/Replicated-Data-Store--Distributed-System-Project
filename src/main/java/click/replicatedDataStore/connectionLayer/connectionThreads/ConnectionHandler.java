@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Objects;
 import java.util.Optional;
 
 public abstract class ConnectionHandler extends Thread{
@@ -24,7 +25,8 @@ public abstract class ConnectionHandler extends Thread{
     public void run(){
         while(running){
             try {
-                AbstractMsg<?> request = (AbstractMsg<?>) in.readObject();
+                Object readObj = this.in.readObject();
+                AbstractMsg<?> request = (AbstractMsg<?>) readObj;
                 Thread response = new Thread(() -> {
                     Optional<AbstractMsg<?>> retMsg = manager.resolveRequest(request);
                     if(retMsg.isPresent()) {

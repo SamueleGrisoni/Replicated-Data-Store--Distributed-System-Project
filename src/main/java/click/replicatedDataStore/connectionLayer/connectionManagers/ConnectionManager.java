@@ -5,9 +5,7 @@ import click.replicatedDataStore.connectionLayer.CommunicationMethods;
 import click.replicatedDataStore.connectionLayer.connectionThreads.ConnectionAcceptor;
 import click.replicatedDataStore.connectionLayer.messages.AbstractMsg;
 
-import java.io.IOException;
 import java.net.Socket;
-import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.function.Function;

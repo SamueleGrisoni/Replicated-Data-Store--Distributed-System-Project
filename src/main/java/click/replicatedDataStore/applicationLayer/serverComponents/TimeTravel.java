@@ -78,21 +78,18 @@ public class TimeTravel {
         serverConnectionManager.broadcastMessage(new ServerLightPushMsg(light));
     }
 
-    public Optional<AbstractMsg<?>> handleHeavyPush(AbstractMsg<?> msg){
-        ServerHeavyPushMsg hPush = (ServerHeavyPushMsg) msg;
+    public Optional<AbstractMsg<?>> handleHeavyPush(ServerHeavyPushMsg hPush){
         this.que.addServerData(hPush.getPayload());
         return Optional.empty();
     }
 
-    public Optional<AbstractMsg<?>> handleLightPush(AbstractMsg<?> msg){
-        ServerLightPushMsg lPush = (ServerLightPushMsg) msg;
+    public Optional<AbstractMsg<?>> handleLightPush(ServerLightPushMsg lPush){
         return this.checkOutOfDate(lPush.getPayload())?
                 Optional.of(new ServerFetchMsg(this.server.getVectorClock())) :
                 Optional.empty();
     }
 
-    public Optional<AbstractMsg<?>> handleFetch(AbstractMsg<?> msg){
-        ServerFetchMsg fetch = (ServerFetchMsg) msg;
+    public Optional<AbstractMsg<?>> handleFetch(ServerFetchMsg fetch){
         List<ClockedData> list = this.computeFetch(fetch.getPayload());
         if(!list.isEmpty())
             return Optional.of(new ServerHeavyPushMsg(list));

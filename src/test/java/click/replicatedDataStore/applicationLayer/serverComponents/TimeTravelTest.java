@@ -18,10 +18,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 
@@ -38,7 +35,7 @@ public class TimeTravelTest {
 
     private final int serverN = 2;
     private final int myServerId = 0;
-    private VectorClock myVectorClock = new VectorClock(this.serverN, this.myServerId);
+    private final VectorClock myVectorClock = new VectorClock(this.serverN, this.myServerId);
 
     @Before
     public void setUp(){
@@ -118,12 +115,7 @@ public class TimeTravelTest {
         myPrimaryIndex.put(this.myVectorClock, lastKey);
 
         Mockito.doAnswer(invocationOnMock -> myPrimaryIndex).when(server).getSecondaryIndex();
-        Mockito.doAnswer(new Answer() {
-            @Override
-            public List<ClockedData> answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return myData;
-            }
-        }).when(dataManagerReader).recoverData(this.myVectorClock);
+        Mockito.doAnswer(invocationOnMock -> myData).when(dataManagerReader).recoverData(this.myVectorClock);
 
         List<ClockedData> obtainedData = this.sync.computeFetch(externalVector);
         Assert.assertEquals(myData, obtainedData);
@@ -149,12 +141,7 @@ public class TimeTravelTest {
         myPrimaryIndex.put(this.myVectorClock, lastKey);
 
         Mockito.doAnswer(invocationOnMock -> myPrimaryIndex).when(server).getSecondaryIndex();
-        Mockito.doAnswer(new Answer() {
-            @Override
-            public List<ClockedData> answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return myData;
-            }
-        }).when(dataManagerReader).recoverData(this.myVectorClock);
+        Mockito.doAnswer(invocationOnMock -> myData).when(dataManagerReader).recoverData(this.myVectorClock);
 
         List<ClockedData> obtainedData = this.sync.computeFetch(externalVector);
         Assert.assertEquals(myData, obtainedData);
@@ -188,7 +175,7 @@ public class TimeTravelTest {
                 myMidData.add(newData);
                 midKey = iterationKey;
             }else {
-                //externalClock.incrementSelfClock();
+                externalClock.incrementSelfClock();
             }
         }
 
@@ -197,19 +184,11 @@ public class TimeTravelTest {
         myPrimaryIndex.put(midClock, midKey);
 
         Mockito.doAnswer(invocationOnMock -> myPrimaryIndex).when(server).getSecondaryIndex();
-        Mockito.doAnswer(new Answer() {
-            @Override
-            public List<ClockedData> answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return myData;
-            }
-        }).when(dataManagerReader).recoverData(new VectorClock(this.serverN, 0));
-        Mockito.doAnswer(new Answer() {
-            @Override
-            public List<ClockedData> answer(InvocationOnMock invocationOnMock) throws Throwable {
-                List<ClockedData> copyData = new LinkedList<>(myData);
-                copyData.removeAll(myMidData);
-                return copyData;
-            }
+        Mockito.doAnswer(invocationOnMock -> myData).when(dataManagerReader).recoverData(new VectorClock(this.serverN, 0));
+        Mockito.doAnswer(invocationOnMock -> {
+            List<ClockedData> copyData = new LinkedList<>(myData);
+            copyData.removeAll(myMidData);
+            return copyData;
         }).when(dataManagerReader).recoverData(this.myVectorClock);
 
         List<ClockedData> copyData = new LinkedList<>(myData);
@@ -224,7 +203,7 @@ public class TimeTravelTest {
 
         int increment = 5;
         List<ClockedData> myData = new LinkedList<>();
-        Key lastKey = new StringKey("");
+        Key lastKey;
 
         for (int i = 0; i<increment; i++){
             this.myVectorClock.incrementSelfClock();
@@ -244,13 +223,9 @@ public class TimeTravelTest {
         this.sync = new TimeTravel(this.server, this.dataManagerReader, this.connectionManager, this.que);
 
         int increment = 5;
-        List<ClockedData> myData = new LinkedList<>();
-        Key lastKey = new StringKey("");
 
         for (int i = 0; i<increment; i++){
             this.myVectorClock.incrementSelfClock();
-            lastKey = new StringKey(Integer.toString(i));
-            myData.add(new ClockedData(new VectorClock(this.myVectorClock, 0), lastKey, i));
         }
 
         VectorClock parallelClock = new VectorClock(this.serverN, 1);
