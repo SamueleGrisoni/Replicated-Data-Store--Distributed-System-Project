@@ -14,4 +14,12 @@ public abstract class AbstractMsg<T> implements Serializable{
     }
 
     public abstract T getPayload();
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof AbstractMsg<?>)
+            return ((AbstractMsg<?>) obj).payLoad.equals(this.payLoad);
+        else
+            return false;
+    }
 }

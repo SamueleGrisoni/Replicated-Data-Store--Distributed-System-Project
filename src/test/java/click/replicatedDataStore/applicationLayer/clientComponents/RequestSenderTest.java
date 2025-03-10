@@ -1,7 +1,9 @@
 package click.replicatedDataStore.applicationLayer.clientComponents;
 
 import click.replicatedDataStore.InjectionUtils;
+import click.replicatedDataStore.PortRetryRule;
 import click.replicatedDataStore.ServerMock;
+import click.replicatedDataStore.TestUtils;
 import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.clientComponents.view.ClientErrorManager;
 import click.replicatedDataStore.connectionLayer.messages.AnswerState;
@@ -10,10 +12,7 @@ import click.replicatedDataStore.connectionLayer.messages.ClientWriteMsg;
 import click.replicatedDataStore.connectionLayer.messages.StateAnswerMsg;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.keyImplementations.StringKey;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -28,13 +27,18 @@ import static org.junit.Assert.*;
 
 public class RequestSenderTest {
     private ClientErrorManager errorManager;
-    private int serverPort = 8080;
+    private int serverPort;
     private String serverIp = "localhost";
+
+    @Rule
+    public PortRetryRule retryRule = new PortRetryRule(20);
 
     @Before
     public void setUp() {
         InjectionUtils.setDebug(true);
         this.errorManager = new ClientErrorManager();
+
+        serverPort = TestUtils.getPort();
     }
 
     @Test
@@ -83,8 +87,7 @@ public class RequestSenderTest {
 
         ServerMock server = new ServerMock(this.serverPort, serverFun);
         server.start();
-        RequestSender requestSender = new RequestSender(this.serverIp, this.serverPort, this.errorManager);
-
+        RequestSender requestSender =  new RequestSender(this.serverIp, this.serverPort, this.errorManager);
         ClientWrite result = requestSender.read(key);
 
         assertEquals(value, result.value());

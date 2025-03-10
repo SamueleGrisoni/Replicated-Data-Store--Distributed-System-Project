@@ -1,7 +1,9 @@
 package click.replicatedDataStore.connectionLayer.connectionManagers;
 
 import click.replicatedDataStore.InjectionUtils;
+import click.replicatedDataStore.PortRetryRule;
 import click.replicatedDataStore.ServerMock;
+import click.replicatedDataStore.TestUtils;
 import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;
 import click.replicatedDataStore.applicationLayer.Logger;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
@@ -15,6 +17,7 @@ import click.replicatedDataStore.dataStructures.keyImplementations.StringKey;
 import click.replicatedDataStore.utlis.Key;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -33,21 +36,26 @@ import java.util.function.BiFunction;
 
 import static org.junit.Assert.*;
 
+
 public class ClientConnectionManagerTest {
     private final String ip = "localhost";
-    private final int port = 8080;
     private Logger logger;
+    private int port;
+
     @Mock
     private ClientServerPriorityQueue mockedQue;
     @Mock
     private DataManagerReader mockDataRead;
 
+    @Rule
+    public PortRetryRule retryRule = new PortRetryRule(20);
+
     @Before
     public void setUp(){
-        logger = Mockito.mock(Logger.class);
         MockitoAnnotations.openMocks(this);
+        logger = Mockito.mock(Logger.class);
 
-
+        port = TestUtils.getPort();
     }
 
     @Test
@@ -121,7 +129,7 @@ public class ClientConnectionManagerTest {
                     "unable to open socket to " + this.ip + ":" + this.port + "\n" +
                             e.getMessage());
         }
-
+        assertNotNull(socket);
         assertNotNull(in);
         assertNotNull(out);
 

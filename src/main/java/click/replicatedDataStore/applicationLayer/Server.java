@@ -28,6 +28,8 @@ public class Server {
     private final TimeTravel timeTravel;
     private final Persist persist;
 
+    //todo make the serverNumber a config parameter. Vector clocks take it from config
+    //todo move the clock in a separate class. server just a holder and initializer
     public Server(int serverID, Map<Integer, Pair<String, Integer>> addresses) {
         this.serverID = serverID;
         this.addresses = addresses;
@@ -130,6 +132,14 @@ public class Server {
     //todo remove this and substitute the one made by @author Sam
     public List<Integer> getLowerServers(){
         return null;
+    }
+
+    public int getNumberOfServers(){
+        return addresses.size();
+    }
+
+    public int getServerID(){
+        return Integer.valueOf(this.serverID);
     }
 
     public Set<Integer> getOtherIndexes(){

@@ -11,7 +11,7 @@ public class ServerConfig {
     public static final String FILES_EXTENSION = ".bin";
 
     public static final int LIGHT_PUSH_DELAY_MILLIS = 1000;
-    public static final int RANDOM_DELAY = 1000;
+    public static final int LIGHT_PUSH_RANDOM_DELAY_MILLIS = 1000;
 
     public static int NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE = 5;
     public static final boolean debug = true;

@@ -7,11 +7,12 @@ import click.replicatedDataStore.connectionLayer.messages.AbstractMsg;
 
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.function.Function;
 
 public abstract class ConnectionManager {
     private final ConnectionAcceptor connectionAcceptor;
-    protected final HashMap<CommunicationMethods, Function<AbstractMsg, AbstractMsg>> routingTable = new HashMap<>();
+    protected final HashMap<CommunicationMethods, Function<AbstractMsg<?>, Optional<AbstractMsg<?>>>> routingTable = new HashMap<>();
     public final Logger logger;
 
     /**
@@ -36,8 +37,12 @@ public abstract class ConnectionManager {
      * @param msg the message to be routed
      * @return the response to the message
      */
-    public AbstractMsg resolveRequest(AbstractMsg msg){
-        return routingTable.get(msg.method).apply(msg);
+    public Optional<AbstractMsg<?>> resolveRequest(AbstractMsg<?> msg){
+        Function<AbstractMsg<?>, Optional<AbstractMsg<?>>> f = routingTable.get(msg.method);
+        if (f != null)
+            return f.apply(msg);
+        else
+            return Optional.empty();
     }
 
     public abstract void handleNewConnection(Socket newConnection);
