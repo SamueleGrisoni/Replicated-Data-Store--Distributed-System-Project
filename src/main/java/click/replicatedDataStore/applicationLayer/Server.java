@@ -24,7 +24,6 @@ public class Server {
     private final DataManagerReader dataManagerReader;
     private final DataManagerWriter dataManagerWriter;
     private final ServerConnectionManager serverConnectionManager;
-    private final Logger logger;
     private final TimeTravel timeTravel;
     private final Persist persist;
 
@@ -35,7 +34,6 @@ public class Server {
         this.addresses = addresses;
         int serverNumber = addresses.size();
         this.vectorClock = new VectorClock(serverNumber, serverID);
-        this.logger = new Logger();
 
         String dataFolderName = ServerConfig.DATA_FOLDER_NAME+serverID;
         String primaryIndexFileName = ServerConfig.PRIMARY_INDEX_FILE_NAME + serverID + ServerConfig.FILES_EXTENSION;
@@ -154,9 +152,5 @@ public class Server {
 
     public void addServerData(List<ClockedData> serverData){
         dataManagerWriter.addServerData(serverData);
-    }
-
-    public ServerConnectionManager getServerConnectionManager() {
-        return serverConnectionManager;
     }
 }
