@@ -2,6 +2,7 @@ package click.replicatedDataStore.applicationLayer.serverComponents;
 
 import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
+import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerWriter;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.VectorClockComparation;
 import click.replicatedDataStore.connectionLayer.connectionManagers.ServerConnectionManager;
 import click.replicatedDataStore.connectionLayer.messages.AbstractMsg;
@@ -17,22 +18,23 @@ import java.util.*;
 
 public class TimeTravel {
     private final Server server;
-    private final ServerConnectionManager serverConnectionManager;
+    private ServerConnectionManager serverConnectionManager;
     private final DataManagerReader dataManagerReader;
-    private final ClientServerPriorityQueue que;
+    private final DataManagerWriter dataManagerWriter;
     private final Thread lightPusher;
     private boolean stopLightPusher = false;
     private final Random rand = new Random();
 
-    public TimeTravel(Server server, DataManagerReader dataManagerReader,
-                      ServerConnectionManager connectionManager, ClientServerPriorityQueue que) {
+    public TimeTravel(Server server, DataManagerReader dataManagerReader, DataManagerWriter dataManagerWriter) {
         this.server = server;
         this.dataManagerReader = dataManagerReader;
+        this.dataManagerWriter = dataManagerWriter;
         this.lightPusher = new Thread(this::lightPusherFunction);
-        this.serverConnectionManager = connectionManager;
-        this.que = que;
-
         lightPusher.start();
+    }
+
+    public void setServerConnectionManager(ServerConnectionManager serverConnectionManager) {
+        this.serverConnectionManager = serverConnectionManager;
     }
 
     private void lightPusherFunction() {
@@ -80,7 +82,7 @@ public class TimeTravel {
 
     public Optional<AbstractMsg<?>> handleHeavyPush(AbstractMsg<?> msg){
         ServerHeavyPushMsg hPush = (ServerHeavyPushMsg) msg;
-        this.que.addServerData(hPush.getPayload());
+        dataManagerWriter.addServerData(hPush.getPayload());
         return Optional.empty();
     }
 

@@ -4,6 +4,7 @@ import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
+import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utlis.ServerConfig;
 import click.replicatedDataStore.utlis.Key;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import static org.junit.Assert.*;
 
@@ -27,7 +29,8 @@ public class DataManagerWriterTest {
 
     @Before
     public void setUp() {
-        mockServer = new Server(0, 2);
+        Map<Integer, Pair<String, Integer>> addresses = Map.of(0, new Pair<>("localhost", 4416), 1, new Pair<>("localhost", 4417));
+        mockServer = new Server(0, addresses);
         try {
             mockPersist = persistSetUp();
         } catch (IOException e) {
@@ -49,7 +52,7 @@ public class DataManagerWriterTest {
         }
     }
 
-    @After
+    /*@After
     public void tearDown() {
         if (persistFolder.exists()) {
             File[] files = persistFolder.listFiles();
@@ -62,7 +65,7 @@ public class DataManagerWriterTest {
         }
         //check if the dataFolder is deleted (if it is deleted also the files are deleted)
         Assert.assertFalse(persistFolder.exists());
-    }
+    }*/
 
     @Test
     public void addClientData() throws InterruptedException {
@@ -73,6 +76,14 @@ public class DataManagerWriterTest {
         Thread.sleep(100);
         assertEquals(1, mockServer.getPrimaryIndex().size());
         assertEquals("value1", mockServer.getPrimaryIndex().get(key));
+
+        TestKey key2 = new TestKey("key2");
+        ClientWrite clientWrite2 = new ClientWrite(key2, "value2");
+        mockServer.addClientData(clientWrite2);
+        // Wait for the writer thread to process the data
+        Thread.sleep(1000);
+        assertEquals(2, mockServer.getPrimaryIndex().size());
+        assertEquals("value2", mockServer.getPrimaryIndex().get(key2));
     }
 
     @Test

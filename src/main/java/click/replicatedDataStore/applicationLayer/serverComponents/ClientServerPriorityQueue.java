@@ -43,7 +43,7 @@ public class ClientServerPriorityQueue {
     }
 
     //Prefer user update to server update. If both queues are empty, update the lock so the writerThread requesting pops is blocked
-    public List<ClockedData> peekData() {
+    public List<ClockedData> pollData() {
         synchronized (lock) {
             while (clientQueue.isEmpty() && serversQueue.isEmpty()) {
                 try {
@@ -53,11 +53,11 @@ public class ClientServerPriorityQueue {
                     Thread.currentThread().interrupt();
                 }
             }
-            return !clientQueue.isEmpty() ? List.of(clientQueue.peek()) : serversQueue.peek();
+            return !clientQueue.isEmpty() ? List.of(clientQueue.poll()) : serversQueue.poll();
         }
     }
 
-    public void popData() {
+    /*public void popData() {
         synchronized (lock) {
             if(!clientQueue.isEmpty()){
                 clientQueue.poll();
@@ -65,5 +65,5 @@ public class ClientServerPriorityQueue {
                 serversQueue.poll();
             }
         }
-    }
+    }*/
 }

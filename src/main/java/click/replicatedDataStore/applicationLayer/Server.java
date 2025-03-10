@@ -25,7 +25,11 @@ public class Server {
     private final DataManagerWriter dataManagerWriter;
     private final ServerConnectionManager serverConnectionManager;
     private final TimeTravel timeTravel;
+    private final Logger logger = new Logger();
     private final Persist persist;
+
+    //(Sam) the serverNumber is equal to the amount of address ins the config file.
+    //also, the vector clock is initialized from scratch if necessary or loaded from the secondary index as described in the design
 
     //todo make the serverNumber a config parameter. Vector clocks take it from config
     //todo move the clock in a separate class. server just a holder and initializer
@@ -33,6 +37,7 @@ public class Server {
         this.serverID = serverID;
         this.addresses = addresses;
         int serverNumber = addresses.size();
+
         this.vectorClock = new VectorClock(serverNumber, serverID);
 
         String dataFolderName = ServerConfig.DATA_FOLDER_NAME+serverID;
@@ -52,9 +57,13 @@ public class Server {
         this.dataManagerWriter.start();
 
         this.dataManagerReader = new DataManagerReader(this);
-        this.serverConnectionManager = new ServerConnectionManager()
-        TimeTravel timeTravel = new TimeTravel(this, dataManagerReader, );
-        System.out.println("Server " + serverID + " started on " + ServerConfig.getServerAddress(serverID).first() + ":" + ServerConfig.getServerAddress(serverID).second());
+        String serverAddress = addresses.get(serverID).first();
+        Integer serverPort = addresses.get(serverID).second();
+        this.timeTravel = new TimeTravel(this, dataManagerReader, dataManagerWriter);
+        this.serverConnectionManager = new ServerConnectionManager(serverPort, timeTravel, logger, this);
+
+        this.timeTravel.setServerConnectionManager(serverConnectionManager);
+        System.out.println("Server " + serverID + " started on " + serverAddress + ":" + serverPort);
     }
 
     public void updateAndPersist(List<ClockedData> clockedDataList) {
@@ -127,9 +136,14 @@ public class Server {
         return addresses.get(serverID);
     }
 
-    //todo remove this and substitute the one made by @author Sam
     public List<Integer> getLowerServers(){
-        return null;
+        List<Integer> lowerServers = new ArrayList<>();
+        addresses.forEach((key, value) -> {
+            if(key < serverID){
+                lowerServers.add(key);
+            }
+        });
+        return lowerServers;
     }
 
     public int getNumberOfServers(){

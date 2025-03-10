@@ -2,6 +2,7 @@ package click.replicatedDataStore.applicationLayer.serverComponents.dataManager;
 
 import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;
+import click.replicatedDataStore.connectionLayer.messages.ServerHeavyPushMsg;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
@@ -24,12 +25,12 @@ public class DataManagerWriter extends Thread{
     public void run() {
         System.out.println("Writer thread started");
         while(true){
-            List<ClockedData> data = queue.peekData();
+            List<ClockedData> data = queue.pollData();
             write(data);
             if(data.size() == 1) {
-                server.getServerConnectionManager().heavyPush(data); //Send user input to other servers
+                //todo check if this now works
+
             }
-            queue.popData();
         }
     }
 

@@ -4,12 +4,15 @@ import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
+import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utlis.Key;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +24,8 @@ public class ClientServerPriorityQueueTest {
 
     @Before
     public void setUp() {
-        mockServer = new Server(0, 3) {
+        Map<Integer, Pair<String, Integer>> addresses = Map.of(0, new Pair<>("localhost", 4416));
+        mockServer = new Server(0, addresses) {
             //return a vector clock [offset, 0, 0]
             @Override
             public VectorClock getOffsetVectorClock(int offset) {
@@ -41,13 +45,13 @@ public class ClientServerPriorityQueueTest {
         compareVC.incrementSelfClock(); //vc = [1, 0, 0]
 
         queue.addClientData(clientData);
-        ClockedData result = queue.peekData().get(0);
+        ClockedData result = queue.pollData().get(0);
 
         assertNotNull(result);
         assertEquals(key, result.key());
         assertEquals("value1", result.value());
         assertEquals(compareVC, result.vectorClock());
-        queue.popData();
+        //queue.popData();
     }
 
     @Test
@@ -57,13 +61,13 @@ public class ClientServerPriorityQueueTest {
 
         ClockedData serverData = new ClockedData(otherServerVC, key, "serverValue");
         queue.addServerData(List.of(serverData));
-        ClockedData result = queue.peekData().get(0);
+        ClockedData result = queue.pollData().get(0);
 
         assertNotNull(result);
         assertEquals(key, result.key());
         assertEquals("serverValue", result.value());
         assertEquals(otherServerVC, result.vectorClock());
-        queue.popData();
+        //queue.popData();
     }
 
     @Test
@@ -79,16 +83,16 @@ public class ClientServerPriorityQueueTest {
         queue.addClientData(clientData);
 
         //clientData should be popped first
-        ClockedData result = queue.peekData().get(0);
+        ClockedData result = queue.pollData().get(0);
         assertNotNull(result);
         assertEquals(clientKey, result.key());
         assertEquals("clientValue", result.value());
-        queue.popData();
-        result = queue.peekData().get(0);
+        //queue.popData();
+        result = queue.pollData().get(0);
         assertNotNull(result);
         assertEquals(serverKey, result.key());
         assertEquals("serverValue", result.value());
-        queue.popData();
+        //queue.popData();
     }
 
     @Test
@@ -107,11 +111,11 @@ public class ClientServerPriorityQueueTest {
 
         //Queue is empty, popData should block until data is added
         System.out.println("Blocking popData");
-        ClockedData result = queue.peekData().get(0);
+        ClockedData result = queue.pollData().get(0);
         assertNotNull(result);
         assertEquals(key, result.key());
         assertEquals("delayedValue", result.value());
-        queue.popData();
+        //queue.popData();
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.SECONDS);
     }
