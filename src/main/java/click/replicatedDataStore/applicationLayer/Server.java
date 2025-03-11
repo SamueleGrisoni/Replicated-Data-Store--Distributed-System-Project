@@ -1,5 +1,6 @@
 package click.replicatedDataStore.applicationLayer;
 
+import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerWriter;
 import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
@@ -18,117 +19,45 @@ import java.util.*;
 public class Server {
     private final Map<Integer, Pair<String, Integer>> addresses;
     private final int serverID;
-    private final VectorClock vectorClock;
-    private final LinkedHashMap<Key, Serializable> primaryIndex;
-    private final TreeMap<VectorClock, Key> secondaryIndex;
+    private final int serverNumber;
+
+    private final ServerDataSynchronizer serverDataSynchronizer;
     private final DataManagerReader dataManagerReader;
     private final DataManagerWriter dataManagerWriter;
     private final ServerConnectionManager serverConnectionManager;
     private final TimeTravel timeTravel;
+
     private final Logger logger = new Logger();
-    private final Persist persist;
 
-    //(Sam) the serverNumber is equal to the amount of address ins the config file.
-    //also, the vector clock is initialized from scratch if necessary or loaded from the secondary index as described in the design
-
-    //todo make the serverNumber a config parameter. Vector clocks take it from config
-    //todo move the clock in a separate class. server just a holder and initializer
     public Server(int serverID, Map<Integer, Pair<String, Integer>> addresses) {
         this.serverID = serverID;
         this.addresses = addresses;
-        int serverNumber = addresses.size();
-
-        this.vectorClock = new VectorClock(serverNumber, serverID);
-
-        String dataFolderName = ServerConfig.DATA_FOLDER_NAME+serverID;
-        String primaryIndexFileName = ServerConfig.PRIMARY_INDEX_FILE_NAME + serverID + ServerConfig.FILES_EXTENSION;
-        String secondaryIndexFileName = ServerConfig.SECONDARY_INDEX_FILE_NAME + serverID + ServerConfig.FILES_EXTENSION;
-        this.persist = new Persist(dataFolderName, primaryIndexFileName, secondaryIndexFileName);
-
-        this.primaryIndex = persist.recoverPrimaryIndex();
-        this.secondaryIndex = persist.recoverSecondaryIndex();
-
-        //If secondary index is not empty, update the vector clock with the latest clock. Useful for recovery
-        if(!secondaryIndex.isEmpty()){
-            vectorClock.updateClock(secondaryIndex.lastKey());
-        }
-
-        this.dataManagerWriter = new DataManagerWriter(this);
-        this.dataManagerWriter.start();
-
-        this.dataManagerReader = new DataManagerReader(this);
+        this.serverNumber = addresses.size();
         String serverAddress = addresses.get(serverID).first();
         Integer serverPort = addresses.get(serverID).second();
-        this.timeTravel = new TimeTravel(this, dataManagerReader, dataManagerWriter);
-        this.serverConnectionManager = new ServerConnectionManager(serverPort, timeTravel, logger, this);
 
+        this.serverDataSynchronizer = new ServerDataSynchronizer(serverNumber, serverID);
+        this.dataManagerWriter = new DataManagerWriter(serverDataSynchronizer);
+        this.dataManagerReader = new DataManagerReader(serverDataSynchronizer);
+
+        this.timeTravel = new TimeTravel(serverDataSynchronizer, dataManagerReader, dataManagerWriter);
+        dataManagerWriter.setTimeTravel(timeTravel);
+
+        this.serverConnectionManager = new ServerConnectionManager(timeTravel, logger, this);
         this.timeTravel.setServerConnectionManager(serverConnectionManager);
-        System.out.println("Server " + serverID + " started on " + serverAddress + ":" + serverPort);
+
+        startServerThreads();
+        logger.logInfo("Server " + serverID + " started on " + serverAddress + ":" + serverPort);
     }
 
-    public void updateAndPersist(List<ClockedData> clockedDataList) {
-        synchronized (primaryIndex) {
-            for(ClockedData clockedData : clockedDataList){
-                updatePersistPrimaryIndex(clockedData);
-            }
-            vectorClock.updateClock(clockedDataList.get(clockedDataList.size()-1).vectorClock());
-        }
+    private void startServerThreads(){
+        dataManagerWriter.start();
     }
-
-    public void updateAndPersist(List<ClockedData> clockedDataList, TreeMap<VectorClock, Key> secondaryIndexUpdated) {
-        synchronized (primaryIndex) {
-            for(int i = 0; i<clockedDataList.size()-1; i++){
-                updatePersistPrimaryIndex(clockedDataList.get(i));
-            }
-            ClockedData lastClockedData = clockedDataList.get(clockedDataList.size()-1);
-            synchronized (secondaryIndex) {
-                persist.persist(lastClockedData, secondaryIndexUpdated);
-                primaryIndex.remove(lastClockedData.key());
-                primaryIndex.put(lastClockedData.key(), lastClockedData.value());
-                secondaryIndex.clear();
-                secondaryIndex.putAll(secondaryIndexUpdated);
-            }
-            vectorClock.updateClock(lastClockedData.vectorClock());
-        }
-    }
-
-    private void updatePersistPrimaryIndex(ClockedData clockedData){
-        synchronized (primaryIndex) {
-            persist.persist(clockedData);
-            primaryIndex.remove(clockedData.key());
-            primaryIndex.put(clockedData.key(), clockedData.value());
-        }
-    }
-
-    //As discussed during design, the synchronization is probably not needed here
-    //(Writer and Queue are already synchronized). It is kept just in case
-    public synchronized VectorClock getVectorClock() {
-        return vectorClock;
-    }
-
-    public synchronized VectorClock getOffsetVectorClock(int offset) {
-        return new VectorClock(vectorClock, offset);
-    }
-
     public void stopThreads() {
         //todo
     }
 
-    //return a COPY of the primary index
-    public LinkedHashMap<Key, Serializable> getPrimaryIndex() {
-        synchronized (primaryIndex){
-            return new LinkedHashMap<>(primaryIndex);
-        }
-    }
-
-    //return a COPY of the secondary index
-    public TreeMap<VectorClock, Key> getSecondaryIndex() {
-        synchronized (secondaryIndex){
-            return new TreeMap<>(secondaryIndex);
-        }
-    }
-
-    public Pair<String, Integer> getMyAddressAndPortPair(){
+    public Pair<String, Integer> getMyAddressAndPort(){
         return addresses.get(serverID);
     }
 
@@ -136,22 +65,12 @@ public class Server {
         return addresses.get(serverID);
     }
 
-    public List<Integer> getLowerServers(){
-        List<Integer> lowerServers = new ArrayList<>();
-        addresses.forEach((key, value) -> {
-            if(key < serverID){
-                lowerServers.add(key);
-            }
-        });
-        return lowerServers;
-    }
-
     public int getNumberOfServers(){
-        return addresses.size();
+        return serverNumber;
     }
 
     public int getServerID(){
-        return Integer.valueOf(this.serverID);
+        return serverID;
     }
 
     public Set<Integer> getOtherIndexes(){

@@ -10,13 +10,13 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 public class ClientServerPriorityQueue {
-    private final Server server;
+    private final ServerDataSynchronizer serverDataSynchronizer;
     private final PriorityQueue<ClockedData> clientQueue;
     private final PriorityQueue<List<ClockedData>> serversQueue;
     private final Object lock = new Object();
 
-    public ClientServerPriorityQueue(Server server) {
-        this.server = server;
+    public ClientServerPriorityQueue(ServerDataSynchronizer serverDataSynchronizer) {
+        this.serverDataSynchronizer = serverDataSynchronizer;
         this.clientQueue = new PriorityQueue<>();
         this.serversQueue = new PriorityQueue<>(Comparator.comparing(list -> list.get(0).vectorClock()));
     }
@@ -25,7 +25,7 @@ public class ClientServerPriorityQueue {
     public boolean addClientData(ClientWrite clientData) {
         //Offset = current size of the clientQueue + this clientData (current size + 1)
         synchronized (lock) {
-            VectorClock offsetVectorClock = server.getOffsetVectorClock(clientQueue.size() + 1);
+            VectorClock offsetVectorClock = serverDataSynchronizer.getOffsetVectorClock(clientQueue.size() + 1);
             //System.out.println("Offset vector clock: " + offsetVectorClock);
             ClockedData clockedData = new ClockedData(offsetVectorClock, clientData.key(), clientData.value());
             clientQueue.add(clockedData);

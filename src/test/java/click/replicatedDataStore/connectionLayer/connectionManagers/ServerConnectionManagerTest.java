@@ -3,7 +3,7 @@ package click.replicatedDataStore.connectionLayer.connectionManagers;
 import click.replicatedDataStore.InjectionUtils;
 import click.replicatedDataStore.TestUtils;
 import click.replicatedDataStore.applicationLayer.Server;
-import click.replicatedDataStore.applicationLayer.serverComponents.Logger;
+import click.replicatedDataStore.applicationLayer.Logger;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
 import click.replicatedDataStore.connectionLayer.connectionThreads.ServerHandler;
 import click.replicatedDataStore.connectionLayer.messages.*;

@@ -23,9 +23,21 @@ public class ServerConnectionManager extends ConnectionManager{
     private final Map<Integer, Optional<ServerHandler>> serverHandlersMap = new HashMap<>();
     private final Map<Integer, Object> handlerLocksMap = new HashMap<>();
 
+    //todo remove this constructor
+    //legacy costructor used for testing
     public ServerConnectionManager(Integer port, TimeTravel sync,
                                    Logger logger, Server server) {
         super(port, logger);
+
+        this.sync = sync;
+        this.server = server;
+        initializeServerHandlerAndLocksMap();
+        this.createConnections();
+    }
+
+    public ServerConnectionManager(TimeTravel sync,
+                                   Logger logger, Server server) {
+        super(server.getMyAddressAndPort().second(), logger);
 
         this.sync = sync;
         this.server = server;

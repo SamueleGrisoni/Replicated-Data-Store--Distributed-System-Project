@@ -1,6 +1,5 @@
 package click.replicatedDataStore.applicationLayer.serverComponents;
 
-import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerWriter;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.VectorClockComparation;
@@ -17,7 +16,7 @@ import click.replicatedDataStore.utlis.ServerConfig;
 import java.util.*;
 
 public class TimeTravel {
-    private final Server server;
+    private final ServerDataSynchronizer serverDataSynchronizer;
     private ServerConnectionManager serverConnectionManager;
     private final DataManagerReader dataManagerReader;
     private final DataManagerWriter dataManagerWriter;
@@ -25,8 +24,8 @@ public class TimeTravel {
     private boolean stopLightPusher = false;
     private final Random rand = new Random();
 
-    public TimeTravel(Server server, DataManagerReader dataManagerReader, DataManagerWriter dataManagerWriter) {
-        this.server = server;
+    public TimeTravel(ServerDataSynchronizer serverDataSynchronizer, DataManagerReader dataManagerReader, DataManagerWriter dataManagerWriter) {
+        this.serverDataSynchronizer = serverDataSynchronizer;
         this.dataManagerReader = dataManagerReader;
         this.dataManagerWriter = dataManagerWriter;
         this.lightPusher = new Thread(this::lightPusherFunction);
@@ -44,14 +43,14 @@ public class TimeTravel {
             } catch (InterruptedException e) {
                 Thread.currentThread().start();
             }
-            this.lightPush(server.getVectorClock());
+            this.lightPush(serverDataSynchronizer.getVectorClock());
         }
     }
 
     //Function call each time I receive a LightPushMsg
     public boolean checkOutOfDate(VectorClock otherVectorClock) {
         boolean outDate = false;
-        VectorClock myVectorClock = server.getVectorClock();
+        VectorClock myVectorClock = serverDataSynchronizer.getVectorClock();
         int compareRes = myVectorClock.compareTo(otherVectorClock);
         if(compareRes == VectorClockComparation.CONCURRENT.getCompareResult()
         || compareRes == VectorClockComparation.LESS_THAN.getCompareResult()){
@@ -61,7 +60,7 @@ public class TimeTravel {
     }
 
     public List<ClockedData> computeFetch(VectorClock otherVectorClock) {
-        TreeMap<VectorClock, Key> secInd = server.getSecondaryIndex();
+        TreeMap<VectorClock, Key> secInd = serverDataSynchronizer.getSecondaryIndex();
         VectorClock calcClock = null;
         List<ClockedData> recovery = new ArrayList<>();
         for (VectorClock thisClock : secInd.descendingKeySet()) {
@@ -90,7 +89,7 @@ public class TimeTravel {
 
     public Optional<AbstractMsg<?>> handleLightPush(ServerLightPushMsg lPush){
         return this.checkOutOfDate(lPush.getPayload())?
-                Optional.of(new ServerFetchMsg(this.server.getVectorClock())) :
+                Optional.of(new ServerFetchMsg(this.serverDataSynchronizer.getVectorClock())) :
                 Optional.empty();
     }
 

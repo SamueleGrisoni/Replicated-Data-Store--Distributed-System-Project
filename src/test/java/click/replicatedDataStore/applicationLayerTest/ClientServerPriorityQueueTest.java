@@ -2,6 +2,7 @@ package click.replicatedDataStore.applicationLayerTest;
 
 import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;
+import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
@@ -20,20 +21,21 @@ import static org.junit.Assert.*;
 
 public class ClientServerPriorityQueueTest {
     private ClientServerPriorityQueue queue;
-    private Server mockServer;
-
+    private ServerDataSynchronizer mockServerDataSynch;
+    private int serverNumber;
     @Before
     public void setUp() {
-        Map<Integer, Pair<String, Integer>> addresses = Map.of(0, new Pair<>("localhost", 4416));
-        mockServer = new Server(0, addresses) {
+        Map<Integer, Pair<String, Integer>> addresses = Map.of(0, new Pair<>("localhost", 4416), 1, new Pair<>("localhost", 4417), 2, new Pair<>("localhost", 4418));
+        serverNumber = addresses.size();
+        mockServerDataSynch = new ServerDataSynchronizer(serverNumber, 0) {
             //return a vector clock [offset, 0, 0]
             @Override
             public VectorClock getOffsetVectorClock(int offset) {
-                VectorClock vc = new VectorClock(3, 0);
+                VectorClock vc = new VectorClock(serverNumber, 0);
                 return new VectorClock(vc, offset);
             }
         };
-        queue = new ClientServerPriorityQueue(mockServer);
+        queue = new ClientServerPriorityQueue(mockServerDataSynch);
     }
 
     @Test
@@ -41,7 +43,7 @@ public class ClientServerPriorityQueueTest {
         TestKey key = new TestKey("key1");
         ClientWrite clientData = new ClientWrite(key, "value1");
         //Queue is empty (size 0), the offset vector clock should be [1, 0, 0]
-        VectorClock compareVC = new VectorClock(3, 0);
+        VectorClock compareVC = new VectorClock(serverNumber, 0);
         compareVC.incrementSelfClock(); //vc = [1, 0, 0]
 
         queue.addClientData(clientData);
