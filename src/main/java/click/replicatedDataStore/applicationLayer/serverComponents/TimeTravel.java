@@ -60,14 +60,17 @@ public class TimeTravel {
 
     public List<ClockedData> computeFetch(VectorClock otherVectorClock) {
         TreeMap<VectorClock, Key> secInd = server.getSecondaryIndex();
-        VectorClock calcClock = new VectorClock(server.getNumberOfServers(), server.getServerID());
+        VectorClock calcClock = null;
+        List<ClockedData> recovery = new ArrayList<>();
         for (VectorClock thisClock : secInd.descendingKeySet()) {
             if (thisClock.compareTo(otherVectorClock) <= 0)
                 break;
             else
                 calcClock = thisClock;
         }
-        return this.dataManagerReader.recoverData(calcClock);
+        if (calcClock != null)
+            recovery = this.dataManagerReader.recoverData(calcClock);
+        return recovery;
     }
 
     public void heavyPush(List<ClockedData> heavy){
