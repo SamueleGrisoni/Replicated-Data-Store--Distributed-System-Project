@@ -4,7 +4,7 @@ import click.replicatedDataStore.utlis.Key;
 
 import java.io.Serializable;
 
-public record ClockedData(VectorClock vectorClock, Key key, Serializable value) implements Comparable<ClockedData> {
+public record ClockedData(VectorClock vectorClock, Key key, Serializable value) implements Comparable<ClockedData>, Serializable {
 
     @Override
     public int compareTo(ClockedData o) {

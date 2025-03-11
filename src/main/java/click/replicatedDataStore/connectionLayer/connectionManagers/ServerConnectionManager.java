@@ -14,12 +14,14 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 public class ServerConnectionManager extends ConnectionManager{
     private final TimeTravel sync;
     private final Server server;
-    private final Map<Integer, ServerHandler> serverHandlersMap = new HashMap<>();
+    private final Map<Integer, Optional<ServerHandler>> serverHandlersMap = new HashMap<>();
+    private final Map<Integer, Object> handlerLocksMap = new HashMap<>();
 
     public ServerConnectionManager(Integer port, TimeTravel sync,
                                    Logger logger, Server server) {
@@ -27,14 +29,23 @@ public class ServerConnectionManager extends ConnectionManager{
 
         this.sync = sync;
         this.server = server;
+        initializeServerHandlerAndLocksMap();
         this.createConnections();
     }
 
     @Override
     public void setupRouting() {
-        this.routingTable.put(CommunicationMethods.SERVER_H_PUSH, sync::handleHeavyPush);
-        this.routingTable.put(CommunicationMethods.SERVER_L_PUSH, sync::handleLightPush);
-        this.routingTable.put(CommunicationMethods.SERVER_FETCH, sync::handleFetch);
+        this.routingTable.put(CommunicationMethods.SERVER_H_PUSH, this::handleHeavyPush);
+        this.routingTable.put(CommunicationMethods.SERVER_L_PUSH, this::handleLightPush);
+        this.routingTable.put(CommunicationMethods.SERVER_FETCH, this::handleFetch);
+    }
+
+    private void initializeServerHandlerAndLocksMap(){
+        IntStream otherServerIndexes = IntStream.range(0, server.getNumberOfServers()).filter(i -> i!=server.getServerID());
+        otherServerIndexes.forEach(index -> {
+            this.serverHandlersMap.put(index, Optional.empty());
+            this.handlerLocksMap.put(index, new Object());
+        });
     }
 
     @Override
@@ -48,16 +59,19 @@ public class ServerConnectionManager extends ConnectionManager{
         }
     }
 
+
     private void createConnections(){
-        IntStream serverIndexes = IntStream.range(0, server.getNumberOfServers());
-        int myId = server.getServerID();
-        serverIndexes.filter(index -> index != myId).forEach(index -> {
+        IntStream serverIndexes = IntStream.range(0, server.getNumberOfServers())
+                .filter(index -> index != server.getServerID());
+        serverIndexes.forEach(index -> {
             Thread t = new Thread(() -> {
                 Pair<String, Integer> ipPort = server.getAddressAndPortPairOf(index);
-                try{
+                try {
                     Socket socket = new Socket(ipPort.first(), ipPort.second());
-                    //the Server handler constructor will put itself in the map
-                    ActiveServerHandler serverHandler = new ActiveServerHandler(socket, this, index);
+                    ActiveServerHandler serverHandler;
+                    synchronized (handlerLocksMap.get(index)) {
+                        serverHandler = new ActiveServerHandler(socket, this, this.server.getServerID(), index);
+                    }
                     serverHandler.start();
                 } catch (IOException e){
                     this.logger.logErr(this.getClass(),
@@ -70,27 +84,38 @@ public class ServerConnectionManager extends ConnectionManager{
     }
 
     public void sendMessage(AbstractMsg<?> msg, int recipientIndex){
-        serverHandlersMap.get(recipientIndex).sendMessage(msg);
+        serverHandlersMap.get(recipientIndex).ifPresent(serverHandler -> serverHandler.sendMessage(msg));
     }
 
     public void broadcastMessage(AbstractMsg<?> msg){
-        for (Integer i : server.getOtherIndexes()){
-            serverHandlersMap.get(i).sendMessage(msg);
-        }
+        serverHandlersMap.values()
+                .forEach(opt-> opt.ifPresent(handler -> handler.sendMessage(msg)));
+    }
+
+    public Optional<AbstractMsg<?>> handleHeavyPush(AbstractMsg<?> msg){
+        ServerHeavyPushMsg hPush = (ServerHeavyPushMsg) msg;
+        return sync.handleHeavyPush(hPush);
+    }
+
+    public Optional<AbstractMsg<?>> handleLightPush(AbstractMsg<?> msg){
+        ServerLightPushMsg lPush = (ServerLightPushMsg) msg;
+        return sync.handleLightPush(lPush);
+    }
+
+    public Optional<AbstractMsg<?>> handleFetch(AbstractMsg<?> msg){
+        ServerFetchMsg fetch = (ServerFetchMsg) msg;
+        return sync.handleFetch(fetch);
     }
 
     public void stop(){
         super.stop();
-        for(ServerHandler serverHandler: serverHandlersMap.values()){
-            serverHandler.stopRunning();
-        }
+        serverHandlersMap.values().forEach(opt -> opt.ifPresent(ServerHandler::stopRunning));
     }
 
     public void addIndexed(Integer index, ServerHandler serverHandler){
-        if(this.serverHandlersMap.containsKey(index)){
-            ServerHandler oldHandler = serverHandlersMap.get(index);
-            oldHandler.stopRunning();
+        synchronized (handlerLocksMap.get(index)) {
+            serverHandlersMap.get(index).ifPresent(ServerHandler::stopRunning);
+            this.serverHandlersMap.put(index, Optional.of(serverHandler));
         }
-        this.serverHandlersMap.put(index, serverHandler);
     }
 }

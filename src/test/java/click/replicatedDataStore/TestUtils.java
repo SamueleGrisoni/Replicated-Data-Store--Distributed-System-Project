@@ -7,7 +7,7 @@ import java.net.Socket;
 public class TestUtils {
 
     static final int MIN_PORT = 49152;
-    static final int MAX_PORT = 49160;
+    static final int MAX_PORT = 49200;
     static int serverPort;
 
     public static int getPort() {
