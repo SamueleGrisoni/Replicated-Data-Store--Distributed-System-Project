@@ -70,8 +70,6 @@ public class ServerConnectionManagerTest {
 
     @Test
     public void startUpConnectionManager() throws IOException, InterruptedException, ClassNotFoundException {
-        Assert.assertNotNull(sync);
-
         ServerConnectionManager connManager0 = new ServerConnectionManager(port0, sync, logger, server0);
 
         Socket socket = new Socket("localhost", port0);
@@ -88,8 +86,6 @@ public class ServerConnectionManagerTest {
 
     @Test
     public void connManagerInteraction() throws InterruptedException{
-        Assert.assertNotNull(sync);
-
         ServerConnectionManager connManager0 = new ServerConnectionManager(port0, sync, logger, server0);
         Thread.sleep(100);
         ServerConnectionManager connManager1 = new ServerConnectionManager(port1, sync, logger, server1);
@@ -101,10 +97,9 @@ public class ServerConnectionManagerTest {
         Assert.assertNotEquals(Optional.empty(), serverHandlerMapOn1.get(0));
     }
 
+
     @Test
     public void connManagerInteractSendLight() throws InterruptedException{
-        TimeTravel sync1 = Mockito.mock(TimeTravel.class);
-
         ServerConnectionManager connManager0 = new ServerConnectionManager(port0, sync, logger, server0);
         Thread.sleep(100);
         ServerConnectionManager connManager1 = new ServerConnectionManager(port1, sync1, logger, server1);
@@ -118,8 +113,6 @@ public class ServerConnectionManagerTest {
 
     @Test
     public void connManagerInteractSendHeavy() throws InterruptedException{
-        TimeTravel sync1 = Mockito.mock(TimeTravel.class);
-
         ServerConnectionManager connManager0 = new ServerConnectionManager(port0, sync, logger, server0);
         Thread.sleep(100);
         ServerConnectionManager connManager1 = new ServerConnectionManager(port1, sync1, logger, server1);
@@ -136,8 +129,6 @@ public class ServerConnectionManagerTest {
 
     @Test
     public void connManagerInteractSendFetch() throws InterruptedException{
-        TimeTravel sync1 = Mockito.mock(TimeTravel.class);
-
         ServerConnectionManager connManager0 = new ServerConnectionManager(port0, sync, logger, server0);
         Thread.sleep(100);
         ServerConnectionManager connManager1 = new ServerConnectionManager(port1, sync1, logger, server1);
@@ -248,6 +239,60 @@ public class ServerConnectionManagerTest {
         Thread.sleep(100);
         Mockito.verify(sync1).handleFetch(fetch);
         Mockito.verify(sync2).handleFetch(fetch);
+    }
+
+    @Test
+    public void reConnectionTest() throws InterruptedException {
+        ServerConnectionManager connManager0 = new ServerConnectionManager(port0, sync, logger, server0);
+        Thread.sleep(100);
+        ServerConnectionManager connManager1 = new ServerConnectionManager(port1, sync, logger, server1);
+        Thread.sleep(100);
+
+        Map<Integer, Optional<ServerHandler>> serverHandlerMapOn0 = (Map<Integer, Optional<ServerHandler>>) InjectionUtils.getPrivateField(connManager0, "serverHandlersMap");
+        Assert.assertNotEquals(Optional.empty(), serverHandlerMapOn0.get(1));
+        Map<Integer, Optional<ServerHandler>> serverHandlerMapOn1 = (Map<Integer, Optional<ServerHandler>>) InjectionUtils.getPrivateField(connManager1, "serverHandlersMap");
+        Assert.assertNotEquals(Optional.empty(), serverHandlerMapOn1.get(0));
+
+        ServerLightPushMsg light = new ServerLightPushMsg(new VectorClock(nServer, 0));
+        connManager0.sendMessage(light, 1);
+        Thread.sleep(100);
+        Mockito.verify(sync).handleLightPush(light);
+
+        connManager1.stop();
+        connManager1 = new ServerConnectionManager(port1 + 100, sync1, logger, server1);
+        Thread.sleep(100);
+        serverHandlerMapOn0 = (Map<Integer, Optional<ServerHandler>>) InjectionUtils.getPrivateField(connManager0, "serverHandlersMap");
+        Assert.assertNotEquals(Optional.empty(), serverHandlerMapOn0.get(1));
+        serverHandlerMapOn1 = (Map<Integer, Optional<ServerHandler>>) InjectionUtils.getPrivateField(connManager1, "serverHandlersMap");
+        Assert.assertNotEquals(Optional.empty(), serverHandlerMapOn1.get(0));
+
+        connManager0.sendMessage(light, 1);
+        Thread.sleep(100);
+        Mockito.verify(sync1).handleLightPush(light);
+    }
+
+    @Test
+    public void receiverDownSendMessage() throws InterruptedException {
+        ServerConnectionManager connManager0 = new ServerConnectionManager(port0, sync, logger, server0);
+        Thread.sleep(100);
+
+        Map<Integer, Optional<ServerHandler>> serverHandlerMapOn0 = (Map<Integer, Optional<ServerHandler>>) InjectionUtils.getPrivateField(connManager0, "serverHandlersMap");
+        Assert.assertEquals(Optional.empty(), serverHandlerMapOn0.get(1));
+
+        ServerLightPushMsg light = new ServerLightPushMsg(new VectorClock(nServer, 0));
+        connManager0.sendMessage(light, 1);
+        Thread.sleep(100);
+        Mockito.verifyNoInteractions(sync1);
+
+        ServerConnectionManager connManager1 = new ServerConnectionManager(port1, sync1, logger, server1);
+        Thread.sleep(100);
+
+        serverHandlerMapOn0 = (Map<Integer, Optional<ServerHandler>>) InjectionUtils.getPrivateField(connManager0, "serverHandlersMap");
+
+        Assert.assertNotEquals(Optional.empty(), serverHandlerMapOn0.get(1));
+        connManager0.sendMessage(light, 1);
+        Thread.sleep(100);
+        Mockito.verify(sync1).handleLightPush(light);
     }
 
     @After
