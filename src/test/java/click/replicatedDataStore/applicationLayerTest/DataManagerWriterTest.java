@@ -21,6 +21,8 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
+//todo
+//with the new server implementation it probably would be possible to create a separated test folder by delaying the start of the server
 public class DataManagerWriterTest {
     private Server mockServer;
     private Server mockServer2;
@@ -39,13 +41,14 @@ public class DataManagerWriterTest {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-
+        mockServer.start();
+        mockServer2.start();
     }
 
     @After
     public void tearDown() {
-        mockServer.stopThreads();
-        mockServer2.stopThreads();
+        mockServer.stopServer();
+        mockServer2.stopServer();
         List<File> dataFolders = new LinkedList<>();
         for (int i = 0; i < addresses.size(); i++) {
             dataFolders.add(new File(ServerConfig.getOSDataFolderPath() + click.replicatedDataStore.utlis.ServerConfig.DATA_FOLDER_NAME + i + File.separator));
@@ -156,7 +159,7 @@ public class DataManagerWriterTest {
 
         // Wait for the writer thread to process the data
         try {
-            Thread.sleep(100);
+            Thread.sleep(500);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

@@ -1,17 +1,14 @@
 {
   "servers": [
     {
-      "serverIndex": 1,
       "address": "127.0.0.1",
       "port": 4416
     },
     {
-      "serverIndex": 2,
       "address": "127.0.0.1",
       "port": 4417
     },
     {
-      "serverIndex": 3,
       "address": "127.0.0.1",
       "port": 4418
     }

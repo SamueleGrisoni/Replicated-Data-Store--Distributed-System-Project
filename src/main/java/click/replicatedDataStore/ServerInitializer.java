@@ -21,10 +21,15 @@ public class ServerInitializer {
             return;
         }
         System.out.println("Found a config file for " + addresses.size() + " servers");
+        System.out.println("--------------------");
+        for(Map.Entry<Integer, Pair<String, Integer>> entry : addresses.entrySet()){
+            System.out.println("Server " + entry.getKey() + " at " + entry.getValue().first() + ":" + entry.getValue().second());
+        }
+        System.out.println("--------------------");
         List<Server> servers = new ArrayList<>();
         for(Map.Entry<Integer, Pair<String, Integer>> entry : addresses.entrySet()){
             Server server = new Server(entry.getKey(), addresses);
-            server.run();
+            server.start();
             servers.add(server);
         }
         System.out.println("Successfully created " + servers.size() + " servers");
@@ -39,6 +44,7 @@ public class ServerInitializer {
                 break;
             }
         }
+        System.out.println("Servers stopped successfully");
     }
 
     private static Map<Integer, Pair<String, Integer>> readJson(String filePath) {
@@ -61,8 +67,10 @@ public class ServerInitializer {
                 System.out.println("To correctly run the system, at least 2 servers are required");
                 return resultMap;
             }
+            int serverIndex = 0;
             for (ConfigFile.ConfigFileEntry entry : configFile.getServers()) {
-                resultMap.put(entry.getServerIndex(), new Pair<>(entry.getIp(), entry.getPort()));
+                resultMap.put(serverIndex, new Pair<>(entry.getIp(), entry.getPort()));
+                serverIndex++;
             }
         } catch (Exception e) {
             System.out.println("An error occurred while reading the config file: " + e.getMessage());
