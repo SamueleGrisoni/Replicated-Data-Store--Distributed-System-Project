@@ -7,8 +7,8 @@ import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utlis.ServerConfig;
 import click.replicatedDataStore.utlis.Key;
+import click.replicatedDataStore.utlis.ServerConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,8 +44,10 @@ public class DataManagerWriterTest {
 
     @After
     public void tearDown() {
+        mockServer.stopThreads();
+        mockServer2.stopThreads();
         List<File> dataFolders = new LinkedList<>();
-        for(int i = 0; i < addresses.size(); i++){
+        for (int i = 0; i < addresses.size(); i++) {
             dataFolders.add(new File(ServerConfig.getOSDataFolderPath() + click.replicatedDataStore.utlis.ServerConfig.DATA_FOLDER_NAME + i + File.separator));
         }
         dataFolders.forEach(this::deleteDataFolder);
@@ -55,18 +57,21 @@ public class DataManagerWriterTest {
 
     private void deleteDataFolder(File dataFolder) {
         System.out.println("Deleting data folder: " + dataFolder);
-        if (dataFolder.exists()) {
-            File[] files = dataFolder.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    if (file.isDirectory()) {
+        File[] files = dataFolder.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDataFolder(file);
+                } else {
+                    if (!file.delete()) {
+                        System.out.println("Failed to delete file: " + file + " retrying...");
                         deleteDataFolder(file);
-                    } else {
-                        file.delete();
                     }
                 }
             }
-            dataFolder.delete();
+        }
+        if (!dataFolder.delete()) {
+            System.out.println("Failed to delete folder: " + dataFolder + "retrying...");
         }
     }
 
@@ -87,6 +92,7 @@ public class DataManagerWriterTest {
         Thread.sleep(100);
         assertEquals(2, mockServerDataSynchronizer1.getPrimaryIndex().size());
         assertEquals("value2", mockServerDataSynchronizer1.getPrimaryIndex().get(key2));
+        Thread.sleep(1000);
     }
 
     @Test
@@ -117,7 +123,7 @@ public class DataManagerWriterTest {
     }
 
     @Test
-    public void testSecondaryWrite(){
+    public void testSecondaryWrite() {
         injectNUMBER_OF_WRITE_SECONDARY_INTERVAL(2);
 
         TestKey key = new TestKey("key1");
@@ -146,7 +152,7 @@ public class DataManagerWriterTest {
 
     //todo find problem
     @Test
-    public void testSecondaryUpdate(){
+    public void testSecondaryUpdate() {
         injectNUMBER_OF_WRITE_SECONDARY_INTERVAL(2);
 
         TestKey keyA = new TestKey("A");
@@ -176,7 +182,7 @@ public class DataManagerWriterTest {
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().values().stream().anyMatch(key -> key.equals(keyB)));
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().values().stream().anyMatch(key -> key.equals(keyD)));
         System.out.println("Secondary Index:");
-        for(Map.Entry<VectorClock, Key> entry : mockServerDataSynchronizer1.getSecondaryIndex().entrySet()){
+        for (Map.Entry<VectorClock, Key> entry : mockServerDataSynchronizer1.getSecondaryIndex().entrySet()) {
             System.out.println("VectorClock: " + entry.getKey() + " Key: " + entry.getValue());
         }
         ClientWrite updateClientWrite = new ClientWrite(keyB, "value2.1");
@@ -191,7 +197,7 @@ public class DataManagerWriterTest {
         //I should have the 2 "old" vector clocks and the new one because this is the 6th write.
         //The oldest vector clock [2,0] should now point to the keyC, because the newestVC clock [6,0] should point to keyB
         System.out.println("Secondary Index after 1° update:");
-        for(Map.Entry<VectorClock, Key> entry : mockServerDataSynchronizer1.getSecondaryIndex().entrySet()){
+        for (Map.Entry<VectorClock, Key> entry : mockServerDataSynchronizer1.getSecondaryIndex().entrySet()) {
             System.out.println("VectorClock: " + entry.getKey() + " Key: " + entry.getValue());
         }
         assertEquals(3, mockServerDataSynchronizer1.getSecondaryIndex().size());
@@ -219,7 +225,7 @@ public class DataManagerWriterTest {
         }
         //The secondary index should now contain 4 entry. The (old) newestVC should point to keyF, while the (new) newestVC should point to keyB
         System.out.println("Secondary Index after 2° update:");
-        for(Map.Entry<VectorClock, Key> entry : mockServerDataSynchronizer1.getSecondaryIndex().entrySet()){
+        for (Map.Entry<VectorClock, Key> entry : mockServerDataSynchronizer1.getSecondaryIndex().entrySet()) {
             System.out.println("VectorClock: " + entry.getKey() + " Key: " + entry.getValue());
         }
         assertEquals(6, mockServerDataSynchronizer1.getPrimaryIndex().size());
@@ -247,7 +253,7 @@ public class DataManagerWriterTest {
         assertEquals(7, mockServerDataSynchronizer1.getPrimaryIndex().size());
         assertEquals(4, mockServerDataSynchronizer1.getSecondaryIndex().size());
         System.out.println("Secondary Index after 3° update:");
-        for(Map.Entry<VectorClock, Key> entry : mockServerDataSynchronizer1.getSecondaryIndex().entrySet()){
+        for (Map.Entry<VectorClock, Key> entry : mockServerDataSynchronizer1.getSecondaryIndex().entrySet()) {
             System.out.println("VectorClock: " + entry.getKey() + " Key: " + entry.getValue());
         }
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().values().stream().anyMatch(key -> key.equals(keyD)));
@@ -278,7 +284,7 @@ public class DataManagerWriterTest {
 
         // Wait for the writer thread to process the update.
         try {
-            Thread.sleep(100);
+            Thread.sleep(500);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -292,7 +298,7 @@ public class DataManagerWriterTest {
         // the old mapping should be removed rather than replaced with a null value.
         // The only entry in the secondary index should be the updated key.
         assertEquals(1, mockServerDataSynchronizer1.getSecondaryIndex().size());
-        for (Key secondaryKey : mockServerDataSynchronizer1.getSecondaryIndex().values()){
+        for (Key secondaryKey : mockServerDataSynchronizer1.getSecondaryIndex().values()) {
             assertNotNull("Secondary index should not contain null keys", secondaryKey);
             assertEquals("Secondary index should map to the updated key", key, secondaryKey);
         }
@@ -336,9 +342,9 @@ public class DataManagerWriterTest {
         System.out.println("Injected NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE: " + ServerConfig.NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE);
     }
 
-    private VectorClock createComparableVectorClock(int serverNumber, int serverID, int offset){
+    private VectorClock createComparableVectorClock(int serverNumber, int serverID, int offset) {
         VectorClock vectorClock = new VectorClock(serverNumber, serverID);
-        for(int i = 0; i < offset; i++){
+        for (int i = 0; i < offset; i++) {
             vectorClock.incrementSelfClock();
         }
         return vectorClock;

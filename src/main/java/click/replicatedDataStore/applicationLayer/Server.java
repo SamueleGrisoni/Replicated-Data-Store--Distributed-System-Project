@@ -54,7 +54,7 @@ public class Server {
         dataManagerWriter.start();
     }
     public void stopThreads() {
-        //todo
+        dataManagerWriter.stopThread();
     }
 
     public Pair<String, Integer> getMyAddressAndPort(){

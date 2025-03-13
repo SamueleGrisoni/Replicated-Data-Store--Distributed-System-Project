@@ -5,7 +5,9 @@ import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSyn
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
+import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.VectorClock;
+import click.replicatedDataStore.utlis.DataType;
 import click.replicatedDataStore.utlis.Key;
 import click.replicatedDataStore.utlis.ServerConfig;
 
@@ -19,6 +21,7 @@ public class DataManagerWriter extends Thread {
     private final ClientServerPriorityQueue queue;
     private int numberOfWrites = 0;
     private TimeTravel timeTravel;
+    private boolean stop = false;
 
     public DataManagerWriter(ServerDataSynchronizer serverDataSynchronizer) {
         this.serverDataSynchronizer = serverDataSynchronizer;
@@ -33,10 +36,25 @@ public class DataManagerWriter extends Thread {
     public void run() {
         System.out.println("Writer thread started");
         while (true) {
-            List<ClockedData> data = queue.pollData();
-            write(data);
-            if (data.size() == 1) {
-                timeTravel.heavyPush(data);
+            if(stop){
+                //thread is stopped here if it is waiting for data
+                break;
+            }
+            //Lock the queue so new data cannot be added while writing
+            queue.lockQueue();
+            try {
+                if(stop){
+                    //thread is stopped here if there is data to be written
+                    break;
+                }
+                Pair<DataType, List<ClockedData>> data = queue.pollData();
+                write(data.second());
+                if(data.first() == DataType.CLIENT){
+                    System.out.println("Sending data to other servers" + data.second());
+                    timeTravel.heavyPush(data.second());
+                }
+            } finally {
+                queue.unlockQueue();
             }
         }
     }
@@ -95,5 +113,16 @@ public class DataManagerWriter extends Thread {
 
     public void addServerData(List<ClockedData> serverData) {
         queue.addServerData(serverData);
+    }
+
+    public void stopThread() {
+        stop = true;
+        queue.lockQueue();
+        try {
+            // Unblock thread if it is waiting for data
+            queue.getNotEmptyCondition().signalAll();
+        } finally {
+            queue.unlockQueue();
+        }
     }
 }

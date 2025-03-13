@@ -47,7 +47,7 @@ public class ClientServerPriorityQueueTest {
         compareVC.incrementSelfClock(); //vc = [1, 0, 0]
 
         queue.addClientData(clientData);
-        ClockedData result = queue.pollData().get(0);
+        ClockedData result = queue.pollData().second().get(0);
 
         assertNotNull(result);
         assertEquals(key, result.key());
@@ -63,7 +63,7 @@ public class ClientServerPriorityQueueTest {
 
         ClockedData serverData = new ClockedData(otherServerVC, key, "serverValue");
         queue.addServerData(List.of(serverData));
-        ClockedData result = queue.pollData().get(0);
+        ClockedData result = queue.pollData().second().get(0);
 
         assertNotNull(result);
         assertEquals(key, result.key());
@@ -85,12 +85,12 @@ public class ClientServerPriorityQueueTest {
         queue.addClientData(clientData);
 
         //clientData should be popped first
-        ClockedData result = queue.pollData().get(0);
+        ClockedData result = queue.pollData().second().get(0);
         assertNotNull(result);
         assertEquals(clientKey, result.key());
         assertEquals("clientValue", result.value());
         //queue.popData();
-        result = queue.pollData().get(0);
+        result = queue.pollData().second().get(0);
         assertNotNull(result);
         assertEquals(serverKey, result.key());
         assertEquals("serverValue", result.value());
@@ -104,20 +104,26 @@ public class ClientServerPriorityQueueTest {
         executor.submit(() -> {
             try {
                 Thread.sleep(500);
-                System.out.println("Adding data");
-                queue.addClientData(new ClientWrite(key, "delayedValue"));
+                queue.lockQueue();
+                try {
+                    queue.addClientData(new ClientWrite(key, "delayedValue"));
+                } finally {
+                    queue.unlockQueue();
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         });
 
-        //Queue is empty, popData should block until data is added
-        System.out.println("Blocking popData");
-        ClockedData result = queue.pollData().get(0);
-        assertNotNull(result);
-        assertEquals(key, result.key());
-        assertEquals("delayedValue", result.value());
-        //queue.popData();
+        queue.lockQueue();
+        try {
+            ClockedData result = queue.pollData().second().get(0);
+            assertEquals(key, result.key());
+            assertEquals("delayedValue", result.value());
+        } finally {
+            queue.unlockQueue();
+        }
+
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.SECONDS);
     }
