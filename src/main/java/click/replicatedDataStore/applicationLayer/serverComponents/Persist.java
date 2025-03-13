@@ -3,6 +3,7 @@ package click.replicatedDataStore.applicationLayer.serverComponents;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utlis.Key;
+import click.replicatedDataStore.utlis.ServerConfig;
 
 import java.io.*;
 import java.util.LinkedHashMap;
@@ -17,7 +18,7 @@ public class Persist {
     private boolean newIndexFile;
 
     public Persist(String dataFolderName, String dataFileName, String indexFileName) {
-        String folderPath = getOSDataFolderPath() + dataFolderName + File.separator;
+        String folderPath = ServerConfig.getOSDataFolderPath() + dataFolderName + File.separator;
         this.dataFilePath = folderPath + dataFileName;
         this.indexFilePath = folderPath + indexFileName;
 
@@ -152,25 +153,6 @@ public class Persist {
             }
         }
         return secondaryIndex;
-    }
-
-    /**
-     * Get the path of the data folder based on the OS (Windows, macOS, Linux)
-     * data folder is the folder where the data is going to be persisted
-     *
-     * @return the path of the data folder depending on the OS
-     */
-    private String getOSDataFolderPath() {
-        String OS = (System.getProperty("os.name")).toUpperCase();
-        if (OS.contains("WIN")) {
-            return System.getenv("APPDATA") + File.separator;
-        } else if (OS.contains("MAC")) {
-            //well-known hardcoded paths, used in the appDirs library
-            return System.getProperty("user.home") + "/Library/Application Support/";
-        } else {
-            //In a Unix system, data will be saved in the home directory as a hidden folder
-            return System.getProperty("user.home") + File.separator + ".";
-        }
     }
 
     private void checkOrCreateDataFile(String dataFilePath) {
