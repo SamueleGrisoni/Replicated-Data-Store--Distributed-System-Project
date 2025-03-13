@@ -39,7 +39,7 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
 
     public void updateClock(VectorClock incomingClock) throws ClockTooFarAhead{
         try{
-            checkIfUpdatable(this, incomingClock);
+            checkIfUpdatable(serverID, this, incomingClock);
         }catch (IllegalArgumentException e){
             e.printStackTrace();
         }
@@ -49,7 +49,7 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
     }
 
     //Compare the incoming clock with the server's clock. If the incoming clock is too far ahead, throw an exception
-    private void checkIfUpdatable(VectorClock serverVectorClock, VectorClock incomingVectorClock) throws ClockTooFarAhead, IllegalArgumentException {
+    public static void checkIfUpdatable(Integer serverID, VectorClock serverVectorClock, VectorClock incomingVectorClock) throws ClockTooFarAhead, IllegalArgumentException {
         if (incomingVectorClock == null || incomingVectorClock.clock == null) {
             throw new IllegalArgumentException("The incoming vector clock is null");
         }
@@ -63,7 +63,7 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
                 delta = incomingVectorClock.clock[i] - serverVectorClock.clock[i];
             }
             if (delta > 1) {
-                System.out.println("Server clock: " + serverVectorClock);
+                System.out.println("Server" +serverID+ "'s clock: " + serverVectorClock);
                 System.out.println("Incoming clock: " + incomingVectorClock);
                 throw new ClockTooFarAhead("Incoming clock is " + delta + " steps ahead");
             }

@@ -117,9 +117,27 @@ public class DataManagerWriterTest {
         Thread.sleep(100);
         assertEquals(1, mockServerDataSynchronizer1.getPrimaryIndex().size());
         assertEquals("value1", mockServerDataSynchronizer1.getPrimaryIndex().get(key));
-
         assertEquals(1, mockServerDataSynchronizer2.getPrimaryIndex().size());
         assertEquals("value1", mockServerDataSynchronizer2.getPrimaryIndex().get(key));
+
+        ClientWrite clientUpdate = new ClientWrite(key, "updateValue1");
+        mockServer.addClientData(clientUpdate);
+        // Wait for the writer thread to process the data
+        Thread.sleep(100);
+        assertEquals(1, mockServerDataSynchronizer1.getPrimaryIndex().size());
+        assertEquals("updateValue1", mockServerDataSynchronizer1.getPrimaryIndex().get(key));
+        assertEquals(1, mockServerDataSynchronizer2.getPrimaryIndex().size());
+        assertEquals("updateValue1", mockServerDataSynchronizer2.getPrimaryIndex().get(key));
+
+        TestKey otherClientKey = new TestKey("OtherClientKey");
+        ClientWrite otherClientWrite = new ClientWrite(otherClientKey, "value2");
+        mockServer2.addClientData(otherClientWrite);
+        // Wait for the writer thread to process the data
+        Thread.sleep(100);
+        assertEquals(2, mockServerDataSynchronizer2.getPrimaryIndex().size());
+        assertEquals("value2", mockServerDataSynchronizer2.getPrimaryIndex().get(otherClientKey));
+        assertEquals(2, mockServerDataSynchronizer1.getPrimaryIndex().size());
+        assertEquals("value2", mockServerDataSynchronizer1.getPrimaryIndex().get(otherClientKey));
     }
 
     @Test
@@ -150,7 +168,6 @@ public class DataManagerWriterTest {
         assertEquals(1, mockServerDataSynchronizer1.getSecondaryIndex().size());
     }
 
-    //todo find problem
     @Test
     public void testSecondaryUpdate() {
         injectNUMBER_OF_WRITE_SECONDARY_INTERVAL(2);

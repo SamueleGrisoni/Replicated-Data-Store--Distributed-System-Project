@@ -101,4 +101,8 @@ public class ServerDataSynchronizer {
             return new TreeMap<>(secondaryIndex);
         }
     }
+
+    public int getServerID() {
+        return serverID;
+    }
 }

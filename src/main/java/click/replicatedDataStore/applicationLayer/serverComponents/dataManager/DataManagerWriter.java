@@ -7,6 +7,7 @@ import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.VectorClock;
+import click.replicatedDataStore.utlis.ClockTooFarAhead;
 import click.replicatedDataStore.utlis.DataType;
 import click.replicatedDataStore.utlis.Key;
 import click.replicatedDataStore.utlis.ServerConfig;
@@ -36,25 +37,29 @@ public class DataManagerWriter extends Thread {
     public void run() {
         System.out.println("Writer thread started");
         while (true) {
-            if(stop){
-                //thread is stopped here if it is waiting for data
-                break;
-            }
+            if(stop) break;
             //Lock the queue so new data cannot be added while writing
             queue.lockQueue();
             try {
-                if(stop){
-                    //thread is stopped here if there is data to be written
-                    break;
-                }
                 Pair<DataType, List<ClockedData>> data = queue.pollData();
-                write(data.second());
-                if(data.first() == DataType.CLIENT){
-                    System.out.println("Sending data to other servers" + data.second());
-                    timeTravel.heavyPush(data.second());
-                }
+                processPopData(data);
             } finally {
                 queue.unlockQueue();
+            }
+        }
+    }
+
+    private void processPopData(Pair<DataType, List<ClockedData>> data) {
+        if(data.first() == DataType.CLIENT){
+            System.out.println("Sending data to other servers" + data.second());
+            timeTravel.heavyPush(data.second());
+            write(data.second());
+        }else if(data.first() == DataType.SERVER){
+            try {
+                VectorClock.checkIfUpdatable(serverDataSynchronizer.getServerID(), serverDataSynchronizer.getVectorClock(), data.second().get(0).vectorClock());
+                write(data.second());
+            }catch (ClockTooFarAhead e){
+                System.out.println("Server"+serverDataSynchronizer.getServerID() + ": incoming data is too far ahead. Discarding Update");
             }
         }
     }
