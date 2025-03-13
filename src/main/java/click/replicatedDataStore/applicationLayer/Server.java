@@ -16,7 +16,7 @@ import click.replicatedDataStore.dataStructures.Pair;
 import java.io.Serializable;
 import java.util.*;
 
-public class Server {
+public class Server extends Thread{
     private final Map<Integer, Pair<String, Integer>> addresses;
     private final int serverID;
     private final int serverNumber;
@@ -26,15 +26,13 @@ public class Server {
     private final DataManagerWriter dataManagerWriter;
     private final ServerConnectionManager serverConnectionManager;
     private final TimeTravel timeTravel;
-
+    private boolean stop = false;
     private final Logger logger = new Logger();
 
     public Server(int serverID, Map<Integer, Pair<String, Integer>> addresses) {
         this.serverID = serverID;
         this.addresses = addresses;
         this.serverNumber = addresses.size();
-        String serverAddress = addresses.get(serverID).first();
-        Integer serverPort = addresses.get(serverID).second();
 
         this.serverDataSynchronizer = new ServerDataSynchronizer(serverNumber, serverID);
         this.dataManagerWriter = new DataManagerWriter(serverDataSynchronizer);
@@ -45,15 +43,12 @@ public class Server {
 
         this.serverConnectionManager = new ServerConnectionManager(timeTravel, logger, this);
         this.timeTravel.setServerConnectionManager(serverConnectionManager);
-
-        startServerThreads();
-        logger.logInfo("Server " + serverID + " started on " + serverAddress + ":" + serverPort);
     }
 
     private void startServerThreads(){
         dataManagerWriter.start();
     }
-    public void stopThreads() {
+    private void stopThreads() {
         dataManagerWriter.stopThread();
     }
 
@@ -85,5 +80,18 @@ public class Server {
 
     public void addServerData(List<ClockedData> serverData){
         dataManagerWriter.addServerData(serverData);
+    }
+
+    @Override
+    public void run() {
+        startServerThreads();
+        logger.logInfo("Server " + serverID + " started on " + addresses.get(serverID).first() + ":" + addresses.get(serverID).second());
+        while(!stop){
+        }
+        stopThreads();
+    }
+
+    public void stopServer(){
+        stop = true;
     }
 }
