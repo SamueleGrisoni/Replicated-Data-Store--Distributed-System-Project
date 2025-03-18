@@ -119,6 +119,7 @@ public class ServerConnectionManager extends ConnectionManager{
         return sync.handleFetch(fetch);
     }
 
+    //TODO call this in server
     public void stop(){
         super.stop();
         serverHandlersMap.values().forEach(opt -> opt.ifPresent(ServerHandler::stopRunning));

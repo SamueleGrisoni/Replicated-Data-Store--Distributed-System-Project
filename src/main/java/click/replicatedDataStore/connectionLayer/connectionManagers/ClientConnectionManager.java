@@ -65,7 +65,7 @@ public class ClientConnectionManager extends ConnectionManager {
         return Optional.of(new StateAnswerMsg(que.addClientData(write.getPayload())? AnswerState.OK: AnswerState.FAIL));
     }
 
-
+    //TODO call this in server
     public void stop(){
         super.stop();
         for(ClientsHandler client: clientsHandlerList){

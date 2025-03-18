@@ -42,6 +42,7 @@ public abstract class ConnectionHandler extends Thread{
                 response.start();
             }catch (EOFException e){
                 running = false;
+                //TODO remove handler from the list (remove from ClientConnectioManager list)
             }catch (IOException e){
                 if(running)
                     manager.logger.logErr(this.getClass(), "error while processing a request\n" + e.getMessage());
