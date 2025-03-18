@@ -5,10 +5,7 @@ import click.replicatedDataStore.connectionLayer.messages.*;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.utlis.Key;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.net.Socket;
 
 public class RequestSender {
@@ -79,7 +76,7 @@ public class RequestSender {
             out.writeObject(new ClientWriteMsg(new ClientWrite(key, value
             )));
             out.flush();
-        }catch (IOException e){
+        } catch (IOException e) {
             errorManager.logErr(this.getClass(),
                     "unable to write the object correctly" + "\n" +
                             e.getMessage());
@@ -88,7 +85,9 @@ public class RequestSender {
         AnswerState response = AnswerState.FAIL;
         try {
             response = ((StateAnswerMsg) in.readObject()).getPayload();
-        } catch (IOException ioException){
+        } catch (EOFException e){
+            errorManager.logErr(this.getClass(), "lost connection with the server");
+        }catch (IOException ioException){
             errorManager.logErr(this.getClass(),
                     "unable to read the object correctly" + "\n" + ioException.getMessage());
         } catch (ClassNotFoundException cException) {

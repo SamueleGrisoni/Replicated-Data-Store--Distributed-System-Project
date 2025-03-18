@@ -3,6 +3,7 @@ package click.replicatedDataStore.connectionLayer.connectionThreads;
 import click.replicatedDataStore.connectionLayer.connectionManagers.ConnectionManager;
 import click.replicatedDataStore.connectionLayer.messages.AbstractMsg;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -26,6 +27,7 @@ public abstract class ConnectionHandler extends Thread{
         while(running){
             try {
                 Object readObj = this.in.readObject();
+
                 AbstractMsg<?> request = (AbstractMsg<?>) readObj;
                 Thread response = new Thread(() -> {
                     Optional<AbstractMsg<?>> retMsg = manager.resolveRequest(request);
@@ -38,6 +40,8 @@ public abstract class ConnectionHandler extends Thread{
                     }
                 });
                 response.start();
+            }catch (EOFException e){
+                running = false;
             }catch (IOException e){
                 if(running)
                     manager.logger.logErr(this.getClass(), "error while processing a request\n" + e.getMessage());

@@ -42,8 +42,9 @@ public class ConnectionAcceptor extends Thread{
                 Socket newClientConnection = serverSocket.accept();
                 connectionManager.handleNewConnection(newClientConnection);
             } catch (IOException e) {
-                if(running)
+                if(running) {
                     connectionManager.logger.logErr(this.getClass(), "error while accepting client connection\n" + e.getMessage());
+                }
             }
         }
     }
