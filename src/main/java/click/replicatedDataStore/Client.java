@@ -2,11 +2,20 @@ package click.replicatedDataStore;
 
 import click.replicatedDataStore.applicationLayer.clientComponents.RequestSender;
 import click.replicatedDataStore.applicationLayer.clientComponents.view.ClientErrorManager;
+import click.replicatedDataStore.connectionLayer.messages.AnswerState;
+import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.keyImplementations.StringKey;
 
 import java.util.Scanner;
 
 public class Client {
+
+    public static int nextIntClear(){
+        Scanner input = new Scanner(System.in);
+        int val = input.nextInt();
+        input.nextLine();
+        return val;
+    }
 
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
@@ -17,27 +26,29 @@ public class Client {
         System.out.println("ip: ");
         String ip = input.nextLine();
         System.out.println("port: ");
-        int port = input.nextInt();
+        int port = nextIntClear();
 
-        RequestSender sender = new RequestSender(ip, port, eMan);
+        RequestSender sender = new RequestSender(ip.isEmpty()? "localhost": ip, port, eMan);
 
-        System.out.println("what do you want to do?\n");
+        System.out.println("what do you want to do?");
         while(true){
-            System.out.println("0: read\n" + "1: write\n");
+            System.out.println("0: read"+ " --- " + "1: write");
 
-            int choice = input.nextInt();
+            int choice = nextIntClear();
             if(choice == 0){
                 System.out.println("key: ");
                 String skey = input.nextLine();
-
-                sender.read(new StringKey(skey));
+                System.out.println("reading (" + skey + ") ...");
+                ClientWrite read = sender.read(new StringKey(skey));
+                System.out.println(read.key() + ", " + read.value());
             } else if (choice == 1) {
                 System.out.println("key: ");
                 String skey = input.nextLine();
                 System.out.println("value: ");
-                Integer val = input.nextInt();
-
-                sender.write(new StringKey(skey), val);
+                Integer val = nextIntClear();
+                System.out.println("writing (" + skey + ", " + val + ") ...");
+                AnswerState state = sender.write(new StringKey(skey), val);
+                System.out.println(state);
             }else {
                 System.out.println("Wrong input\n");
             }
