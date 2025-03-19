@@ -17,19 +17,22 @@ public class ConfigFile{
         @JsonProperty("address")
         private String ip;
 
-        @JsonProperty("port")
-        private int port;
+        @JsonProperty("incomingPort")
+        private int incomingPort;
+
+        @JsonProperty("outgoingPort")
+        private int outgoingPort;
+
+        public int getIncomingPort() {
+            return incomingPort;
+        }
+
+        public int getOutgoingPort() {
+            return outgoingPort;
+        }
 
         public String getIp() {
             return ip;
-        }
-
-        public int getPort() {
-            return port;
-        }
-
-        public void setPort(int port) {
-            this.port = port;
         }
     }
 }

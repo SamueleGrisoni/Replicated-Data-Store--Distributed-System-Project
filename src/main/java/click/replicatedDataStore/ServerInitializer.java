@@ -3,6 +3,7 @@ package click.replicatedDataStore;
 import click.replicatedDataStore.applicationLayer.Logger;
 import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.dataStructures.Pair;
+import click.replicatedDataStore.dataStructures.ServerPorts;
 import click.replicatedDataStore.utlis.ConfigFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -16,18 +17,20 @@ public class ServerInitializer {
             System.out.println("Usage: java -jar Server.jar configFilePath");
             return;
         }
-        Map<Integer, Pair<String, Integer>> addresses = readJson(args[0]);
-        if(addresses.isEmpty()){
+        Map<Integer, Pair<String, ServerPorts>> addresses = readJson(args[0]);
+        if(!isMapCorrect(addresses)){
             return;
         }
         System.out.println("Found a config file for " + addresses.size() + " servers");
         System.out.println("--------------------");
-        for(Map.Entry<Integer, Pair<String, Integer>> entry : addresses.entrySet()){
-            System.out.println("Server " + entry.getKey() + " at " + entry.getValue().first() + ":" + entry.getValue().second());
+        for(Map.Entry<Integer, Pair<String, ServerPorts>> entry : addresses.entrySet()){
+            System.out.println("Server " + entry.getKey() + " at " + entry.getValue().first());
+            System.out.println("Incoming port: " + entry.getValue().second().incomingPort());
+            System.out.println("Outgoing port: " + entry.getValue().second().outgoingPort());
         }
         System.out.println("--------------------");
         List<Server> servers = new ArrayList<>();
-        for(Map.Entry<Integer, Pair<String, Integer>> entry : addresses.entrySet()){
+        for(Map.Entry<Integer, Pair<String, ServerPorts>> entry : addresses.entrySet()){
             Server server = new Server(entry.getKey(), addresses);
             server.start();
             servers.add(server);
@@ -47,9 +50,9 @@ public class ServerInitializer {
         System.out.println("Servers stopped successfully");
     }
 
-    private static Map<Integer, Pair<String, Integer>> readJson(String filePath) {
+    private static Map<Integer, Pair<String, ServerPorts>> readJson(String filePath) {
         ObjectMapper objectMapper = new ObjectMapper();
-        Map<Integer, Pair<String, Integer>> resultMap = new HashMap<>();
+        Map<Integer, Pair<String, ServerPorts>> resultMap = new HashMap<>();
         ConfigFile configFile;
         try {
             try{
@@ -69,7 +72,7 @@ public class ServerInitializer {
             }
             int serverIndex = 0;
             for (ConfigFile.ConfigFileEntry entry : configFile.getServers()) {
-                resultMap.put(serverIndex, new Pair<>(entry.getIp(), entry.getPort()));
+                resultMap.put(serverIndex, new Pair<>(entry.getIp(), new ServerPorts(entry.getIncomingPort(), entry.getOutgoingPort())));
                 serverIndex++;
             }
         } catch (Exception e) {
@@ -78,5 +81,31 @@ public class ServerInitializer {
         return resultMap;
     }
 
+    private static boolean isMapCorrect(Map<Integer, Pair<String, ServerPorts>> addresses){
+        Set<Integer> ports = new HashSet<>();
+        if(addresses.isEmpty()){
+            System.out.println("No servers found in the config file, check the config file syntax");
+            return false;
+        }
+        for(Map.Entry<Integer, Pair<String, ServerPorts>> entry : addresses.entrySet()){
+            if(entry.getValue().first() == null || entry.getValue().second() == null){
+                System.out.println("Server " + entry.getKey() + " has missing address or port");
+                return false;
+            }
+            if(entry.getValue().second().incomingPort() < 1024 || entry.getValue().second().outgoingPort() < 1024){
+                System.out.println("Server " + entry.getKey() + " is using a reserved port. Please use a port number greater than 1023");
+                return false;
+            }
+            if(!ports.add(entry.getValue().second().incomingPort())){
+                System.out.println("Incoming port " + entry.getValue().second().incomingPort() + " of server " + entry.getKey() + " is already in use by another server");
+                return false;
+            }
+            if(!ports.add(entry.getValue().second().outgoingPort())){
+                System.out.println("Outgoing port " + entry.getValue().second().outgoingPort() + " of server " + entry.getKey() + " is already in use by another server");
+                return false;
+            }
 
+        }
+        return true;
+    }
 }

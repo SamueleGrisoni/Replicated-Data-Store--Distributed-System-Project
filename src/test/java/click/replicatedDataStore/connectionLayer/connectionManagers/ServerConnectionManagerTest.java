@@ -63,9 +63,9 @@ public class ServerConnectionManagerTest {
         Mockito.doAnswer(invocationOnMock -> nServer).when(server).getNumberOfServers();
         Mockito.doAnswer(invocationOnMock -> otherIndexes).when(server).getOtherIndexes();
 
-        Mockito.doAnswer(invocationOnMock -> serverIpPortMap.get(index)).when(server).getAddressAndPortPairOf(index);
+        Mockito.doAnswer(invocationOnMock -> serverIpPortMap.get(index)).when(server).getAddressAndPortsPairOf(index);
         for(Integer i : otherIndexes)
-            Mockito.doAnswer(invocationOnMock -> serverIpPortMap.get(i)).when(server).getAddressAndPortPairOf(i);
+            Mockito.doAnswer(invocationOnMock -> serverIpPortMap.get(i)).when(server).getAddressAndPortsPairOf(i);
     }
 
     @Test

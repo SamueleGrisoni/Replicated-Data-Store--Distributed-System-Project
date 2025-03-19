@@ -9,6 +9,7 @@ import click.replicatedDataStore.connectionLayer.connectionThreads.PassiveServer
 import click.replicatedDataStore.connectionLayer.connectionThreads.ServerHandler;
 import click.replicatedDataStore.connectionLayer.messages.*;
 import click.replicatedDataStore.dataStructures.Pair;
+import click.replicatedDataStore.dataStructures.ServerPorts;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -23,21 +24,11 @@ public class ServerConnectionManager extends ConnectionManager{
     private final Map<Integer, Optional<ServerHandler>> serverHandlersMap = new HashMap<>();
     private final Map<Integer, Object> handlerLocksMap = new HashMap<>();
 
-    //todo remove this constructor
-    //legacy costructor used for testing
-    public ServerConnectionManager(Integer port, TimeTravel sync,
-                                   Logger logger, Server server) {
-        super(port, logger);
-
-        this.sync = sync;
-        this.server = server;
-        initializeServerHandlerAndLocksMap();
-        this.createConnections();
-    }
-
     public ServerConnectionManager(TimeTravel sync,
                                    Logger logger, Server server) {
-        super(server.getMyAddressAndPort().second(), logger);
+        super(server.getMyAddressAndPorts().second().incomingPort(),
+                server.getMyAddressAndPorts().second().outgoingPort(),
+                logger);
 
         this.sync = sync;
         this.server = server;
@@ -77,9 +68,10 @@ public class ServerConnectionManager extends ConnectionManager{
                 .filter(index -> index != server.getServerID());
         serverIndexes.forEach(index -> {
             Thread t = new Thread(() -> {
-                Pair<String, Integer> ipPort = server.getAddressAndPortPairOf(index);
+                //todo fix this with the new 2 ports system
+                Pair<String, ServerPorts> ipPort = server.getAddressAndPortsPairOf(index);
                 try {
-                    Socket socket = new Socket(ipPort.first(), ipPort.second());
+                    Socket socket = new Socket(ipPort.first(), ipPort.second().incomingPort());
                     ActiveServerHandler serverHandler;
                     synchronized (handlerLocksMap.get(index)) {
                         serverHandler = new ActiveServerHandler(socket, this, this.server.getServerID(), index);

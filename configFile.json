@@ -2,15 +2,18 @@
   "servers": [
     {
       "address": "127.0.0.1",
-      "port": 4416
+      "incomingPort": 4416,
+      "outgoingPort": 4417
     },
     {
       "address": "127.0.0.1",
-      "port": 4417
+      "incomingPort": 4418,
+      "outgoingPort": 4419
     },
     {
       "address": "127.0.0.1",
-      "port": 4418
+      "incomingPort": 4420,
+      "outgoingPort": 4421
     }
   ]
 }

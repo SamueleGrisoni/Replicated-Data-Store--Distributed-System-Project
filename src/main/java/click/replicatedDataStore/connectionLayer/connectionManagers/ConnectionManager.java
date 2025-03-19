@@ -16,12 +16,14 @@ public abstract class ConnectionManager {
     public final Logger logger;
 
     /**
-     * @param port the port on which the server accepts connections
+     * @param incomingPort the port on which the server accepts connections
+     * @param outgoingPort the port on which the server sends connections
      * @param logger the logger for the server
      */
-    protected ConnectionManager(int port, Logger logger){
+    protected ConnectionManager(int incomingPort, int outgoingPort, Logger logger){
+        //todo handle 2 port setup
         this.logger = logger;
-        connectionAcceptor = new ConnectionAcceptor(port, this);
+        connectionAcceptor = new ConnectionAcceptor(incomingPort, this);
         setupRouting();
 
         connectionAcceptor.start();

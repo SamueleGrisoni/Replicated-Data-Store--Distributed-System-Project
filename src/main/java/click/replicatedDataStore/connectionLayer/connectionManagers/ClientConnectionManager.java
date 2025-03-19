@@ -20,14 +20,15 @@ public class ClientConnectionManager extends ConnectionManager {
     private final DataManagerReader dataRead;
 
     /**
-     * @param port the port on which the server accepts connections from clients
+     * @param incomingPort the port on which the server accepts connections from clients
      * @param serverQueue the server priority queue on which incoming data is sent
      * @param dataRead the data manager reader
      * @param logger the server logger
      */
-    public ClientConnectionManager(int port, ClientServerPriorityQueue serverQueue,
+    public ClientConnectionManager(int incomingPort, int outgoingPort, ClientServerPriorityQueue serverQueue,
                             DataManagerReader dataRead, Logger logger) {
-        super(port, logger);
+        //todo handle 2 port setup
+        super(incomingPort, outgoingPort, logger);
         this.clientsHandlerList = new LinkedList<>();
         this.que = serverQueue;
         this.dataRead = dataRead;

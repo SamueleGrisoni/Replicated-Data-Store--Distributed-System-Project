@@ -3,21 +3,17 @@ package click.replicatedDataStore.applicationLayer;
 import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerWriter;
-import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
 import click.replicatedDataStore.connectionLayer.connectionManagers.ServerConnectionManager;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
-import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utlis.ServerConfig;
-import click.replicatedDataStore.utlis.Key;
 import click.replicatedDataStore.dataStructures.Pair;
+import click.replicatedDataStore.dataStructures.ServerPorts;
 
-import java.io.Serializable;
 import java.util.*;
 
 public class Server extends Thread{
-    private final Map<Integer, Pair<String, Integer>> addresses;
+    private final Map<Integer, Pair<String, ServerPorts>> addresses;
     private final int serverID;
     private final int serverNumber;
 
@@ -29,7 +25,7 @@ public class Server extends Thread{
     private boolean stop = false;
     private final Logger logger = new Logger();
 
-    public Server(int serverID, Map<Integer, Pair<String, Integer>> addresses) {
+    public Server(int serverID, Map<Integer, Pair<String, ServerPorts>> addresses) {
         this.serverID = serverID;
         this.addresses = addresses;
         this.serverNumber = addresses.size();
@@ -52,11 +48,11 @@ public class Server extends Thread{
         dataManagerWriter.stopThread();
     }
 
-    public Pair<String, Integer> getMyAddressAndPort(){
+    public Pair<String, ServerPorts> getMyAddressAndPorts(){
         return addresses.get(serverID);
     }
 
-    public Pair<String, Integer> getAddressAndPortPairOf(int serverID){
+    public Pair<String, ServerPorts> getAddressAndPortsPairOf(int serverID){
         return addresses.get(serverID);
     }
 
