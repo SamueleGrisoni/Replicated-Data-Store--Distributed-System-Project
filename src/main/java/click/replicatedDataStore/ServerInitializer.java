@@ -1,6 +1,5 @@
 package click.replicatedDataStore;
 
-import click.replicatedDataStore.applicationLayer.Logger;
 import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.ServerPorts;
@@ -48,6 +47,7 @@ public class ServerInitializer {
             }
         }
         System.out.println("Servers stopped successfully");
+        System.exit(0);
     }
 
     private static Map<Integer, Pair<String, ServerPorts>> readJson(String filePath) {

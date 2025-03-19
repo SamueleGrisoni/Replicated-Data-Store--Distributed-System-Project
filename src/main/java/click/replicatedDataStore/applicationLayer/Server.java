@@ -46,6 +46,8 @@ public class Server extends Thread{
     }
     private void stopThreads() {
         dataManagerWriter.stopThread();
+        serverConnectionManager.stop();
+        timeTravel.stop();
     }
 
     public Pair<String, ServerPorts> getMyAddressAndPorts(){
