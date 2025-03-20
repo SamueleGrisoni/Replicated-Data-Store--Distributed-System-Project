@@ -3,10 +3,7 @@ package click.replicatedDataStore.applicationLayerTest;
 import click.replicatedDataStore.TestUtils;
 import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
-import click.replicatedDataStore.dataStructures.ClientWrite;
-import click.replicatedDataStore.dataStructures.ClockedData;
-import click.replicatedDataStore.dataStructures.Pair;
-import click.replicatedDataStore.dataStructures.VectorClock;
+import click.replicatedDataStore.dataStructures.*;
 import click.replicatedDataStore.utlis.Key;
 import click.replicatedDataStore.utlis.ServerConfig;
 import org.junit.After;
@@ -28,7 +25,9 @@ public class DataManagerWriterTest {
     private Server mockServer2;
     private ServerDataSynchronizer mockServerDataSynchronizer1;
     private ServerDataSynchronizer mockServerDataSynchronizer2;
-    Map<Integer, Pair<String, Integer>> addresses = Map.of(0, new Pair<>("localhost", TestUtils.getPort()), 1, new Pair<>("localhost", TestUtils.getPort()));
+    Map<Integer, Pair<String, ServerPorts>> addresses = Map.of(
+            0, new Pair<>("localhost", new ServerPorts(TestUtils.getPort(), TestUtils.getPort())),
+            1, new Pair<>("localhost", new ServerPorts(TestUtils.getPort(), TestUtils.getPort())));
 
     @Before
     public void setUp() {

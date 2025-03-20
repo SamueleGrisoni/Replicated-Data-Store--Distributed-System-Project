@@ -24,8 +24,8 @@ public class ServerInitializer {
         System.out.println("--------------------");
         for(Map.Entry<Integer, Pair<String, ServerPorts>> entry : addresses.entrySet()){
             System.out.println("Server " + entry.getKey() + " at " + entry.getValue().first());
-            System.out.println("Incoming port: " + entry.getValue().second().incomingPort());
-            System.out.println("Outgoing port: " + entry.getValue().second().outgoingPort());
+            System.out.println("Server port: " + entry.getValue().second().serverPort());
+            System.out.println("Client port: " + entry.getValue().second().clientPort());
         }
         System.out.println("--------------------");
         List<Server> servers = new ArrayList<>();
@@ -72,7 +72,7 @@ public class ServerInitializer {
             }
             int serverIndex = 0;
             for (ConfigFile.ConfigFileEntry entry : configFile.getServers()) {
-                resultMap.put(serverIndex, new Pair<>(entry.getIp(), new ServerPorts(entry.getIncomingPort(), entry.getOutgoingPort())));
+                resultMap.put(serverIndex, new Pair<>(entry.getIp(), new ServerPorts(entry.getServerPort(), entry.getClientPort())));
                 serverIndex++;
             }
         } catch (Exception e) {
@@ -92,16 +92,16 @@ public class ServerInitializer {
                 System.out.println("Server " + entry.getKey() + " has missing address or port");
                 return false;
             }
-            if(entry.getValue().second().incomingPort() < 1024 || entry.getValue().second().outgoingPort() < 1024){
+            if(entry.getValue().second().serverPort() < 1024 || entry.getValue().second().clientPort() < 1024){
                 System.out.println("Server " + entry.getKey() + " is using a reserved port. Please use a port number greater than 1023");
                 return false;
             }
-            if(!ports.add(entry.getValue().second().incomingPort())){
-                System.out.println("Incoming port " + entry.getValue().second().incomingPort() + " of server " + entry.getKey() + " is already in use by another server");
+            if(!ports.add(entry.getValue().second().serverPort())){
+                System.out.println("Incoming port " + entry.getValue().second().serverPort() + " of server " + entry.getKey() + " is already in use by another server");
                 return false;
             }
-            if(!ports.add(entry.getValue().second().outgoingPort())){
-                System.out.println("Outgoing port " + entry.getValue().second().outgoingPort() + " of server " + entry.getKey() + " is already in use by another server");
+            if(!ports.add(entry.getValue().second().clientPort())){
+                System.out.println("Outgoing port " + entry.getValue().second().clientPort() + " of server " + entry.getKey() + " is already in use by another server");
                 return false;
             }
 

@@ -4,6 +4,7 @@ import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSyn
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerWriter;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
+import click.replicatedDataStore.connectionLayer.connectionManagers.ClientConnectionManager;
 import click.replicatedDataStore.connectionLayer.connectionManagers.ServerConnectionManager;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
@@ -21,6 +22,7 @@ public class Server extends Thread{
     private final DataManagerReader dataManagerReader;
     private final DataManagerWriter dataManagerWriter;
     private final ServerConnectionManager serverConnectionManager;
+    private final ClientConnectionManager clientConnectionManager;
     private final TimeTravel timeTravel;
     private boolean stop = false;
     private final Logger logger = new Logger();
@@ -39,6 +41,9 @@ public class Server extends Thread{
 
         this.serverConnectionManager = new ServerConnectionManager(timeTravel, logger, this);
         this.timeTravel.setServerConnectionManager(serverConnectionManager);
+
+        this.clientConnectionManager = new ClientConnectionManager(addresses.get(serverID).second().clientPort(),
+                                            dataManagerWriter.getQueue(), dataManagerReader, logger);
     }
 
     private void startServerThreads(){
@@ -47,6 +52,7 @@ public class Server extends Thread{
     private void stopThreads() {
         dataManagerWriter.stopThread();
         serverConnectionManager.stop();
+        clientConnectionManager.stop();
         timeTravel.stop();
     }
 

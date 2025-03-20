@@ -3,6 +3,7 @@ package click.replicatedDataStore.applicationLayer.serverComponents.dataManager;
 import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;
 import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
+import click.replicatedDataStore.connectionLayer.connectionThreads.ClientsHandler;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
@@ -130,4 +131,9 @@ public class DataManagerWriter extends Thread {
             queue.unlockQueue();
         }
     }
+
+    public ClientServerPriorityQueue getQueue() {
+        return queue;
+    }
+
 }

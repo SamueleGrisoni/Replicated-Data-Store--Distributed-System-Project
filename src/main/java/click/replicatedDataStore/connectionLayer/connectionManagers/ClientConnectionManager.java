@@ -20,15 +20,14 @@ public class ClientConnectionManager extends ConnectionManager {
     private final DataManagerReader dataRead;
 
     /**
-     * @param incomingPort the port on which the server accepts connections from clients
+     * @param clientPort the port on which the server accepts connections from clients
      * @param serverQueue the server priority queue on which incoming data is sent
      * @param dataRead the data manager reader
      * @param logger the server logger
      */
-    public ClientConnectionManager(int incomingPort, int outgoingPort, ClientServerPriorityQueue serverQueue,
+    public ClientConnectionManager(int clientPort, ClientServerPriorityQueue serverQueue,
                             DataManagerReader dataRead, Logger logger) {
-        //todo handle 2 port setup
-        super(incomingPort, outgoingPort, logger);
+        super(clientPort, logger);
         this.clientsHandlerList = new LinkedList<>();
         this.que = serverQueue;
         this.dataRead = dataRead;
@@ -66,7 +65,6 @@ public class ClientConnectionManager extends ConnectionManager {
         return Optional.of(new StateAnswerMsg(que.addClientData(write.getPayload())? AnswerState.OK: AnswerState.FAIL));
     }
 
-    //TODO call this in server
     public void stop(){
         super.stop();
         for(ClientsHandler client: clientsHandlerList){

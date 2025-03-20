@@ -26,10 +26,7 @@ public class ServerConnectionManager extends ConnectionManager{
 
     public ServerConnectionManager(TimeTravel sync,
                                    Logger logger, Server server) {
-        super(server.getMyAddressAndPorts().second().incomingPort(),
-                server.getMyAddressAndPorts().second().outgoingPort(),
-                logger);
-
+        super(server.getMyAddressAndPorts().second().serverPort(), logger);
         this.sync = sync;
         this.server = server;
         initializeServerHandlerAndLocksMap();
@@ -68,10 +65,9 @@ public class ServerConnectionManager extends ConnectionManager{
                 .filter(index -> index != server.getServerID());
         serverIndexes.forEach(index -> {
             Thread t = new Thread(() -> {
-                //todo fix this with the new 2 ports system
                 Pair<String, ServerPorts> ipPort = server.getAddressAndPortsPairOf(index);
                 try {
-                    Socket socket = new Socket(ipPort.first(), ipPort.second().incomingPort());
+                    Socket socket = new Socket(ipPort.first(), ipPort.second().serverPort());
                     ActiveServerHandler serverHandler;
                     synchronized (handlerLocksMap.get(index)) {
                         serverHandler = new ActiveServerHandler(socket, this, this.server.getServerID(), index);
