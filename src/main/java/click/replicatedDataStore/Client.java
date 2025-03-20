@@ -6,14 +6,25 @@ import click.replicatedDataStore.connectionLayer.messages.AnswerState;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.keyImplementations.StringKey;
 
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Client {
 
     public static int nextIntClear(){
         Scanner input = new Scanner(System.in);
-        int val = input.nextInt();
-        input.nextLine();
+        int val = 0;
+        boolean valid = false;
+        while (!valid) {
+            try {
+                val = input.nextInt();
+                input.nextLine();
+                valid = true;
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please, for this demo, enter an integer as value.");
+                input.nextLine();
+            }
+        }
         return val;
     }
 

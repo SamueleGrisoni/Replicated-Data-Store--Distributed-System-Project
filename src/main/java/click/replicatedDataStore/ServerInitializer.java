@@ -97,11 +97,11 @@ public class ServerInitializer {
                 return false;
             }
             if(!ports.add(entry.getValue().second().serverPort())){
-                System.out.println("Incoming port " + entry.getValue().second().serverPort() + " of server " + entry.getKey() + " is already in use by another server");
+                System.out.println("Server port " + entry.getValue().second().serverPort() + " of server " + entry.getKey() + " is already in use by another server");
                 return false;
             }
             if(!ports.add(entry.getValue().second().clientPort())){
-                System.out.println("Outgoing port " + entry.getValue().second().clientPort() + " of server " + entry.getKey() + " is already in use by another server");
+                System.out.println("Client port " + entry.getValue().second().clientPort() + " of server " + entry.getKey() + " is already in use by another server");
                 return false;
             }
 
