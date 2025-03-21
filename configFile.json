@@ -1,19 +1,24 @@
 {
-  "servers": [
+  "localServer": [
     {
+      "id": 16,
       "address": "127.0.0.1",
       "serverPort": 4416,
       "clientPort": 4417
     },
     {
+      "id": 27,
       "address": "127.0.0.1",
       "serverPort": 4418,
       "clientPort": 4419
     },
     {
+      "id": 1,
       "address": "127.0.0.1",
       "serverPort": 4420,
       "clientPort": 4421
     }
+  ],
+  "otherServers": [
   ]
 }

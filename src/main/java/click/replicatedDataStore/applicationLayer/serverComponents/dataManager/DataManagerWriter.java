@@ -3,7 +3,6 @@ package click.replicatedDataStore.applicationLayer.serverComponents.dataManager;
 import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;
 import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
-import click.replicatedDataStore.connectionLayer.connectionThreads.ClientsHandler;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
@@ -36,7 +35,7 @@ public class DataManagerWriter extends Thread {
 
     @Override
     public void run() {
-        //System.out.println("Writer thread of server " + serverDataSynchronizer.getServerID() + " started");
+        //System.out.println("Writer thread of server " + serverDataSynchronizer.getServerIndex() + " started");
         while (true) {
             if(stop) break;
             //Lock the queue so new data cannot be added while writing
@@ -57,10 +56,10 @@ public class DataManagerWriter extends Thread {
             write(data.second());
         }else if(data.first() == DataType.SERVER){
             try {
-                VectorClock.checkIfUpdatable(serverDataSynchronizer.getServerID(), serverDataSynchronizer.getVectorClock(), data.second().get(0).vectorClock());
+                VectorClock.checkIfUpdatable(serverDataSynchronizer.getServerIndex(), serverDataSynchronizer.getVectorClock(), data.second().get(0).vectorClock());
                 write(data.second());
             }catch (ClockTooFarAhead e){
-                System.out.println("Server"+serverDataSynchronizer.getServerID() + ": incoming data is too far ahead. Discarding Update");
+                System.out.println("Server"+serverDataSynchronizer.getServerIndex() + ": incoming data is too far ahead. Discarding Update");
             }
         }
     }

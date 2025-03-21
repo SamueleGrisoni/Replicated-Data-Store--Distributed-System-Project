@@ -2,17 +2,26 @@ package click.replicatedDataStore.utlis;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Comparator;
 import java.util.List;
 
 public class ConfigFile{
-    @JsonProperty("servers")
-    private List<ConfigFileEntry> servers;
+    @JsonProperty("localServer")
+    private List<ConfigFileEntry> localServer;
+    @JsonProperty("otherServers")
+    private List<ConfigFileEntry> otherServers;
 
-    public List<ConfigFileEntry> getServers() {
-        return servers;
+    public List<ConfigFileEntry> getLocalServer() {
+        return localServer;
     }
 
-    public static class ConfigFileEntry {
+    public List<ConfigFileEntry> getOtherServers() {
+        return otherServers;
+    }
+
+    public static class ConfigFileEntry{
+        @JsonProperty("id")
+        private int serverId;
 
         @JsonProperty("address")
         private String ip;
@@ -22,6 +31,10 @@ public class ConfigFile{
 
         @JsonProperty("clientPort")
         private int clientPort;
+
+        public int getServerId(){
+            return serverId;
+        }
 
         public int getServerPort() {
             return serverPort;

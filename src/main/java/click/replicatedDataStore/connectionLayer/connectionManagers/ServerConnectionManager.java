@@ -41,7 +41,7 @@ public class ServerConnectionManager extends ConnectionManager{
     }
 
     private void initializeServerHandlerAndLocksMap(){
-        IntStream otherServerIndexes = IntStream.range(0, server.getNumberOfServers()).filter(i -> i!=server.getServerID());
+        IntStream otherServerIndexes = IntStream.range(0, server.getNumberOfServers()).filter(i -> i!=server.getServerIndex());
         otherServerIndexes.forEach(index -> {
             this.serverHandlersMap.put(index, Optional.empty());
             this.handlerLocksMap.put(index, new Object());
@@ -62,7 +62,7 @@ public class ServerConnectionManager extends ConnectionManager{
 
     private void createConnections(){
         IntStream serverIndexes = IntStream.range(0, server.getNumberOfServers())
-                .filter(index -> index != server.getServerID());
+                .filter(index -> index != server.getServerIndex());
         serverIndexes.forEach(index -> {
             Thread t = new Thread(() -> {
                 Pair<String, ServerPorts> ipPort = server.getAddressAndPortsPairOf(index);
@@ -70,7 +70,7 @@ public class ServerConnectionManager extends ConnectionManager{
                     Socket socket = new Socket(ipPort.first(), ipPort.second().serverPort());
                     ActiveServerHandler serverHandler;
                     synchronized (handlerLocksMap.get(index)) {
-                        serverHandler = new ActiveServerHandler(socket, this, this.server.getServerID(), index);
+                        serverHandler = new ActiveServerHandler(socket, this, this.server.getServerIndex(), index);
                     }
                     serverHandler.start();
                 } catch (IOException e){

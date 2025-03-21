@@ -60,7 +60,7 @@
 //    private void initializeServer(int index, Server server, Map<Integer, Pair<String, Integer>> serverIpPortMap){
 //        Set<Integer> otherIndexes = IntStream.range(0, nServer).boxed().collect(Collectors.toSet());
 //        otherIndexes.remove(index);
-//        Mockito.doAnswer(invocationOnMock -> index).when(server).getServerID();
+//        Mockito.doAnswer(invocationOnMock -> index).when(server).getServerIndex();
 //        Mockito.doAnswer(invocationOnMock -> nServer).when(server).getNumberOfServers();
 //        Mockito.doAnswer(invocationOnMock -> otherIndexes).when(server).getOtherIndexes();
 //
