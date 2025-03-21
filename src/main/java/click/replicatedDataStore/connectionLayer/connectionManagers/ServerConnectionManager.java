@@ -5,6 +5,7 @@ import click.replicatedDataStore.applicationLayer.Logger;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
 import click.replicatedDataStore.connectionLayer.CommunicationMethods;
 import click.replicatedDataStore.connectionLayer.connectionThreads.ActiveServerHandler;
+import click.replicatedDataStore.connectionLayer.connectionThreads.ConnectionHandler;
 import click.replicatedDataStore.connectionLayer.connectionThreads.PassiveServerHandler;
 import click.replicatedDataStore.connectionLayer.connectionThreads.ServerHandler;
 import click.replicatedDataStore.connectionLayer.messages.*;
@@ -59,6 +60,15 @@ public class ServerConnectionManager extends ConnectionManager{
         }
     }
 
+    @Override
+    public void handleClosingConnection(ConnectionHandler handler) {
+        for(Map.Entry<Integer, Optional<ServerHandler>> entry : serverHandlersMap.entrySet()){
+            if(entry.getValue().isPresent() && entry.getValue().get().equals(handler)){
+                serverHandlersMap.put(entry.getKey(), Optional.empty());
+                break;
+            }
+        }
+    }
 
     private void createConnections(){
         IntStream serverIndexes = IntStream.range(0, server.getNumberOfServers())

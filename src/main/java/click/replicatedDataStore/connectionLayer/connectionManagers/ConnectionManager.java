@@ -3,6 +3,7 @@ package click.replicatedDataStore.connectionLayer.connectionManagers;
 import click.replicatedDataStore.applicationLayer.Logger;
 import click.replicatedDataStore.connectionLayer.CommunicationMethods;
 import click.replicatedDataStore.connectionLayer.connectionThreads.ConnectionAcceptor;
+import click.replicatedDataStore.connectionLayer.connectionThreads.ConnectionHandler;
 import click.replicatedDataStore.connectionLayer.messages.AbstractMsg;
 
 import java.net.Socket;
@@ -20,7 +21,6 @@ public abstract class ConnectionManager {
      * @param logger the logger for the server
      */
     protected ConnectionManager(int serverPort, Logger logger){
-        //todo handle 2 port setup
         this.logger = logger;
         connectionAcceptor = new ConnectionAcceptor(serverPort, this);
         setupRouting();
@@ -47,6 +47,7 @@ public abstract class ConnectionManager {
     }
 
     public abstract void handleNewConnection(Socket newConnection);
+    public abstract void handleClosingConnection(ConnectionHandler handler);
 
     protected void stop(){
         connectionAcceptor.stopRunning();

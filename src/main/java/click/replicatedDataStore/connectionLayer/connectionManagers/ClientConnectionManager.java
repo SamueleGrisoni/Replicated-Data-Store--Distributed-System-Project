@@ -5,6 +5,7 @@ import click.replicatedDataStore.applicationLayer.Logger;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
 import click.replicatedDataStore.connectionLayer.CommunicationMethods;
 import click.replicatedDataStore.connectionLayer.connectionThreads.ClientsHandler;
+import click.replicatedDataStore.connectionLayer.connectionThreads.ConnectionHandler;
 import click.replicatedDataStore.connectionLayer.messages.*;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 
@@ -53,6 +54,11 @@ public class ClientConnectionManager extends ConnectionManager {
         } catch (IOException e){
             this.logger.logErr(this.getClass(), "error while creating a new connected client\n" + e.getMessage());
         }
+    }
+
+    @Override
+    public void handleClosingConnection(ConnectionHandler handler) {
+        boolean result = this.clientsHandlerList.remove(handler);
     }
 
     private Optional<AbstractMsg<?>> readData(AbstractMsg<?> msg){

@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.Objects;
 import java.util.Optional;
 
 public abstract class ConnectionHandler extends Thread{
@@ -42,7 +41,7 @@ public abstract class ConnectionHandler extends Thread{
                 response.start();
             }catch (EOFException e){
                 running = false;
-                //TODO remove handler from the list (remove from ClientConnectioManager list)
+                manager.handleClosingConnection(this);
             }catch (IOException e){
                 if(running)
                     manager.logger.logErr(this.getClass(), "error while processing a request\n" + e.getMessage());
@@ -55,5 +54,13 @@ public abstract class ConnectionHandler extends Thread{
 
     protected void stopRunning(){
         running = false;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(!(obj instanceof ConnectionHandler))
+            return false;
+        return ((ConnectionHandler) obj).in.equals(this.in)
+                && ((ConnectionHandler) obj).out.equals(this.out);
     }
 }
