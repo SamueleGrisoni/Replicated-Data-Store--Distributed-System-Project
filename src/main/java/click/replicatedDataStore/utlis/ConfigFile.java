@@ -47,5 +47,15 @@ public class ConfigFile{
         public String getIp() {
             return ip;
         }
+
+        @Override
+        public String toString() {
+            return "ConfigFileEntry{" +
+                    "serverId=" + serverId +
+                    ", ip='" + ip + '\'' +
+                    ", serverPort=" + serverPort +
+                    ", clientPort=" + clientPort +
+                    '}';
+        }
     }
 }

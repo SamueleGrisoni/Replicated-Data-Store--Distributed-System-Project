@@ -90,7 +90,7 @@ public class Server extends Thread{
     @Override
     public void run() {
         startServerThreads();
-        logger.logInfo("Server " + ServerInitializerUtils.getServerIdFromIndex(serverIndex) + " started on " + addresses.get(serverIndex).first() + ":" + addresses.get(serverIndex).second());
+        logger.logInfo("Server " + ServerInitializerUtils.getServerIdFromIndex(serverIndex) +" (server index " + serverIndex + ") started on " + addresses.get(serverIndex).first() + ":" + addresses.get(serverIndex).second());
         while(!stop){
         }
         stopThreads();

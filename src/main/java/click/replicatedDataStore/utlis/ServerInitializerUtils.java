@@ -230,19 +230,27 @@ public class ServerInitializerUtils {
     }
 
     private void fillAddressMap(Pair<PriorityQueue<ConfigFile.ConfigFileEntry>, PriorityQueue<ConfigFile.ConfigFileEntry>> addressPair) {
+        PriorityQueue<Pair<ConfigFile.ConfigFileEntry, Boolean>> totalList = new PriorityQueue<>(Comparator.comparingInt(o -> o.first().getServerId()));
+        for (ConfigFile.ConfigFileEntry entry : addressPair.first()) {
+            totalList.add(new Pair<>(entry, true));
+        }
+        for (ConfigFile.ConfigFileEntry entry : addressPair.second()) {
+            totalList.add(new Pair<>(entry, false));
+        }
+
         Map<Integer, Pair<String, ServerPorts>> localServer = new LinkedHashMap<>();
         Map<Integer, Pair<String, ServerPorts>> otherServers = new LinkedHashMap<>();
         int serverIndex = 0;
-        for (ConfigFile.ConfigFileEntry entry : addressPair.first()) {
-            serverIdToIndex.put(entry.getServerId(), serverIndex);
-            serverIndexToId.put(serverIndex, entry.getServerId());
-            localServer.put(serverIndex, new Pair<>(entry.getIp(), new ServerPorts(entry.getServerPort(), entry.getClientPort())));
-            serverIndex++;
-        }
-        for (ConfigFile.ConfigFileEntry entry : addressPair.second()) {
-            serverIdToIndex.put(entry.getServerId(), serverIndex);
-            serverIndexToId.put(serverIndex, entry.getServerId());
-            otherServers.put(serverIndex, new Pair<>(entry.getIp(), new ServerPorts(entry.getServerPort(), entry.getClientPort())));
+        for (Pair<ConfigFile.ConfigFileEntry, Boolean> entry : totalList) {
+            if (entry.second()) { //Local server
+                serverIdToIndex.put(entry.first().getServerId(), serverIndex);
+                serverIndexToId.put(serverIndex, entry.first().getServerId());
+                localServer.put(serverIndex, new Pair<>(entry.first().getIp(), new ServerPorts(entry.first().getServerPort(), entry.first().getClientPort())));
+            } else {
+                serverIdToIndex.put(entry.first().getServerId(), serverIndex);
+                serverIndexToId.put(serverIndex, entry.first().getServerId());
+                otherServers.put(serverIndex, new Pair<>(entry.first().getIp(), new ServerPorts(entry.first().getServerPort(), entry.first().getClientPort())));
+            }
             serverIndex++;
         }
         addressesPair = new Pair<>(localServer, otherServers);
@@ -280,11 +288,11 @@ public class ServerInitializerUtils {
                 return false;
             }
             if (!ports.add(entry.getValue().second().serverPort())) {
-                System.out.println("Server port " + entry.getValue().second().serverPort() + " of server " + entry.getKey() + " is already in use by another server");
+                System.out.println("Server port " + entry.getValue().second().serverPort() + " of server " + getServerIdFromIndex(entry.getKey()) + " is already in use by another server. Check the config file");
                 return false;
             }
             if (!ports.add(entry.getValue().second().clientPort())) {
-                System.out.println("Client port " + entry.getValue().second().clientPort() + " of server " + entry.getKey() + " is already in use by another server");
+                System.out.println("Client port " + entry.getValue().second().clientPort() + " of server " + getServerIdFromIndex(entry.getKey()) + " is already in use by another server. Check the config file");
                 return false;
             }
         }
@@ -321,5 +329,4 @@ public class ServerInitializerUtils {
             return Integer.compare(e1.getServerId(), e2.getServerId());
         }
     }
-
 }

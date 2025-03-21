@@ -36,6 +36,6 @@ public class ServerInitializer {
             }
         }
         System.out.println("Local servers stopped successfully");
-        System.exit(0);
+        //System.exit(0);
     }
 }
