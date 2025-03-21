@@ -18,7 +18,7 @@ public class ServerInitializerUtils {
     private final Map<Integer, Pair<Server, Boolean>> localServerStatus = new HashMap<>();
 
     public Map<Integer, Pair<String, ServerPorts>> computeAddress(String filePath) {
-        Pair<PriorityQueue<ConfigFile.ConfigFileEntry>, PriorityQueue<ConfigFile.ConfigFileEntry>> addressesListPair = readJson(filePath);
+        Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> addressesListPair = readJson(filePath);
         checkConfigFileHasChanged(addressesListPair);
         fillAddressMap(addressesListPair);
         addresses.putAll(addressesPair.first());
@@ -119,10 +119,13 @@ public class ServerInitializerUtils {
         }
     }
 
-    private void checkConfigFileHasChanged(Pair<PriorityQueue<ConfigFile.ConfigFileEntry>, PriorityQueue<ConfigFile.ConfigFileEntry>> addressesListPair) {
-        PriorityQueue<ConfigFile.ConfigFileEntry> totalList = new PriorityQueue<>(new ServerListComparator());
+    private void checkConfigFileHasChanged(Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> addressesListPair) {
+        List<ConfigFile.ConfigFileEntry> totalList = new ArrayList<>();
         totalList.addAll(addressesListPair.first());
         totalList.addAll(addressesListPair.second());
+        totalList.sort(Comparator.comparing(ConfigFile.ConfigFileEntry::getServerId));
+        System.out.println("TotalList:" + totalList);
+
         String folderPath = getOSFolderPath() + ServerConfig.GLOBAL_FOLDER_NAME + File.separator;
         String configFilePath = folderPath + ServerConfig.CONFIG_FILE_HASH_NAME + ServerConfig.FILES_EXTENSION;
         if (!new File(folderPath).exists()) {
@@ -161,13 +164,13 @@ public class ServerInitializerUtils {
         }
     }
 
-    private void recreateGlobalDataFolder(String folderPath, String configFilePath, PriorityQueue<ConfigFile.ConfigFileEntry> totalList) {
+    private void recreateGlobalDataFolder(String folderPath, String configFilePath, List<ConfigFile.ConfigFileEntry> totalList) {
         deleteDataFolder(new File(folderPath));
         createGlobalDataFolder(new File(folderPath));
         writeList(configFilePath, totalList);
     }
 
-    private void writeList(String configFilePath, PriorityQueue<ConfigFile.ConfigFileEntry> totalList) {
+    private void writeList(String configFilePath, List<ConfigFile.ConfigFileEntry> totalList) {
         try {
             String hash = computeHash(totalList);
             try (FileOutputStream out = new FileOutputStream(configFilePath)) {
@@ -180,7 +183,7 @@ public class ServerInitializerUtils {
         }
     }
 
-    private String computeHash(PriorityQueue<ConfigFile.ConfigFileEntry> totalList) {
+    private String computeHash(List<ConfigFile.ConfigFileEntry> totalList) {
         try{
             //Serialize the list
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -207,7 +210,7 @@ public class ServerInitializerUtils {
         }
     }
 
-    private Pair<PriorityQueue<ConfigFile.ConfigFileEntry>, PriorityQueue<ConfigFile.ConfigFileEntry>> readJson(String filePath) {
+    private Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> readJson(String filePath) {
         ObjectMapper objectMapper = new ObjectMapper();
         ConfigFile configFile = null;
         try {
@@ -229,19 +232,19 @@ public class ServerInitializerUtils {
         }
     }
 
-    private void fillAddressMap(Pair<PriorityQueue<ConfigFile.ConfigFileEntry>, PriorityQueue<ConfigFile.ConfigFileEntry>> addressPair) {
-        PriorityQueue<Pair<ConfigFile.ConfigFileEntry, Boolean>> totalList = new PriorityQueue<>(Comparator.comparingInt(o -> o.first().getServerId()));
+    private void fillAddressMap(Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> addressPair) {
+        List<Pair<ConfigFile.ConfigFileEntry, Boolean>> totalListLocal = new ArrayList<>();
         for (ConfigFile.ConfigFileEntry entry : addressPair.first()) {
-            totalList.add(new Pair<>(entry, true));
+            totalListLocal.add(new Pair<>(entry, true));
         }
         for (ConfigFile.ConfigFileEntry entry : addressPair.second()) {
-            totalList.add(new Pair<>(entry, false));
+            totalListLocal.add(new Pair<>(entry, false));
         }
-
+        totalListLocal.sort(Comparator.comparingInt(o -> o.first().getServerId()));
         Map<Integer, Pair<String, ServerPorts>> localServer = new LinkedHashMap<>();
         Map<Integer, Pair<String, ServerPorts>> otherServers = new LinkedHashMap<>();
         int serverIndex = 0;
-        for (Pair<ConfigFile.ConfigFileEntry, Boolean> entry : totalList) {
+        for (Pair<ConfigFile.ConfigFileEntry, Boolean> entry : totalListLocal) {
             if (entry.second()) { //Local server
                 serverIdToIndex.put(entry.first().getServerId(), serverIndex);
                 serverIndexToId.put(serverIndex, entry.first().getServerId());
@@ -312,21 +315,15 @@ public class ServerInitializerUtils {
         }
     }
 
-    //Return a queue of servers sorted by serverId, lower id first
-    private PriorityQueue<ConfigFile.ConfigFileEntry> getServerList(ConfigFile configFile, boolean localServer) {
-        PriorityQueue<ConfigFile.ConfigFileEntry> queue = new PriorityQueue<>(new ServerListComparator());
+    //Return a List of servers sorted by serverId, lower id first
+    private List<ConfigFile.ConfigFileEntry> getServerList(ConfigFile configFile, boolean localServer) {
+        List<ConfigFile.ConfigFileEntry> list = new ArrayList<>();
         if (localServer) {
-            queue.addAll(configFile.getLocalServer());
+            list.addAll(configFile.getLocalServer());
         } else {
-            queue.addAll(configFile.getOtherServers());
+            list.addAll(configFile.getOtherServers());
         }
-        return queue;
-    }
-
-    private static class ServerListComparator implements Comparator<ConfigFile.ConfigFileEntry>, Serializable {
-        @Override
-        public int compare(ConfigFile.ConfigFileEntry e1, ConfigFile.ConfigFileEntry e2) {
-            return Integer.compare(e1.getServerId(), e2.getServerId());
-        }
+        list.sort(Comparator.comparing(ConfigFile.ConfigFileEntry::getServerId));
+        return list;
     }
 }
