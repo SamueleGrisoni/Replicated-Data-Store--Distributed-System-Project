@@ -1,5 +1,6 @@
 package click.replicatedDataStore.applicationLayerTest;
 
+import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
@@ -26,26 +27,15 @@ public class PersistTest implements Serializable {
     private File dataFile;
     private File indexFile;
 
-    private File getBaseFolder() {
-        String os = System.getProperty("os.name").toUpperCase();
-        if (os.contains("WIN")) {
-            return new File(System.getenv("APPDATA") + File.separator);
-        } else if (os.contains("MAC")) {
-            return new File(System.getProperty("user.home") + "/Library/Application Support/");
-        } else {
-            return new File(System.getProperty("user.home") + File.separator + ".");
-        }
-    }
-
     private File getPersistFolder(String dataFolderName) {
-        return new File(getBaseFolder(), dataFolderName);
+        return new File(ServerConfig.getGlobalFolderPath(), dataFolderName);
     }
 
     //Before each test create a temporary dataFolder and files
     @Before
     public void setUp() throws Exception {
         // Use a unique folder name so we do not interfere with any existing data.
-        folderName = ServerConfig.DATA_FOLDER_NAME + "-" + System.currentTimeMillis();
+        folderName = ServerConfig.SERVER_DATA_FOLDER_NAME + "-" + System.currentTimeMillis();
         persistFolder = getPersistFolder(folderName);
 
         // Create the folder and files

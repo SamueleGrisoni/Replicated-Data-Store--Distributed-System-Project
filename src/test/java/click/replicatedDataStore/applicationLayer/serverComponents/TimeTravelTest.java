@@ -44,7 +44,7 @@
 //        MockitoAnnotations.openMocks(this);
 //
 //        Mockito.doAnswer(invocationOnMock -> myVectorClock).when(server).getVectorClock();
-//        Mockito.doAnswer(invocationOnMock -> this.myServerId).when(server).getServerID();
+//        Mockito.doAnswer(invocationOnMock -> this.myServerId).when(server).getServerIndex();
 //        Mockito.doAnswer(invocationOnMock -> this.serverN).when(server).getNumberOfServers();
 //
 //    }

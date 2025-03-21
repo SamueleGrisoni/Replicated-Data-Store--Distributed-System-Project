@@ -12,16 +12,16 @@ import java.util.TreeMap;
 
 public class ServerDataSynchronizer {
     private final int serverNumber;
-    private final int serverID;
+    private final int serverIndex;
 
     private final VectorClock vectorClock;
     private final LinkedHashMap<Key, Serializable> primaryIndex;
     private final TreeMap<VectorClock, Key> secondaryIndex;
     private final Persist persist;
 
-    public ServerDataSynchronizer(int serverNumber, int serverID){
+    public ServerDataSynchronizer(int serverNumber, int serverIndex){
         this.serverNumber = serverNumber;
-        this.serverID = serverID;
+        this.serverIndex = serverIndex;
         this.persist= persistInitializer();
         this.primaryIndex = persist.recoverPrimaryIndex();
         this.secondaryIndex = persist.recoverSecondaryIndex();
@@ -29,15 +29,15 @@ public class ServerDataSynchronizer {
     }
 
     private Persist persistInitializer(){
-        String dataFolderName = ServerConfig.DATA_FOLDER_NAME+serverID;
-        String primaryIndexFileName = ServerConfig.PRIMARY_INDEX_FILE_NAME + serverID + ServerConfig.FILES_EXTENSION;
-        String secondaryIndexFileName = ServerConfig.SECONDARY_INDEX_FILE_NAME + serverID + ServerConfig.FILES_EXTENSION;
+        String dataFolderName = ServerConfig.SERVER_DATA_FOLDER_NAME + serverIndex;
+        String primaryIndexFileName = ServerConfig.PRIMARY_INDEX_FILE_NAME + serverIndex + ServerConfig.FILES_EXTENSION;
+        String secondaryIndexFileName = ServerConfig.SECONDARY_INDEX_FILE_NAME + serverIndex + ServerConfig.FILES_EXTENSION;
         return new Persist(dataFolderName, primaryIndexFileName, secondaryIndexFileName);
     }
 
     //If secondaryIndex is not empty, update the vector clock with the latest clock. Useful for recovery
     private VectorClock vectorClockInitializer(){
-        VectorClock vectorClock = new VectorClock(serverNumber, serverID);
+        VectorClock vectorClock = new VectorClock(serverNumber, serverIndex);
         if(!secondaryIndex.isEmpty()){
             vectorClock.updateClock(secondaryIndex.lastKey());
         }
@@ -102,7 +102,7 @@ public class ServerDataSynchronizer {
         }
     }
 
-    public int getServerID() {
-        return serverID;
+    public int getServerIndex() {
+        return serverIndex;
     }
 }

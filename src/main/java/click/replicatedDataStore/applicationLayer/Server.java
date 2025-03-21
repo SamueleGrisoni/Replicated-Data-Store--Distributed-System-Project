@@ -10,12 +10,13 @@ import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.ServerPorts;
+import click.replicatedDataStore.utlis.ServerInitializerUtils;
 
 import java.util.*;
 
 public class Server extends Thread{
     private final Map<Integer, Pair<String, ServerPorts>> addresses;
-    private final int serverID;
+    private final int serverIndex;
     private final int serverNumber;
 
     private final ServerDataSynchronizer serverDataSynchronizer;
@@ -27,12 +28,12 @@ public class Server extends Thread{
     private boolean stop = false;
     private final Logger logger = new Logger();
 
-    public Server(int serverID, Map<Integer, Pair<String, ServerPorts>> addresses) {
-        this.serverID = serverID;
+    public Server(int serverIndex, Map<Integer, Pair<String, ServerPorts>> addresses) {
+        this.serverIndex = serverIndex;
         this.addresses = addresses;
         this.serverNumber = addresses.size();
 
-        this.serverDataSynchronizer = new ServerDataSynchronizer(serverNumber, serverID);
+        this.serverDataSynchronizer = new ServerDataSynchronizer(serverNumber, serverIndex);
         this.dataManagerWriter = new DataManagerWriter(serverDataSynchronizer);
         this.dataManagerReader = new DataManagerReader(serverDataSynchronizer);
 
@@ -42,7 +43,7 @@ public class Server extends Thread{
         this.serverConnectionManager = new ServerConnectionManager(timeTravel, logger, this);
         this.timeTravel.setServerConnectionManager(serverConnectionManager);
 
-        this.clientConnectionManager = new ClientConnectionManager(addresses.get(serverID).second().clientPort(),
+        this.clientConnectionManager = new ClientConnectionManager(addresses.get(serverIndex).second().clientPort(),
                                             dataManagerWriter.getQueue(), dataManagerReader, logger);
     }
 
@@ -57,24 +58,24 @@ public class Server extends Thread{
     }
 
     public Pair<String, ServerPorts> getMyAddressAndPorts(){
-        return addresses.get(serverID);
+        return addresses.get(serverIndex);
     }
 
-    public Pair<String, ServerPorts> getAddressAndPortsPairOf(int serverID){
-        return addresses.get(serverID);
+    public Pair<String, ServerPorts> getAddressAndPortsPairOf(int serverIndex){
+        return addresses.get(serverIndex);
     }
 
     public int getNumberOfServers(){
         return serverNumber;
     }
 
-    public int getServerID(){
-        return serverID;
+    public int getServerIndex(){
+        return serverIndex;
     }
 
     public Set<Integer> getOtherIndexes(){
         Set<Integer> list = addresses.keySet();
-        list.remove(this.serverID);
+        list.remove(this.serverIndex);
         return list;
     }
 
@@ -89,7 +90,7 @@ public class Server extends Thread{
     @Override
     public void run() {
         startServerThreads();
-        logger.logInfo("Server " + serverID + " started on " + addresses.get(serverID).first() + ":" + addresses.get(serverID).second());
+        logger.logInfo("Server " + ServerInitializerUtils.getServerIdFromIndex(serverIndex) + " started on " + addresses.get(serverIndex).first() + ":" + addresses.get(serverIndex).second());
         while(!stop){
         }
         stopThreads();

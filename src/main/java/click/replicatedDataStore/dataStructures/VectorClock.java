@@ -1,6 +1,7 @@
 package click.replicatedDataStore.dataStructures;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.VectorClockComparation;
 import click.replicatedDataStore.utlis.ClockTooFarAhead;
+import click.replicatedDataStore.utlis.ServerInitializerUtils;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -8,22 +9,22 @@ import java.util.Objects;
 
 public class VectorClock implements Comparable<VectorClock>, Serializable {
     private final int[] clock;
-    private final int serverID;
+    private final int serverIndex;
 
-    public VectorClock(int serverNumber, int serverID) {
-        if(serverID > serverNumber-1){
-            throw new IllegalArgumentException("serverID is greater than the max amount of server");
+    public VectorClock(int serverNumber, int serverIndex) {
+        if(serverIndex > serverNumber-1){
+            throw new IllegalArgumentException("serverIndex is greater than the max amount of server");
         }
         this.clock = new int[serverNumber];
-        this.serverID = serverID;
+        this.serverIndex = serverIndex;
     }
 
     //Build a new vector clock, offsetting the incoming clock by the given offset. Offset is added to the server's own clock
     public VectorClock(VectorClock incomingClock, int offset){
         this.clock = new int[incomingClock.clock.length];
-        this.serverID = incomingClock.serverID;
+        this.serverIndex = incomingClock.serverIndex;
         System.arraycopy(incomingClock.clock, 0, clock, 0, incomingClock.clock.length);
-        clock[serverID] += offset;
+        clock[serverIndex] += offset;
     }
 
     //return a copy of the vector clock
@@ -34,12 +35,12 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
     }
 
     public void incrementSelfClock(){
-        clock[serverID]++;
+        clock[serverIndex]++;
     }
 
     public void updateClock(VectorClock incomingClock) throws ClockTooFarAhead{
         try{
-            checkIfUpdatable(serverID, this, incomingClock);
+            checkIfUpdatable(serverIndex, this, incomingClock);
         }catch (IllegalArgumentException e){
             e.printStackTrace();
         }
@@ -49,7 +50,7 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
     }
 
     //Compare the incoming clock with the server's clock. If the incoming clock is too far ahead, throw an exception
-    public static void checkIfUpdatable(Integer serverID, VectorClock serverVectorClock, VectorClock incomingVectorClock) throws ClockTooFarAhead, IllegalArgumentException {
+    public static void checkIfUpdatable(Integer serverIndex, VectorClock serverVectorClock, VectorClock incomingVectorClock) throws ClockTooFarAhead, IllegalArgumentException {
         if (incomingVectorClock == null || incomingVectorClock.clock == null) {
             throw new IllegalArgumentException("The incoming vector clock is null");
         }
@@ -63,7 +64,7 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
                 delta = incomingVectorClock.clock[i] - serverVectorClock.clock[i];
             }
             if (delta > 1) {
-                System.out.println("Server" +serverID+ "'s clock: " + serverVectorClock);
+                System.out.println("Server" + serverIndex + "'s clock: " + serverVectorClock);
                 System.out.println("Incoming clock: " + incomingVectorClock);
                 throw new ClockTooFarAhead("Incoming clock is " + delta + " steps ahead");
             }
@@ -113,9 +114,16 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
 
     @Override
     public String toString() {
-        return "VectorClock{" +
-                "clock=" + Arrays.toString(clock) +
-                ", serverID=" + serverID +
-                '}';
+        try{
+            return "VectorClock{" +
+                    "clock=" + Arrays.toString(clock) +
+                    ", serverId=" + ServerInitializerUtils.getServerIdFromIndex(serverIndex) +
+                    '}';
+        }catch (NullPointerException e){
+            return "VectorClock{" +
+                    "clock=" + Arrays.toString(clock) +
+                    ", serverId=" + -1 +
+                    '}';
+        }
     }
 }
