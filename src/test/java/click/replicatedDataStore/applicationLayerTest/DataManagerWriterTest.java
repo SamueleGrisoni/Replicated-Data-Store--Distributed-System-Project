@@ -50,7 +50,7 @@ public class DataManagerWriterTest {
         mockServer2.stopServer();
         List<File> dataFolders = new LinkedList<>();
         for (int i = 0; i < addresses.size(); i++) {
-            dataFolders.add(new File(ServerConfig.getOSDataFolderPath() + click.replicatedDataStore.utlis.ServerConfig.DATA_FOLDER_NAME + i + File.separator));
+            dataFolders.add(new File(ServerConfig.getGlobalFolderPath() + click.replicatedDataStore.utlis.ServerConfig.SERVER_DATA_FOLDER_NAME + i + File.separator));
         }
         dataFolders.forEach(this::deleteDataFolder);
         // Verify that the data folders have been deleted.

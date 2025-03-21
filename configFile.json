@@ -17,6 +17,12 @@
       "address": "127.0.0.1",
       "serverPort": 4420,
       "clientPort": 4421
+    },
+    {
+      "id": 2,
+      "address": "127.0.0.1",
+      "serverPort": 4422,
+      "clientPort": 4423
     }
   ],
   "otherServers": [

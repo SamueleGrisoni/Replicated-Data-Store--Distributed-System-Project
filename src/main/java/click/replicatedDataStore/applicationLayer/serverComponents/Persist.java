@@ -18,7 +18,7 @@ public class Persist {
     private boolean newIndexFile;
 
     public Persist(String dataFolderName, String dataFileName, String indexFileName) {
-        String folderPath = ServerConfig.getOSDataFolderPath() + dataFolderName + File.separator;
+        String folderPath = ServerConfig.getGlobalFolderPath() + dataFolderName + File.separator;
         this.dataFilePath = folderPath + dataFileName;
         this.indexFilePath = folderPath + indexFileName;
 

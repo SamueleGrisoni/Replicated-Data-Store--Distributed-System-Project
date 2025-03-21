@@ -2,7 +2,7 @@ package click.replicatedDataStore.utlis;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Comparator;
+import java.io.Serializable;
 import java.util.List;
 
 public class ConfigFile{
@@ -19,7 +19,7 @@ public class ConfigFile{
         return otherServers;
     }
 
-    public static class ConfigFileEntry{
+    public static class ConfigFileEntry implements Serializable {
         @JsonProperty("id")
         private int serverId;
 

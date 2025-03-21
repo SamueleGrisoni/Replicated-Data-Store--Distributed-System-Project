@@ -29,7 +29,7 @@ public class ServerDataSynchronizer {
     }
 
     private Persist persistInitializer(){
-        String dataFolderName = ServerConfig.DATA_FOLDER_NAME+ serverIndex;
+        String dataFolderName = ServerConfig.SERVER_DATA_FOLDER_NAME + serverIndex;
         String primaryIndexFileName = ServerConfig.PRIMARY_INDEX_FILE_NAME + serverIndex + ServerConfig.FILES_EXTENSION;
         String secondaryIndexFileName = ServerConfig.SECONDARY_INDEX_FILE_NAME + serverIndex + ServerConfig.FILES_EXTENSION;
         return new Persist(dataFolderName, primaryIndexFileName, secondaryIndexFileName);
