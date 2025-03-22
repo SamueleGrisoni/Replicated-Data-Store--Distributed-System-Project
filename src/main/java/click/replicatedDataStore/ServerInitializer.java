@@ -2,12 +2,19 @@ package click.replicatedDataStore;
 
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.ServerPorts;
+import click.replicatedDataStore.utlis.configs.ConfigFile;
+import click.replicatedDataStore.utlis.configs.ServerConfig;
 import click.replicatedDataStore.utlis.serverUtilis.ServerInitializerUtils;
 
+import java.io.File;
+import java.lang.reflect.Field;
 import java.util.*;
 
 public class ServerInitializer {
     public static void main(String[] args) {
+        if(ServerConfig.debug)
+            showWorkingDirectory();
+
         if(args.length != 1){
             System.out.println("Usage: java -jar Server.jar configFilePath");
             System.exit(1);
@@ -32,5 +39,18 @@ public class ServerInitializer {
             SIU.stopOrStartLocalServer(input);
         }
         System.exit(0);
+    }
+
+    private static void showWorkingDirectory(){
+        String currentDirPath = System.getProperty("user.dir");
+        File currentDir = new File(currentDirPath);
+        File[] containedFiles = currentDir.listFiles();
+
+        System.out.println("Working in directory:  " + currentDirPath + "\n" +
+                           "Contents:");
+        assert containedFiles != null;
+        for(File file : containedFiles){
+            System.out.println(file.getName());
+        }
     }
 }
