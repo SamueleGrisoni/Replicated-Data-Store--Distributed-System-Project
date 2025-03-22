@@ -53,7 +53,7 @@ public class ServerInitializerUtils {
         }
     }
 
-    public void startLocalServer() {
+    public void startAllLocalServer() {
         for (Map.Entry<Integer, Pair<String, ServerPorts>> entry : addressesPair.first().entrySet()) {
             Server server = new Server(entry.getKey(), addresses);
             server.start();
@@ -63,11 +63,20 @@ public class ServerInitializerUtils {
     }
 
     public void closeAllLocalServer() {
+        System.out.println("Stopping servers...");
         for (Map.Entry<Integer, Pair<Server, Boolean>> entry : localServerStatus.entrySet()) {
             if (entry.getValue().second()) { //If the server is running
                 entry.getValue().first().stopServer();
             }
         }
+        for (Map.Entry<Integer, Pair<Server, Boolean>> entry : localServerStatus.entrySet()) {
+            try {
+                entry.getValue().first().join();
+            } catch (InterruptedException e) {
+                System.out.println("An error occurred while stopping the server: " + getServerIdFromIndex(entry.getKey()) + " " + e.getMessage());
+            }
+        }
+        System.out.println("Servers stopped successfully");
     }
 
     public void stopOrStartLocalServer(int serverId) {
@@ -79,6 +88,11 @@ public class ServerInitializerUtils {
         Pair<Server, Boolean> serverStatus = localServerStatus.get(serverIndex);
         if (serverStatus.second()) { //server is on
             serverStatus.first().stopServer();
+            try {
+                serverStatus.first().join();
+            } catch (InterruptedException e) {
+                System.out.println("An error occurred while stopping the server: " + serverId + " " + e.getMessage());
+            }
             localServerStatus.put(serverIndex, new Pair<>(serverStatus.first(), false));
             System.out.println("Server " + serverId + " stopped successfully");
         } else {
@@ -88,7 +102,6 @@ public class ServerInitializerUtils {
                 System.out.println("Server " + serverId + " restarted successfully");
                 localServerStatus.put(serverIndex, new Pair<>(restartedServer, true));
             } catch (RuntimeException e) {
-                //todo fix
                 e.printStackTrace();
                 System.out.println("Server " + serverId + " socket port is still in use, try again in a few moment");
             } catch (Exception e) {

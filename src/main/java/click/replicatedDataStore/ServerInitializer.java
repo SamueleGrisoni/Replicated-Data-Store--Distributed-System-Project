@@ -19,7 +19,7 @@ public class ServerInitializer {
         System.out.println("Found a config file for " + addresses.size() + " servers");
         SIU.printServerList();
 
-        SIU.startLocalServer();
+        SIU.startAllLocalServer();
 
         Scanner scanner = new Scanner(System.in);
         while(true){
@@ -36,7 +36,6 @@ public class ServerInitializer {
                 System.out.println("Invalid input. Please enter a local server index or 'exit'");
             }
         }
-        System.out.println("Local servers stopped successfully");
-        //System.exit(0);
+        System.exit(0);
     }
 }
