@@ -10,7 +10,7 @@ import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.ServerPorts;
-import click.replicatedDataStore.utlis.ServerInitializerUtils;
+import click.replicatedDataStore.utlis.serverUtilis.ServerInitializerUtils;
 
 import java.util.*;
 
@@ -25,7 +25,7 @@ public class Server extends Thread{
     private final ServerConnectionManager serverConnectionManager;
     private final ClientConnectionManager clientConnectionManager;
     private final TimeTravel timeTravel;
-    private boolean stop = false;
+    private volatile boolean stop = false;
     private final Logger logger = new Logger();
 
     public Server(int serverIndex, Map<Integer, Pair<String, ServerPorts>> addresses) {
@@ -94,6 +94,7 @@ public class Server extends Thread{
         while(!stop){
         }
         stopThreads();
+        logger.logInfo("Server " + ServerInitializerUtils.getServerIdFromIndex(serverIndex) +" (server index " + serverIndex + ") stopped");
     }
 
     public void stopServer(){

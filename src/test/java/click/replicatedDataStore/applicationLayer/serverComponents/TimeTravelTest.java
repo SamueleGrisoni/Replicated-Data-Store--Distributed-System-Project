@@ -12,7 +12,7 @@
 //import click.replicatedDataStore.dataStructures.VectorClock;
 //import click.replicatedDataStore.dataStructures.keyImplementations.StringKey;
 //import click.replicatedDataStore.utlis.Key;
-//import click.replicatedDataStore.utlis.ServerConfig;
+//import click.replicatedDataStore.utlis.configs.ServerConfig;
 //import org.junit.After;
 //import org.junit.Assert;
 //import org.junit.Before;

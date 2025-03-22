@@ -2,7 +2,8 @@ package click.replicatedDataStore;
 
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.ServerPorts;
-import click.replicatedDataStore.utlis.ServerInitializerUtils;
+import click.replicatedDataStore.utlis.serverUtilis.ServerInitializerUtils;
+
 import java.util.*;
 
 public class ServerInitializer {

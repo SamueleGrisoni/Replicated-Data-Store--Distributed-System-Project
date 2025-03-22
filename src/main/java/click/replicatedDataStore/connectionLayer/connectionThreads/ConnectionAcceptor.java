@@ -1,7 +1,7 @@
 package click.replicatedDataStore.connectionLayer.connectionThreads;
 
 import click.replicatedDataStore.connectionLayer.connectionManagers.ConnectionManager;
-import click.replicatedDataStore.utlis.ServerConfig;
+import click.replicatedDataStore.utlis.configs.ServerConfig;
 
 import java.io.IOException;
 import java.net.ServerSocket;

@@ -1,6 +1,6 @@
 package click.replicatedDataStore.applicationLayer;
 
-import click.replicatedDataStore.utlis.ServerConfig;
+import click.replicatedDataStore.utlis.configs.ServerConfig;
 
 public class Logger {
     private final String RESET = "\u001B[0m";

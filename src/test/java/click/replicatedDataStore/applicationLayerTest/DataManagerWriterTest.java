@@ -5,7 +5,7 @@ import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
 import click.replicatedDataStore.dataStructures.*;
 import click.replicatedDataStore.utlis.Key;
-import click.replicatedDataStore.utlis.ServerConfig;
+import click.replicatedDataStore.utlis.configs.ServerConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 
 //todo
 //with the new server implementation it probably would be possible to create a separated test folder by delaying the start of the server
+//todo 2: because the ServerInitializerUtils is not initialize the map serverIdToIndex is null. A Null Pointer Exception is thrown and the vectorClock is print with -1
 public class DataManagerWriterTest {
     private Server mockServer;
     private Server mockServer2;
@@ -50,7 +51,7 @@ public class DataManagerWriterTest {
         mockServer2.stopServer();
         List<File> dataFolders = new LinkedList<>();
         for (int i = 0; i < addresses.size(); i++) {
-            dataFolders.add(new File(ServerConfig.getGlobalFolderPath() + click.replicatedDataStore.utlis.ServerConfig.SERVER_DATA_FOLDER_NAME + i + File.separator));
+            dataFolders.add(new File(ServerConfig.getGlobalFolderPath() + ServerConfig.SERVER_DATA_FOLDER_NAME + i + File.separator));
         }
         dataFolders.forEach(this::deleteDataFolder);
         // Verify that the data folders have been deleted.
