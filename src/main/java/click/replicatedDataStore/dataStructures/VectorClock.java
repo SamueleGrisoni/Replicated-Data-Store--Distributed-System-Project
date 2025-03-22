@@ -1,7 +1,7 @@
 package click.replicatedDataStore.dataStructures;
+
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.VectorClockComparation;
 import click.replicatedDataStore.utlis.ClockTooFarAhead;
-import click.replicatedDataStore.utlis.serverUtilis.ServerInitializerUtils;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -10,9 +10,11 @@ import java.util.Objects;
 public class VectorClock implements Comparable<VectorClock>, Serializable {
     private final int[] clock;
     private final int serverIndex;
+    private final String serverName;
 
-    public VectorClock(int serverNumber, int serverIndex) {
-        if(serverIndex > serverNumber-1){
+    public VectorClock(String serverName, int serverNumber, int serverIndex) {
+        this.serverName = serverName;
+        if (serverIndex > serverNumber - 1) {
             throw new IllegalArgumentException("serverIndex is greater than the max amount of server");
         }
         this.clock = new int[serverNumber];
@@ -20,7 +22,8 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
     }
 
     //Build a new vector clock, offsetting the incoming clock by the given offset. Offset is added to the server's own clock
-    public VectorClock(VectorClock incomingClock, int offset){
+    public VectorClock(VectorClock incomingClock, int offset) {
+        this.serverName = incomingClock.serverName;
         this.clock = new int[incomingClock.clock.length];
         this.serverIndex = incomingClock.serverIndex;
         System.arraycopy(incomingClock.clock, 0, clock, 0, incomingClock.clock.length);
@@ -34,17 +37,17 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
         return copy;
     }
 
-    public void incrementSelfClock(){
+    public void incrementSelfClock() {
         clock[serverIndex]++;
     }
 
-    public void updateClock(VectorClock incomingClock) throws ClockTooFarAhead{
-        try{
+    public void updateClock(VectorClock incomingClock) throws ClockTooFarAhead {
+        try {
             checkIfUpdatable(serverIndex, this, incomingClock);
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
-        for(int i = 0; i < clock.length; i++){
+        for (int i = 0; i < clock.length; i++) {
             clock[i] = Math.max(clock[i], incomingClock.clock[i]);
         }
     }
@@ -89,11 +92,11 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
                 otherGreater = true;
             }
         }
-        if(thisGreater && otherGreater){
+        if (thisGreater && otherGreater) {
             return VectorClockComparation.CONCURRENT.getCompareResult(); //if clocks are concurrent, this.clock is considered greater
-        } else if(thisGreater){
+        } else if (thisGreater) {
             return VectorClockComparation.GREATER_THAN.getCompareResult();
-        } else if(otherGreater){
+        } else if (otherGreater) {
             return VectorClockComparation.LESS_THAN.getCompareResult();
         } else { //equal clocks
             return VectorClockComparation.EQUAL.getCompareResult();
@@ -114,16 +117,9 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
 
     @Override
     public String toString() {
-        try{
-            return "VectorClock{" +
-                    "clock=" + Arrays.toString(clock) +
-                    ", serverId=" + ServerInitializerUtils.getServerIdFromIndex(serverIndex) +
-                    '}';
-        }catch (NullPointerException e){
-            return "VectorClock{" +
-                    "clock=" + Arrays.toString(clock) +
-                    ", serverId=" + -1 +
-                    '}';
-        }
+        return "VectorClock{" +
+                "clock=" + Arrays.toString(clock) +
+                ", serverName=" + serverName +
+                '}';
     }
 }

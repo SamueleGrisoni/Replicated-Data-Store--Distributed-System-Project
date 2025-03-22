@@ -18,8 +18,10 @@ public class ServerDataSynchronizer {
     private final LinkedHashMap<Key, Serializable> primaryIndex;
     private final TreeMap<VectorClock, Key> secondaryIndex;
     private final Persist persist;
+    private final String serverName;
 
-    public ServerDataSynchronizer(int serverNumber, int serverIndex){
+    public ServerDataSynchronizer(String serverName, int serverNumber, int serverIndex){
+        this.serverName = serverName;
         this.serverNumber = serverNumber;
         this.serverIndex = serverIndex;
         this.persist= persistInitializer();
@@ -37,7 +39,7 @@ public class ServerDataSynchronizer {
 
     //If secondaryIndex is not empty, update the vector clock with the latest clock. Useful for recovery
     private VectorClock vectorClockInitializer(){
-        VectorClock vectorClock = new VectorClock(serverNumber, serverIndex);
+        VectorClock vectorClock = new VectorClock(serverName, serverNumber, serverIndex);
         if(!secondaryIndex.isEmpty()){
             return secondaryIndex.lastKey();
         }
