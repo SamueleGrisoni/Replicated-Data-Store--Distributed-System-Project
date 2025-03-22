@@ -89,7 +89,7 @@ public class PersistTest implements Serializable {
     @Test
     public void testPrimaryIndexPersist() {
         //Create clockedData
-        VectorClock vectorClock = new VectorClock(3, 0);
+        VectorClock vectorClock = new VectorClock("server0", 3, 0);
         Key key = new TestKey("key");
         Key key2 = new TestKey("key2");
         ClockedData clockedData = new ClockedData(vectorClock, key , "value1");
@@ -117,7 +117,7 @@ public class PersistTest implements Serializable {
         TreeMap<VectorClock, Key> secondaryIndex = new TreeMap<>();
 
         //Create clockedData
-        VectorClock vectorClock = new VectorClock(3, 0);
+        VectorClock vectorClock = new VectorClock("server0", 3, 0);
         vectorClock.incrementSelfClock(); //vc = [1, 0, 0]
         TestKey key = new TestKey("key1");
         ClockedData clockedData = new ClockedData(vectorClock, key, "value1");
@@ -145,7 +145,7 @@ public class PersistTest implements Serializable {
 
     @Test
     public void testUpdatePrimaryIndex(){
-        VectorClock vectorClock = new VectorClock(3, 0);
+        VectorClock vectorClock = new VectorClock("server0", 3, 0);
         Key key = new TestKey("key");
         ClockedData clockedData = new ClockedData(vectorClock, key , "value1");
         persist.persist(clockedData);

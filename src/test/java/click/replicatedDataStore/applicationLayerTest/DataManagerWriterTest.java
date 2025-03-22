@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 
 //todo
 //with the new server implementation it probably would be possible to create a separated test folder by delaying the start of the server
-//todo 2: because the ServerInitializerUtils is not initialize the map serverIdToIndex is null. A Null Pointer Exception is thrown and the vectorClock is print with -1
 public class DataManagerWriterTest {
     private Server mockServer;
     private Server mockServer2;
@@ -32,8 +31,8 @@ public class DataManagerWriterTest {
 
     @Before
     public void setUp() {
-        mockServer = new Server(0, addresses);
-        mockServer2 = new Server(1, addresses);
+        mockServer = new Server("Server0", 0, addresses);
+        mockServer2 = new Server("Server1", 1, addresses);
         Field serverDataSynchronizerField = getField(Server.class, "serverDataSynchronizer");
         try {
             mockServerDataSynchronizer1 = (ServerDataSynchronizer) serverDataSynchronizerField.get(mockServer);
@@ -101,7 +100,7 @@ public class DataManagerWriterTest {
     @Test
     public void addServerData() throws InterruptedException {
         TestKey key = new TestKey("key1");
-        VectorClock otherServerClock = new VectorClock(2, 1);
+        VectorClock otherServerClock = new VectorClock("OtherServer", 2, 1);
         otherServerClock.incrementSelfClock(); // [0, 1]
         ClockedData serverData = new ClockedData(otherServerClock, key, "value1");
         mockServer.addServerData(List.of(serverData));
@@ -166,7 +165,7 @@ public class DataManagerWriterTest {
         assertEquals(3, mockServerDataSynchronizer1.getPrimaryIndex().size());
         assertEquals(1, mockServerDataSynchronizer1.getSecondaryIndex().size());
         //Because i'm saving every two entries, [2,0] is the expected and only vector clock in secondary
-        VectorClock expectedVC = createComparableVectorClock(2, 0, 2); // [2,0]
+        VectorClock expectedVC = createComparableVectorClock("otherServer", 2, 0, 2); // [2,0]
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().containsKey(expectedVC));
         assertEquals(1, mockServerDataSynchronizer1.getSecondaryIndex().size());
     }
@@ -224,13 +223,13 @@ public class DataManagerWriterTest {
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().values().stream().anyMatch(key -> key.equals(keyB)));
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().values().stream().anyMatch(key -> key.equals(keyC)));
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().values().stream().anyMatch(key -> key.equals(keyD)));
-        VectorClock newestVC = createComparableVectorClock(2, 0, 6); // [6,0]
+        VectorClock newestVC = createComparableVectorClock("otherServer", 2, 0, 6); // [6,0]
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().containsKey(newestVC));
         assertEquals(keyB, mockServerDataSynchronizer1.getSecondaryIndex().get(newestVC));
-        VectorClock oldestVC = createComparableVectorClock(2, 0, 2); // [2,0]
+        VectorClock oldestVC = createComparableVectorClock("otherServer", 2, 0, 2); // [2,0]
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().containsKey(oldestVC));
         assertEquals(keyC, mockServerDataSynchronizer1.getSecondaryIndex().get(oldestVC));
-        VectorClock secondOldestVC = createComparableVectorClock(2, 0, 4); // [4,0]
+        VectorClock secondOldestVC = createComparableVectorClock("otherServer",2, 0, 4); // [4,0]
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().containsKey(secondOldestVC));
         //---------------------------------------------
         TestKey keyF = new TestKey("F");
@@ -254,7 +253,7 @@ public class DataManagerWriterTest {
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().values().stream().anyMatch(key -> key.equals(keyD)));
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().values().stream().anyMatch(key -> key.equals(keyF)));
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().values().stream().anyMatch(key -> key.equals(keyB)));
-        VectorClock newestVC2 = createComparableVectorClock(2, 0, 8); // [8,0]
+        VectorClock newestVC2 = createComparableVectorClock("otherServer",2, 0, 8); // [8,0]
         assertTrue(mockServerDataSynchronizer1.getSecondaryIndex().containsKey(newestVC2));
         assertEquals(keyB, mockServerDataSynchronizer1.getSecondaryIndex().get(newestVC2));
         assertEquals(keyF, mockServerDataSynchronizer1.getSecondaryIndex().get(newestVC));
@@ -362,8 +361,8 @@ public class DataManagerWriterTest {
         System.out.println("Injected NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE: " + ServerConfig.NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE);
     }
 
-    private VectorClock createComparableVectorClock(int serverNumber, int serverID, int offset) {
-        VectorClock vectorClock = new VectorClock(serverNumber, serverID);
+    private VectorClock createComparableVectorClock(String serverName, int serverNumber, int serverID, int offset) {
+        VectorClock vectorClock = new VectorClock(serverName, serverNumber, serverID);
         for (int i = 0; i < offset; i++) {
             vectorClock.incrementSelfClock();
         }

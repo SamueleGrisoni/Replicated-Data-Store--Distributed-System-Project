@@ -23,18 +23,13 @@ public class ServerInitializer {
 
         Scanner scanner = new Scanner(System.in);
         while(true){
-            System.out.println("To stop or restart a local server enter the server id. Type 'exit' to stop all the local servers: ");
+            System.out.println("To stop or restart a local server enter the server name. Type 'exit' to stop all the local servers: ");
             String input = scanner.nextLine();
             if(input.equals("exit")){
                 SIU.closeAllLocalServer();
                 break;
             }
-            try{
-                int serverId = Integer.parseInt(input);
-                SIU.stopOrStartLocalServer(serverId);
-            }catch (NumberFormatException e){
-                System.out.println("Invalid input. Please enter a local server index or 'exit'");
-            }
+            SIU.stopOrStartLocalServer(input);
         }
         System.exit(0);
     }

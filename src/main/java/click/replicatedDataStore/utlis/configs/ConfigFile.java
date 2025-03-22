@@ -20,8 +20,8 @@ public class ConfigFile{
     }
 
     public static class ConfigFileEntry implements Serializable {
-        @JsonProperty("id")
-        private int serverId;
+        @JsonProperty("serverName")
+        private String serverName;
 
         @JsonProperty("address")
         private String ip;
@@ -32,8 +32,8 @@ public class ConfigFile{
         @JsonProperty("clientPort")
         private int clientPort;
 
-        public int getServerId(){
-            return serverId;
+        public String getServerName(){
+            return serverName;
         }
 
         public int getServerPort() {
@@ -51,7 +51,7 @@ public class ConfigFile{
         @Override
         public String toString() {
             return "ConfigFileEntry{" +
-                    "serverId=" + serverId +
+                    "serverName=" + serverName +
                     ", ip='" + ip + '\'' +
                     ", serverPort=" + serverPort +
                     ", clientPort=" + clientPort +

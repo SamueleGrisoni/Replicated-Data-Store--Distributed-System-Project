@@ -11,7 +11,7 @@ import static org.junit.Assert.*;
 public class VectorClockTest {
     @Test
     public void testConstructorAndGetClock() {
-        VectorClock vc = new VectorClock(3, 1);
+        VectorClock vc = new VectorClock("serverName", 3, 1);
         int[] clock = vc.getClock();
         assertEquals(3, clock.length);
         for (int value : clock) {
@@ -21,7 +21,7 @@ public class VectorClockTest {
 
     @Test
     public void testIncrementSelfClock() {
-        VectorClock vc = new VectorClock(3, 1);
+        VectorClock vc = new VectorClock("serverName", 3, 1);
         vc.incrementSelfClock();  // vc: [0, 1, 0]
         int[] clock = vc.getClock();
         assertEquals(0, clock[0]);
@@ -36,7 +36,7 @@ public class VectorClockTest {
 
     @Test
     public void testSecondaryConstructor() {
-        VectorClock vc1 = new VectorClock(3, 1);
+        VectorClock vc1 = new VectorClock("serverName", 3, 1);
         vc1.incrementSelfClock();  // vc1: [0, 1, 0]
         // Build a new clock from vc1 incrementing index 2 by 1
         VectorClock vc2 = new VectorClock(vc1, 1); // expected vc2: [0, 2, 0]
@@ -56,10 +56,10 @@ public class VectorClockTest {
 
     @Test
     public void testUpdateLegalClock() {
-        VectorClock vc1 = new VectorClock(3, 0);
+        VectorClock vc1 = new VectorClock("serverName", 3, 0);
         vc1.incrementSelfClock();  // vc1: [1, 0, 0]
 
-        VectorClock vc2 = new VectorClock(3, 1);
+        VectorClock vc2 = new VectorClock("serverName", 3, 1);
         vc2.incrementSelfClock();  // vc2: [0, 1, 0]
 
         // Update vc1 with vc2; each index should become the max of the two clocks
@@ -72,14 +72,14 @@ public class VectorClockTest {
 
     @Test
     public void testUpdateClockTooFarAhead() {
-        VectorClock vc1 = new VectorClock(3, 0);
+        VectorClock vc1 = new VectorClock("otherServer", 3, 0);
         vc1.incrementSelfClock();  // vc1: [1, 0, 0]
 
-        VectorClock vc2 = new VectorClock(3, 1);
+        VectorClock vc2 = new VectorClock("otherServer", 3, 1);
         vc2.incrementSelfClock();  // vc2: [0, 1, 0]
         vc2.incrementSelfClock();  // vc2: [0, 2, 0]
 
-        ClockTooFarAhead exception = assertThrows(ClockTooFarAhead.class, () -> {
+        assertThrows(ClockTooFarAhead.class, () -> {
             // vc2 is too far ahead of vc1, vc1 should not be updated
             vc1.updateClock(vc2);
         });
@@ -93,8 +93,8 @@ public class VectorClockTest {
     @Test
     public void testCompareTo() {
         // Test equal clocks
-        VectorClock vc1 = new VectorClock(3, 0);
-        VectorClock vc2 = new VectorClock(3, 0);
+        VectorClock vc1 = new VectorClock("server0", 3, 0);
+        VectorClock vc2 = new VectorClock("server0", 3, 0);
         assertEquals(0, vc1.compareTo(vc2));
 
         // Test when one clock is less than the other
@@ -105,7 +105,7 @@ public class VectorClockTest {
         assertEquals(1, vc2.compareTo(vc1));
 
         // vc2: [1,0,0] and vc3: [0,1,0] are concurrent
-        VectorClock vc3 = new VectorClock(3, 1);
+        VectorClock vc3 = new VectorClock("server1", 3, 1);
         vc3.incrementSelfClock();
 
         // According to the implementation, if clocks are concurrent the first clock is considered greater
@@ -114,9 +114,9 @@ public class VectorClockTest {
 
     @Test 
     public void PriorityQueue(){
-        VectorClock vc1 = new VectorClock(3, 0);
-        VectorClock vc2 = new VectorClock(3, 1);
-        VectorClock vc3 = new VectorClock(3, 2);
+        VectorClock vc1 = new VectorClock("server0", 3, 0);
+        VectorClock vc2 = new VectorClock("server1", 3, 1);
+        VectorClock vc3 = new VectorClock("server2", 3, 2);
         vc2.incrementSelfClock();
         vc3.updateClock(vc2);
         vc2.incrementSelfClock(); //vc2: [0, 2, 0]
@@ -136,8 +136,8 @@ public class VectorClockTest {
 
     @Test
     public void testEquals() {
-        VectorClock vc1 = new VectorClock(3, 0);
-        VectorClock vc2 = new VectorClock(3, 0);
+        VectorClock vc1 = new VectorClock("server0", 3, 0);
+        VectorClock vc2 = new VectorClock("server0", 3, 0);
         assertEquals(vc1, vc2);
 
         vc1.incrementSelfClock(); // vc1: [1, 0, 0]
@@ -146,18 +146,18 @@ public class VectorClockTest {
         vc2.incrementSelfClock(); // vc2: [1, 0, 0]
         assertEquals(vc1, vc2);
 
-        VectorClock vc3 = new VectorClock(4, 0);
+        VectorClock vc3 = new VectorClock("server0", 4, 0);
         vc3.incrementSelfClock(); // vc3: [1, 0, 0, 0]
         assertNotEquals(vc1, vc3); // Different size should not be equal
 
-        VectorClock vc4 = new VectorClock(3, 1);
+        VectorClock vc4 = new VectorClock("server1", 3, 1);
         vc4.updateClock(vc1); // vc4: [1, 0, 0]
         assertEquals(vc1, vc4); // Different serverID should not affect equality
     }
 
     @Test
     public void testGetClockImmutability() {
-        VectorClock vc = new VectorClock(3, 0);
+        VectorClock vc = new VectorClock("server0", 3, 0);
         int[] returnedClock = vc.getClock();
         returnedClock[0] = 100;  // Modify the returned copy
         int[] internalClock = vc.getClock();
