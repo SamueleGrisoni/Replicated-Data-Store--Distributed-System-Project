@@ -16,29 +16,20 @@ public class Logger {
     }
 
     /**
-     * Logs an informational message in yellow.
-     * @param classSource the source of the class
-     * @param msg the informational message to log
-     */
-    public void logDebug(Object classSource, String msg) {
-        System.out.println(YELLOW + "INFO: source: " + classSource + "\n" + msg + RESET);
-    }
-
-    /**
      * Logs an error message in red.
      * @param classSource the source of the class
      * @param msg the error message to log
      */
     public void logErr(Object classSource, String msg) {
         if (ServerConfig.debug) {
-            throw new RuntimeException(RED + "ERROR: source: " + classSource + "\n" + msg + RESET);
+            throw new RuntimeException(RED + "SERVER-" + server.getServerName() + "\n" + "ERROR: source: " + classSource + "\n" + msg + RESET);
         } else {
             // Log this on the view with some generic error message
-            System.out.println(RED + "ERROR: source: " + classSource + "\n" + msg + RESET);
+            System.out.println(RED + "SERVER-" + server.getServerName() + "\n" + "ERROR: source: " + classSource + "\n" + msg + RESET);
         }
     }
 
     public void logInfo(String msg){
-        System.out.println(WHITE + "SERVER " + ServerInitializerUtils.getServerIdFromIndex(this.server.getServerIndex()) + ":" + msg + RESET);
+        System.out.println(WHITE + "SERVER-" + server.getServerName() + "\n" + msg + RESET);
     }
 }
