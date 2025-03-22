@@ -39,7 +39,7 @@ public class ServerDataSynchronizer {
     private VectorClock vectorClockInitializer(){
         VectorClock vectorClock = new VectorClock(serverNumber, serverIndex);
         if(!secondaryIndex.isEmpty()){
-            vectorClock.updateClock(secondaryIndex.lastKey());
+            return secondaryIndex.lastKey();
         }
         return vectorClock;
     }
