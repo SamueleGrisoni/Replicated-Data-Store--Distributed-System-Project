@@ -1,6 +1,6 @@
 package click.replicatedDataStore.connectionLayer.connectionManagers;
 
-import click.replicatedDataStore.applicationLayer.Logger;
+import click.replicatedDataStore.applicationLayer.serverComponents.Logger;
 import click.replicatedDataStore.connectionLayer.CommunicationMethods;
 import click.replicatedDataStore.connectionLayer.connectionThreads.ConnectionAcceptor;
 import click.replicatedDataStore.connectionLayer.connectionThreads.ConnectionHandler;

@@ -3,7 +3,7 @@ package click.replicatedDataStore;
 import click.replicatedDataStore.applicationLayer.clientComponents.RequestSender;
 import click.replicatedDataStore.applicationLayer.clientComponents.view.ClientErrorManager;
 import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;
-import click.replicatedDataStore.applicationLayer.Logger;
+import click.replicatedDataStore.applicationLayer.serverComponents.Logger;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
 import click.replicatedDataStore.connectionLayer.connectionManagers.ClientConnectionManager;
 import click.replicatedDataStore.connectionLayer.messages.AnswerState;

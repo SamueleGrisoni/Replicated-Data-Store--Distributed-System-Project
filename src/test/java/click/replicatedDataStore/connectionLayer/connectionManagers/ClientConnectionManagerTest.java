@@ -5,7 +5,7 @@ import click.replicatedDataStore.PortRetryRule;
 import click.replicatedDataStore.ServerMock;
 import click.replicatedDataStore.TestUtils;
 import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;
-import click.replicatedDataStore.applicationLayer.Logger;
+import click.replicatedDataStore.applicationLayer.serverComponents.Logger;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
 import click.replicatedDataStore.connectionLayer.connectionThreads.ClientsHandler;
 import click.replicatedDataStore.connectionLayer.messages.AnswerState;
