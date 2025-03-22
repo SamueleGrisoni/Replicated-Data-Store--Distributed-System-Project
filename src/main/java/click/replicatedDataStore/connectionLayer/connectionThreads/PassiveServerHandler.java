@@ -9,18 +9,34 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class PassiveServerHandler extends ServerHandler{
-    public PassiveServerHandler(Socket serverSocket, ServerConnectionManager connectionManager) throws IOException {
+    public PassiveServerHandler(Socket serverSocket, ServerConnectionManager connectionManager) throws IOException, ConnectionCreateTimeOutException {
         super(serverSocket, connectionManager);
-        ServerIndexMsg indexMsg;
+        Runnable setupConnection = new Thread(() -> {
+            ServerIndexMsg indexMsg;
+            try {
+                indexMsg = (ServerIndexMsg) in.readObject();
+                connectionManager.addIndexed(indexMsg.getPayload(), this);
+                super.connectionEstablished = true;
+                out.writeObject(new StateAnswerMsg(AnswerState.OK));
+            } catch (Exception e) { //catch both ClassNotFound and IOException by readObject
+                windDown();
+                manager.logger.logErr(this.getClass(), "error: didnt' receive initialization message with server index\n" + e.getMessage());
+            }
+            synchronized (notify) {
+                notify.notifyAll();
+            }
+        });
+        super.createConnectionTimed(setupConnection, "PassiveServerHandler: corrupted message");
+    }
+
+    private void windDown(){
+        this.running = false;
         try {
-            indexMsg = (ServerIndexMsg) in.readObject(); //todo add a timer and interrupt after x time
-            connectionManager.addIndexed(indexMsg.getPayload(), this);
-            out.writeObject(new StateAnswerMsg(AnswerState.OK));
-        } catch (Exception e) { //catch both ClassNotFound and IOException by readObject
-            manager.logger.logErr(this.getClass(), "error: didnt' receive initialization message with server index\n" + e.getMessage());
             in.close();
             out.close();
+        } catch (IOException ex) {
             this.running = false;
+            throw new RuntimeException("error: can't close input or output stream"+ ex);
         }
     }
 }

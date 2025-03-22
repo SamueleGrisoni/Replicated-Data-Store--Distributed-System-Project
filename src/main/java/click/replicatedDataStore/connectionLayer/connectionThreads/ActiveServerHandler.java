@@ -9,22 +9,38 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class ActiveServerHandler extends ServerHandler{
-    public ActiveServerHandler(Socket socket, ServerConnectionManager connectionManager, Integer localServerIndex, Integer contactedServerIndex) throws IOException {
+    public ActiveServerHandler(Socket socket, ServerConnectionManager connectionManager, Integer localServerIndex, Integer contactedServerIndex) throws IOException, ConnectionCreateTimeOutException {
         super(socket, connectionManager);
+        Runnable setupConnection = new Thread(() ->{
+            try {
+                this.out.writeObject(new ServerIndexMsg(localServerIndex));
+                AnswerState answer = ((StateAnswerMsg) this.in.readObject()).getPayload();
+                if (answer == AnswerState.OK) {
+                    super.connectionEstablished = true;
+                    connectionManager.addIndexed(contactedServerIndex, this);
+                }else
+                    throw new Error("error: failing answer from contacted passive handler");
+            } catch (IOException e) {
+                windDown();
+                manager.logger.logErr(this.getClass(), "error: unable to send initialization message with server index\n" + e.getMessage());
+            } catch (ClassNotFoundException e) {
+                windDown();
+                manager.logger.logErr(this.getClass(), "error: unable to read answer state from passive\n" + e.getMessage());
+            }
+            synchronized (notify) {
+                notify.notifyAll();
+            }
+        });
+        super.createConnectionTimed(setupConnection, "ActiveServerHandler: did not recive index msg");
+    }
+
+    private void windDown(){
+        this.running = false;
         try {
-            this.out.writeObject(new ServerIndexMsg(localServerIndex));
-            AnswerState answer = ((StateAnswerMsg)this.in.readObject()).getPayload();
-            if(answer == AnswerState.OK)
-                connectionManager.addIndexed(contactedServerIndex, this);
-            else
-                throw new Error("error: failing answer from contacted passive handler");
-         }catch (IOException e) {
-            manager.logger.logErr(this.getClass(), "error: unable to send initialization message with server index\n" + e.getMessage());
             in.close();
             out.close();
-            this.running = false;
-        } catch (ClassNotFoundException e) {
-            manager.logger.logErr(this.getClass(), "error: unable to read answer state from passive\n" + e.getMessage());
+        } catch (IOException ex) {
+            throw new RuntimeException("error: can't close input or output stream"+ ex);
         }
     }
 }

@@ -4,14 +4,10 @@ import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.Logger;
 import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
 import click.replicatedDataStore.connectionLayer.CommunicationMethods;
-import click.replicatedDataStore.connectionLayer.connectionThreads.ActiveServerHandler;
-import click.replicatedDataStore.connectionLayer.connectionThreads.ConnectionHandler;
-import click.replicatedDataStore.connectionLayer.connectionThreads.PassiveServerHandler;
-import click.replicatedDataStore.connectionLayer.connectionThreads.ServerHandler;
+import click.replicatedDataStore.connectionLayer.connectionThreads.*;
 import click.replicatedDataStore.connectionLayer.messages.*;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.ServerPorts;
-
 import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
@@ -51,13 +47,18 @@ public class ServerConnectionManager extends ConnectionManager{
 
     @Override
     public void handleNewConnection(Socket newConnection) {
-        try {
-            //the Server handler constructor will put itself in the map
-            ServerHandler newServer = new PassiveServerHandler(newConnection, this);
-            newServer.start();
-        } catch (IOException e){
-            this.logger.logErr(this.getClass(), "error while creating a new connected client\n" + e.getMessage());
-        }
+        Thread passiveHandlerCreator = new Thread(()-> {
+            try {
+                //the Server handler constructor will put itself in the map
+                ServerHandler newServer = new PassiveServerHandler(newConnection, this);
+                newServer.start();
+            }catch(ConnectionCreateTimeOutException timeOut){
+                this.logger.logErr(this.getClass(), timeOut.getMessage());
+            }catch (IOException e) {
+                this.logger.logErr(this.getClass(), "error while creating a new connected client\n" + e.getMessage());
+            }
+        });
+        passiveHandlerCreator.start();
     }
 
     @Override
@@ -74,7 +75,7 @@ public class ServerConnectionManager extends ConnectionManager{
         IntStream serverIndexes = IntStream.range(0, server.getNumberOfServers())
                 .filter(index -> index != server.getServerIndex());
         serverIndexes.forEach(index -> {
-            Thread t = new Thread(() -> {
+            Thread activeHandlerCreator = new Thread(() -> {
                 Pair<String, ServerPorts> ipPort = server.getAddressAndPortsPairOf(index);
                 try {
                     Socket socket = new Socket(ipPort.first(), ipPort.second().serverPort());
@@ -83,13 +84,15 @@ public class ServerConnectionManager extends ConnectionManager{
                         serverHandler = new ActiveServerHandler(socket, this, this.server.getServerIndex(), index);
                     }
                     serverHandler.start();
-                } catch (IOException e){
+                }catch(ConnectionCreateTimeOutException timeOut){
+                    this.logger.logErr(this.getClass(), timeOut.getMessage());
+                }catch (IOException e){
                     this.logger.logErr(this.getClass(),
-                                  "error cant open socket on" + ipPort.first() + ":" + ipPort.second() + "\n" +
-                                       e.getMessage());
-                }
+                            "error cant open socket on" + ipPort.first() + ":" + ipPort.second() + "\n" +
+                                    e.getMessage());
+                    }
             });
-            t.start();
+            activeHandlerCreator.start();
         });
     }
 
@@ -126,6 +129,7 @@ public class ServerConnectionManager extends ConnectionManager{
         synchronized (handlerLocksMap.get(index)) {
             serverHandlersMap.get(index).ifPresent(ServerHandler::stopRunning);
             this.serverHandlersMap.put(index, Optional.of(serverHandler));
+            logger.logInfo("new connection with server " + index);
         }
     }
 }

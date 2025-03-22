@@ -1,12 +1,19 @@
 package click.replicatedDataStore.applicationLayer;
 
+import click.replicatedDataStore.ServerInitializer;
 import click.replicatedDataStore.utlis.configs.ServerConfig;
+import click.replicatedDataStore.utlis.serverUtilis.ServerInitializerUtils;
 
 public class Logger {
     private final String RESET = "\u001B[0m";
     private final String YELLOW = "\u001B[33m";
     private final String RED = "\u001B[31m";
     private final String WHITE = "\u001B[37m";
+    private final Server server;
+
+    public Logger(Server server){
+        this.server = server;
+    }
 
     /**
      * Logs an informational message in yellow.
@@ -32,6 +39,6 @@ public class Logger {
     }
 
     public void logInfo(String msg){
-        System.out.println(WHITE + "SERVER: " + msg + RESET);
+        System.out.println(WHITE + "SERVER " + ServerInitializerUtils.getServerIdFromIndex(this.server.getServerIndex()) + ":" + msg + RESET);
     }
 }

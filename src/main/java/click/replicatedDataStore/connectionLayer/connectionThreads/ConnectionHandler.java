@@ -54,6 +54,10 @@ public abstract class ConnectionHandler extends Thread{
 
     protected void stopRunning(){
         running = false;
+        try {
+            in.close();
+            out.close();
+        }catch (IOException ignored){}
     }
 
     @Override

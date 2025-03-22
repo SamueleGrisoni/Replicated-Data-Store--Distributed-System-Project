@@ -26,7 +26,7 @@ public class Server extends Thread{
     private final ClientConnectionManager clientConnectionManager;
     private final TimeTravel timeTravel;
     private volatile boolean stop = false;
-    private final Logger logger = new Logger();
+    private final Logger logger = new Logger(this);
 
     public Server(int serverIndex, Map<Integer, Pair<String, ServerPorts>> addresses) {
         this.serverIndex = serverIndex;

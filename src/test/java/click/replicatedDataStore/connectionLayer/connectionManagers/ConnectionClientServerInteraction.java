@@ -116,6 +116,6 @@ public class ConnectionClientServerInteraction {
         Assert.assertNotNull(cIn);
         Assert.assertNotNull(cOut);
         Mockito.verifyNoInteractions(sLogger);
-        Assert.assertFalse(cHandler.size() <= 1);
+        Assert.assertTrue(cHandler.size() == 1);
     }
 }
