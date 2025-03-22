@@ -18,7 +18,7 @@ public class Server extends Thread{
     private final String serverName;
     private final int serverIndex;
     private final int serverNumber;
-
+    private final ServerDataSynchronizer serverDataSynchronizer;
     private final DataManagerWriter dataManagerWriter;
     private final ServerConnectionManager serverConnectionManager;
     private final ClientConnectionManager clientConnectionManager;
@@ -32,7 +32,7 @@ public class Server extends Thread{
         this.addresses = addresses;
         this.serverNumber = addresses.size();
 
-        ServerDataSynchronizer serverDataSynchronizer = new ServerDataSynchronizer(serverName, serverNumber, serverIndex);
+        this.serverDataSynchronizer = new ServerDataSynchronizer(serverName, serverNumber, serverIndex);
         this.dataManagerWriter = new DataManagerWriter(serverDataSynchronizer);
         DataManagerReader dataManagerReader = new DataManagerReader(serverDataSynchronizer);
 
