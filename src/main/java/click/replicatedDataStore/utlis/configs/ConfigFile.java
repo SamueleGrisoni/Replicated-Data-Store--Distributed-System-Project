@@ -1,4 +1,4 @@
-package click.replicatedDataStore.utlis;
+package click.replicatedDataStore.utlis.configs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -46,6 +46,16 @@ public class ConfigFile{
 
         public String getIp() {
             return ip;
+        }
+
+        @Override
+        public String toString() {
+            return "ConfigFileEntry{" +
+                    "serverId=" + serverId +
+                    ", ip='" + ip + '\'' +
+                    ", serverPort=" + serverPort +
+                    ", clientPort=" + clientPort +
+                    '}';
         }
     }
 }

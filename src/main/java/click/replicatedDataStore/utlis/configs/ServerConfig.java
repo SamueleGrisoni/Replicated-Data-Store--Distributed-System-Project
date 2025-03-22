@@ -1,4 +1,4 @@
-package click.replicatedDataStore.utlis;
+package click.replicatedDataStore.utlis.configs;
 
 import java.io.File;
 

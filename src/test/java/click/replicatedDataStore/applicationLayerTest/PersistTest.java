@@ -1,10 +1,9 @@
 package click.replicatedDataStore.applicationLayerTest;
 
-import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.Persist;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utlis.ServerConfig;
+import click.replicatedDataStore.utlis.configs.ServerConfig;
 import click.replicatedDataStore.utlis.Key;
 import org.junit.After;
 import org.junit.Assert;
