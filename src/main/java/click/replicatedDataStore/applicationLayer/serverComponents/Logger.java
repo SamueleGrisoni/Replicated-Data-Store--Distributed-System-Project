@@ -21,14 +21,14 @@ public class Logger {
      */
     public void logErr(Object classSource, String msg) {
         if (ServerConfig.debug) {
-            throw new RuntimeException(RED + "SERVER-" + server.getServerName() + "\n" + "ERROR: source: " + classSource + "\n" + msg + RESET);
+            throw new RuntimeException(YELLOW + "SERVER-" + server.getServerName() + ": "+ RED + "ERROR: source: " + classSource + "\n" + msg + RESET);
         } else {
             // Log this on the view with some generic error message
-            System.out.println(RED + "SERVER-" + server.getServerName() + "\n" + "ERROR: source: " + classSource + "\n" + msg + RESET);
+            System.out.println(YELLOW + "SERVER-" + server.getServerName() + ": " + RED + "ERROR: source: " + classSource + "\n" + msg + RESET);
         }
     }
 
     public void logInfo(String msg){
-        System.out.println(WHITE + "SERVER-" + server.getServerName() + "\n" + msg + RESET);
+        System.out.println(YELLOW + "SERVER-" + server.getServerName() + ": " + WHITE + msg + RESET);
     }
 }

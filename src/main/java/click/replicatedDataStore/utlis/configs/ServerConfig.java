@@ -15,7 +15,7 @@ public class ServerConfig {
 
     public static int NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE = 5;
     public static final boolean debug = true;
-    public static final int retryToOpenServerSocketMilliseconds = 500;
+    public static final int retryToOpenServerSocketMilliseconds = 1000;
     public static final int otherServerResponseWaitMilliseconds = 500;
 
    public static String getGlobalFolderPath() {

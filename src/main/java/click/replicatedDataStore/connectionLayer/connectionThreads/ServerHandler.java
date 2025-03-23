@@ -3,6 +3,8 @@ package click.replicatedDataStore.connectionLayer.connectionThreads;
 import click.replicatedDataStore.connectionLayer.connectionManagers.ServerConnectionManager;
 import click.replicatedDataStore.connectionLayer.messages.AbstractMsg;
 import click.replicatedDataStore.utlis.configs.ServerConfig;
+
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.NotSerializableException;
 import java.net.Socket;
@@ -20,7 +22,9 @@ public abstract class ServerHandler extends ConnectionHandler{
         synchronized (notify){
             try {
                 notify.wait(ServerConfig.otherServerResponseWaitMilliseconds);
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException e) {
+                System.out.println(e.getMessage());
+            }
         }
         if(!connectionEstablished){
             task.interrupt();
@@ -32,10 +36,12 @@ public abstract class ServerHandler extends ConnectionHandler{
         Thread t = new Thread(() -> {
             try {
                 out.writeObject(msg);
-            } catch (NotSerializableException notSer){
-                manager.logger.logErr(this.getClass(), "error: message not serializable" + notSer.getMessage());
+            } catch (NotSerializableException notSer) {
+                manager.logger.logErr(this.getClass(), "error: message not serializable\n" + notSer.getMessage());
+            }catch (EOFException eof){
+                manager.logger.logErr(this.getClass(), "EOF\n");
             } catch (IOException e) {
-                manager.logger.logErr(this.getClass(), "error: sending message" + e.getMessage());
+                manager.logger.logErr(this.getClass(), "error: sending message: " + msg.getClass() + "\n" + e.getMessage());
             }
         });
         t.start();

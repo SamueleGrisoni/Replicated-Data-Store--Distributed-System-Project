@@ -9,7 +9,8 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class ActiveServerHandler extends ServerHandler{
-    public ActiveServerHandler(Socket socket, ServerConnectionManager connectionManager, Integer localServerIndex, Integer contactedServerIndex) throws IOException, ConnectionCreateTimeOutException {
+    public ActiveServerHandler(Socket socket, ServerConnectionManager connectionManager, Integer localServerIndex,
+                               Integer contactedServerIndex) throws IOException, ConnectionCreateTimeOutException {
         super(socket, connectionManager);
         Runnable setupConnection = new Thread(() ->{
             try {
@@ -22,16 +23,18 @@ public class ActiveServerHandler extends ServerHandler{
                     throw new Error("error: failing answer from contacted passive handler");
             } catch (IOException e) {
                 windDown();
-                manager.logger.logErr(this.getClass(), "error: unable to send initialization message with server index\n" + e.getMessage());
+                manager.logger.logErr(this.getClass(), "error: unable to send initialization message with " +
+                        "server index\n" + e.getMessage());
             } catch (ClassNotFoundException e) {
                 windDown();
-                manager.logger.logErr(this.getClass(), "error: unable to read answer state from passive\n" + e.getMessage());
+                manager.logger.logErr(this.getClass(), "error: unable to read answer state from " +
+                        "passive\n" + e.getMessage());
             }
             synchronized (notify) {
                 notify.notifyAll();
             }
         });
-        super.createConnectionTimed(setupConnection, "ActiveServerHandler: did not recive index msg");
+        super.createConnectionTimed(setupConnection, "ActiveServerHandler: did not receive index msg");
     }
 
     private void windDown(){

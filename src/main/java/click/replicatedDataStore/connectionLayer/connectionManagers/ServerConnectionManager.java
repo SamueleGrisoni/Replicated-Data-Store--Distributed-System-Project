@@ -102,7 +102,7 @@ public class ServerConnectionManager extends ConnectionManager{
 
     public void broadcastMessage(AbstractMsg<?> msg){
         serverHandlersMap.values()
-                .forEach(opt-> opt.ifPresent(handler -> handler.sendMessage(msg)));
+                .forEach(opt-> opt.ifPresent(serverHandler -> serverHandler.sendMessage(msg)));
     }
 
     public Optional<AbstractMsg<?>> handleHeavyPush(AbstractMsg<?> msg){
