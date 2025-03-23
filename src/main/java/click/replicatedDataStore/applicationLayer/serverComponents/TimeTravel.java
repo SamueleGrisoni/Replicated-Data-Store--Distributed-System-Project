@@ -41,9 +41,11 @@ public class TimeTravel {
             try {
                 Thread.sleep(ServerConfig.LIGHT_PUSH_DELAY_MILLIS + rand.nextInt(ServerConfig.LIGHT_PUSH_RANDOM_DELAY_MILLIS));
             } catch (InterruptedException e) {
-                Thread.currentThread().start();
+                if(!stopLightPusher)
+                    Thread.currentThread().start();
             }
-            this.lightPush(serverDataSynchronizer.getVectorClock());
+            if(!stopLightPusher)
+                this.lightPush(serverDataSynchronizer.getVectorClock());
         }
     }
 
@@ -103,5 +105,6 @@ public class TimeTravel {
 
     public void stop() {
         stopLightPusher = true;
+        lightPusher.interrupt();
     }
 }
