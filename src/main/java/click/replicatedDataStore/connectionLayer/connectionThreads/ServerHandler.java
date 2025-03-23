@@ -21,7 +21,7 @@ public abstract class ServerHandler extends ConnectionHandler{
         task.start();
         synchronized (notify){
             try {
-                notify.wait(ServerConfig.otherServerResponseWaitMilliseconds);
+                notify.wait(ServerConfig.WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS);
             } catch (InterruptedException e) {
                 System.out.println(e.getMessage());
             }

@@ -63,7 +63,6 @@ public class ServerConnectionManagerTest {
         otherIndexes.remove(index);
         Mockito.doAnswer(invocationOnMock -> index).when(server).getServerIndex();
         Mockito.doAnswer(invocationOnMock -> nServer).when(server).getNumberOfServers();
-        Mockito.doAnswer(invocationOnMock -> otherIndexes).when(server).getOtherIndexes();
 
         Mockito.doAnswer(invocationOnMock -> serverIpPortMap.get(index)).when(server).getAddressAndPortsPairOf(index);
         Mockito.doAnswer(invocationOnMock -> serverIpPortMap.get(index)).when(server).getMyAddressAndPorts();
@@ -91,7 +90,7 @@ public class ServerConnectionManagerTest {
         ServerConnectionManager connManager0 = new ServerConnectionManager(sync, logger, server0);
         Thread.sleep(100);
         ServerConnectionManager connManager1 = new ServerConnectionManager(sync, logger, server1);
-        Thread.sleep(ServerConfig.otherServerResponseWaitMilliseconds + 100);
+        Thread.sleep(ServerConfig.WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS + 100);
 
         Map<Integer, Optional<ServerHandler>> serverHandlerMapOn0 = (Map<Integer, Optional<ServerHandler>>) InjectionUtils.getPrivateField(connManager0, "serverHandlersMap");
         Assert.assertNotEquals(Optional.empty(), serverHandlerMapOn0.get(1));
@@ -105,7 +104,7 @@ public class ServerConnectionManagerTest {
         ServerConnectionManager connManager0 = new ServerConnectionManager(sync, logger, server0);
         Thread.sleep(100);
         ServerConnectionManager connManager1 = new ServerConnectionManager(sync1, logger, server1);
-        Thread.sleep(ServerConfig.otherServerResponseWaitMilliseconds +100);
+        Thread.sleep(ServerConfig.WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS +100);
 
         ServerLightPushMsg light = new ServerLightPushMsg(new VectorClock(nServer, 0));
         connManager0.sendMessage(light, 1);
@@ -118,7 +117,7 @@ public class ServerConnectionManagerTest {
         ServerConnectionManager connManager0 = new ServerConnectionManager(sync, logger, server0);
         Thread.sleep(100);
         ServerConnectionManager connManager1 = new ServerConnectionManager(sync1, logger, server1);
-        Thread.sleep(ServerConfig.otherServerResponseWaitMilliseconds +100);
+        Thread.sleep(ServerConfig.WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS +100);
 
         ClockedData testClockData = new ClockedData(new VectorClock(nServer, 0), new StringKey("test"), 3);
         List<ClockedData> clockedData = new ArrayList<>();
@@ -134,7 +133,7 @@ public class ServerConnectionManagerTest {
         ServerConnectionManager connManager0 = new ServerConnectionManager(sync, logger, server0);
         Thread.sleep(100);
         ServerConnectionManager connManager1 = new ServerConnectionManager(sync1, logger, server1);
-        Thread.sleep(ServerConfig.otherServerResponseWaitMilliseconds +100);
+        Thread.sleep(ServerConfig.WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS +100);
 
         ServerFetchMsg fetch = new ServerFetchMsg(new VectorClock(nServer, 0));
         connManager0.sendMessage(fetch, 1);
@@ -171,7 +170,7 @@ public class ServerConnectionManagerTest {
         ServerConnectionManager connManager1 = new ServerConnectionManager(sync1, logger, server1);
         Thread.sleep(100);
         ServerConnectionManager connManager2 = new ServerConnectionManager(sync2, logger, server2);
-        Thread.sleep(ServerConfig.otherServerResponseWaitMilliseconds + 100);
+        Thread.sleep(ServerConfig.WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS + 100);
 
         Map<Integer, Optional<ServerHandler>> serverHandlerMapOn0 = (Map<Integer, Optional<ServerHandler>>) InjectionUtils.getPrivateField(connManager0, "serverHandlersMap");
         Assert.assertNotEquals(Optional.empty(), serverHandlerMapOn0.get(1));
@@ -193,7 +192,7 @@ public class ServerConnectionManagerTest {
         ServerConnectionManager connManager1 = new ServerConnectionManager(sync1, logger, server1);
         Thread.sleep(100);
         ServerConnectionManager connManager2 = new ServerConnectionManager(sync2, logger, server2);
-        Thread.sleep(ServerConfig.otherServerResponseWaitMilliseconds +100);
+        Thread.sleep(ServerConfig.WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS +100);
 
         ServerLightPushMsg light = new ServerLightPushMsg(new VectorClock(nServer, 0));
         connManager0.broadcastMessage(light);
@@ -212,7 +211,7 @@ public class ServerConnectionManagerTest {
         ServerConnectionManager connManager1 = new ServerConnectionManager(sync1, logger, server1);
         Thread.sleep(100);
         ServerConnectionManager connManager2 = new ServerConnectionManager(sync2, logger, server2);
-        Thread.sleep(ServerConfig.otherServerResponseWaitMilliseconds +100);
+        Thread.sleep(ServerConfig.WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS +100);
 
         ClockedData testClockData = new ClockedData(new VectorClock(nServer, 0), new StringKey("test"), 3);
         List<ClockedData> clockedData = new ArrayList<>();
@@ -233,7 +232,7 @@ public class ServerConnectionManagerTest {
         ServerConnectionManager connManager1 = new ServerConnectionManager(sync1, logger, server1);
         Thread.sleep(100);
         ServerConnectionManager connManager2 = new ServerConnectionManager(sync2, logger, server2);
-        Thread.sleep(ServerConfig.otherServerResponseWaitMilliseconds +100);
+        Thread.sleep(ServerConfig.WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS +100);
 
         ServerFetchMsg fetch = new ServerFetchMsg(new VectorClock(nServer, 0));
         connManager0.broadcastMessage(fetch);
@@ -247,7 +246,7 @@ public class ServerConnectionManagerTest {
         ServerConnectionManager connManager0 = new ServerConnectionManager(sync, logger, server0);
         Thread.sleep(100);
         ServerConnectionManager connManager1 = new ServerConnectionManager(sync, logger, server1);
-        Thread.sleep(ServerConfig.otherServerResponseWaitMilliseconds +100);
+        Thread.sleep(ServerConfig.WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS +100);
 
         Map<Integer, Optional<ServerHandler>> serverHandlerMapOn0 = (Map<Integer, Optional<ServerHandler>>) InjectionUtils.getPrivateField(connManager0, "serverHandlersMap");
         Assert.assertNotEquals(Optional.empty(), serverHandlerMapOn0.get(1));
@@ -261,7 +260,7 @@ public class ServerConnectionManagerTest {
 
         connManager1.stop();
         connManager1 = new ServerConnectionManager(sync1, logger, server1);
-        Thread.sleep(ServerConfig.otherServerResponseWaitMilliseconds + 100);
+        Thread.sleep(ServerConfig.WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS + 100);
         serverHandlerMapOn0 = (Map<Integer, Optional<ServerHandler>>) InjectionUtils.getPrivateField(connManager0, "serverHandlersMap");
         Assert.assertNotEquals(Optional.empty(), serverHandlerMapOn0.get(1));
         serverHandlerMapOn1 = (Map<Integer, Optional<ServerHandler>>) InjectionUtils.getPrivateField(connManager1, "serverHandlersMap");
@@ -275,7 +274,7 @@ public class ServerConnectionManagerTest {
     @Test
     public void receiverDownSendMessage() throws InterruptedException {
         ServerConnectionManager connManager0 = new ServerConnectionManager(sync, logger, server0);
-        Thread.sleep(ServerConfig.otherServerResponseWaitMilliseconds +100);
+        Thread.sleep(ServerConfig.WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS +100);
 
         Map<Integer, Optional<ServerHandler>> serverHandlerMapOn0 = (Map<Integer, Optional<ServerHandler>>) InjectionUtils.getPrivateField(connManager0, "serverHandlersMap");
         Assert.assertEquals(Optional.empty(), serverHandlerMapOn0.get(1));
@@ -286,7 +285,7 @@ public class ServerConnectionManagerTest {
         Mockito.verifyNoInteractions(sync1);
 
         ServerConnectionManager connManager1 = new ServerConnectionManager(sync1, logger, server1);
-        Thread.sleep(ServerConfig.otherServerResponseWaitMilliseconds + 100);
+        Thread.sleep(ServerConfig.WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS + 100);
 
         serverHandlerMapOn0 = (Map<Integer, Optional<ServerHandler>>) InjectionUtils.getPrivateField(connManager0, "serverHandlersMap");
 

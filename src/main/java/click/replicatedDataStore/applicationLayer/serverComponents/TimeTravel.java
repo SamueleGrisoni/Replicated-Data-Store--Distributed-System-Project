@@ -14,22 +14,30 @@ import click.replicatedDataStore.utlis.Key;
 import click.replicatedDataStore.utlis.configs.ServerConfig;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class TimeTravel {
     private final ServerDataSynchronizer serverDataSynchronizer;
     private ServerConnectionManager serverConnectionManager;
     private final DataManagerReader dataManagerReader;
     private final DataManagerWriter dataManagerWriter;
-    private final Thread lightPusher;
+    private final ScheduledExecutorService lightPusher = Executors.newScheduledThreadPool(1);
     private boolean stopLightPusher = false;
-    private final Random rand = new Random();
 
     public TimeTravel(ServerDataSynchronizer serverDataSynchronizer, DataManagerReader dataManagerReader, DataManagerWriter dataManagerWriter) {
         this.serverDataSynchronizer = serverDataSynchronizer;
         this.dataManagerReader = dataManagerReader;
         this.dataManagerWriter = dataManagerWriter;
-        this.lightPusher = new Thread(this::lightPusherFunction);
-        lightPusher.start();
+
+        this.startLightPusher();
+    }
+
+    private void startLightPusher(){
+        Random rand = new Random();
+        int delay = ServerConfig.LIGHT_PUSH_DELAY_MILLIS + rand.nextInt(ServerConfig.LIGHT_PUSH_RANDOM_DELAY_MILLIS);
+        lightPusher.scheduleAtFixedRate(this::lightPusherFunction, delay, delay, TimeUnit.MILLISECONDS);
     }
 
     public void setServerConnectionManager(ServerConnectionManager serverConnectionManager) {
@@ -37,15 +45,8 @@ public class TimeTravel {
     }
 
     private void lightPusherFunction() {
-        while (!stopLightPusher) {
-            try {
-                Thread.sleep(ServerConfig.LIGHT_PUSH_DELAY_MILLIS + rand.nextInt(ServerConfig.LIGHT_PUSH_RANDOM_DELAY_MILLIS));
-            } catch (InterruptedException e) {
-                if(!stopLightPusher)
-                    Thread.currentThread().start();
-            }
-            if(!stopLightPusher)
-                this.lightPush(serverDataSynchronizer.getVectorClock());
+        if (!stopLightPusher) {
+            this.lightPush(serverDataSynchronizer.getVectorClock());
         }
     }
 
@@ -105,6 +106,6 @@ public class TimeTravel {
 
     public void stop() {
         stopLightPusher = true;
-        lightPusher.interrupt();
+        lightPusher.shutdownNow();
     }
 }

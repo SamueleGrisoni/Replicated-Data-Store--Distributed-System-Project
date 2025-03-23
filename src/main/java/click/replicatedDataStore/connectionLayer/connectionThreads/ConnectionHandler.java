@@ -44,7 +44,7 @@ public abstract class ConnectionHandler extends Thread{
                 manager.handleClosingConnection(this);
             }catch (IOException e){
                 if(running)
-                    manager.logger.logErr(this.getClass(), "error while processing a request\n" + e.getMessage());
+                    manager.logger.logErr(this.getClass(), "error while processing a request \n" + e.getMessage());
             }catch (ClassNotFoundException e){
                 if(running)
                     manager.logger.logErr(this.getClass(), "error the input from the socket isn't an AbstractMsg\n" + e.getMessage());

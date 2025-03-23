@@ -24,12 +24,9 @@ public class ConnectionAcceptor extends Thread{
                 serverSocket = new ServerSocket(port);
             } catch (IOException e) {
                 connectionManager.logger.logErr(this.getClass(), "error while opening server socket on port " + port + "\n" + e.getMessage());
-
                 try {
-                    sleep(ServerConfig.retryToOpenServerSocketMilliseconds);
-                } catch (InterruptedException ex) {
-                    throw new RuntimeException("error while sleeping\n" + ex.getMessage());
-                }
+                    sleep(ServerConfig.OPEN_OCCUPIED_SERVER_SOCKET_RETRY_MILLIS);
+                } catch (InterruptedException ignored) {}
             }
         } while (serverSocket == null && running);
 
