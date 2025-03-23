@@ -10,8 +10,8 @@ import click.replicatedDataStore.connectionLayer.messages.ServerHeavyPushMsg;
 import click.replicatedDataStore.connectionLayer.messages.ServerLightPushMsg;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utlis.Key;
-import click.replicatedDataStore.utlis.configs.ServerConfig;
+import click.replicatedDataStore.utils.Key;
+import click.replicatedDataStore.utils.configs.ServerConfig;
 
 import java.util.*;
 import java.util.concurrent.Executors;

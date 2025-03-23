@@ -7,10 +7,10 @@ import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utlis.ClockTooFarAhead;
-import click.replicatedDataStore.utlis.DataType;
-import click.replicatedDataStore.utlis.Key;
-import click.replicatedDataStore.utlis.configs.ServerConfig;
+import click.replicatedDataStore.utils.ClockTooFarAhead;
+import click.replicatedDataStore.utils.DataType;
+import click.replicatedDataStore.utils.Key;
+import click.replicatedDataStore.utils.configs.ServerConfig;
 
 import java.util.Iterator;
 import java.util.List;

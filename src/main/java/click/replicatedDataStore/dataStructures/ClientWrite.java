@@ -1,6 +1,6 @@
 package click.replicatedDataStore.dataStructures;
 
-import click.replicatedDataStore.utlis.Key;
+import click.replicatedDataStore.utils.Key;
 
 import java.io.Serializable;
 

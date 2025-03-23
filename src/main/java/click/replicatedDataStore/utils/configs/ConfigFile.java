@@ -1,4 +1,4 @@
-package click.replicatedDataStore.utlis.configs;
+package click.replicatedDataStore.utils.configs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

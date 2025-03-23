@@ -3,7 +3,7 @@ package click.replicatedDataStore.applicationLayer.serverComponents.dataManager;
 import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utlis.Key;
+import click.replicatedDataStore.utils.Key;
 
 import java.io.Serializable;
 import java.util.*;

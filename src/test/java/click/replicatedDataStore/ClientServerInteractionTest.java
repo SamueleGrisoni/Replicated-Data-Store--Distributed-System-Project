@@ -9,7 +9,7 @@ import click.replicatedDataStore.connectionLayer.connectionManagers.ClientConnec
 import click.replicatedDataStore.connectionLayer.messages.AnswerState;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.keyImplementations.StringKey;
-import click.replicatedDataStore.utlis.Key;
+import click.replicatedDataStore.utils.Key;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

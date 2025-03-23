@@ -1,4 +1,4 @@
-package click.replicatedDataStore.utlis;
+package click.replicatedDataStore.utils;
 
 public enum DataType {
     CLIENT,

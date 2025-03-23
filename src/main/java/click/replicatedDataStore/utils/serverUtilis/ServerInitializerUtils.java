@@ -1,9 +1,9 @@
-package click.replicatedDataStore.utlis.serverUtilis;
+package click.replicatedDataStore.utils.serverUtilis;
 
 import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.ServerPorts;
-import click.replicatedDataStore.utlis.configs.ConfigFile;
+import click.replicatedDataStore.utils.configs.ConfigFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;

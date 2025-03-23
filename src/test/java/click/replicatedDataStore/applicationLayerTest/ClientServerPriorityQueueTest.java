@@ -6,7 +6,7 @@ import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utlis.Key;
+import click.replicatedDataStore.utils.Key;
 import org.junit.Before;
 import org.junit.Test;
 

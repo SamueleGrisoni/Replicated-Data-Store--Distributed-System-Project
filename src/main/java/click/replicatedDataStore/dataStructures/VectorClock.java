@@ -1,7 +1,7 @@
 package click.replicatedDataStore.dataStructures;
 
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.VectorClockComparation;
-import click.replicatedDataStore.utlis.ClockTooFarAhead;
+import click.replicatedDataStore.utils.ClockTooFarAhead;
 
 import java.io.Serializable;
 import java.util.Arrays;

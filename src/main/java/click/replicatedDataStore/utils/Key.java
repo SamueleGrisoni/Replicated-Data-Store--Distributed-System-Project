@@ -1,4 +1,4 @@
-package click.replicatedDataStore.utlis;
+package click.replicatedDataStore.utils;
 
 import java.io.Serializable;
 

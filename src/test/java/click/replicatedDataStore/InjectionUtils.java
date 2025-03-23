@@ -1,6 +1,6 @@
 package click.replicatedDataStore;
 
-import click.replicatedDataStore.utlis.configs.ClientGlobalParameters;
+import click.replicatedDataStore.utils.configs.ClientGlobalParameters;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

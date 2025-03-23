@@ -1,7 +1,7 @@
 package click.replicatedDataStore.applicationLayerTest;
 
 import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utlis.ClockTooFarAhead;
+import click.replicatedDataStore.utils.ClockTooFarAhead;
 import org.junit.Test;
 
 import java.util.PriorityQueue;

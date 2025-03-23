@@ -1,9 +1,7 @@
 package click.replicatedDataStore.connectionLayer.messages;
 
 import click.replicatedDataStore.connectionLayer.CommunicationMethods;
-import click.replicatedDataStore.utlis.Key;
-
-import java.io.Serializable;
+import click.replicatedDataStore.utils.Key;
 
 public class ClientReadMsg extends AbstractMsg<Key>{
 

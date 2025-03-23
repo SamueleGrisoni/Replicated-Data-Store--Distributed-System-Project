@@ -2,12 +2,10 @@ package click.replicatedDataStore;
 
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.ServerPorts;
-import click.replicatedDataStore.utlis.configs.ConfigFile;
-import click.replicatedDataStore.utlis.configs.ServerConfig;
-import click.replicatedDataStore.utlis.serverUtilis.ServerInitializerUtils;
+import click.replicatedDataStore.utils.configs.ServerConfig;
+import click.replicatedDataStore.utils.serverUtilis.ServerInitializerUtils;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.*;
 
 public class ServerInitializer {

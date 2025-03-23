@@ -1,6 +1,6 @@
 package click.replicatedDataStore.dataStructures.keyImplementations;
 
-import click.replicatedDataStore.utlis.Key;
+import click.replicatedDataStore.utils.Key;
 
 public class StringKey implements Key {
     public final String key;

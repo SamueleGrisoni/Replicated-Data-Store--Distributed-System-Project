@@ -3,7 +3,7 @@ package click.replicatedDataStore.applicationLayer.clientComponents;
 import click.replicatedDataStore.applicationLayer.clientComponents.view.ClientErrorManager;
 import click.replicatedDataStore.connectionLayer.messages.*;
 import click.replicatedDataStore.dataStructures.ClientWrite;
-import click.replicatedDataStore.utlis.Key;
+import click.replicatedDataStore.utils.Key;
 
 import java.io.*;
 import java.net.Socket;

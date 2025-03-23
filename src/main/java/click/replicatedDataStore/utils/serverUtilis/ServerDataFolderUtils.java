@@ -1,8 +1,8 @@
-package click.replicatedDataStore.utlis.serverUtilis;
+package click.replicatedDataStore.utils.serverUtilis;
 
 import click.replicatedDataStore.dataStructures.Pair;
-import click.replicatedDataStore.utlis.configs.ConfigFile;
-import click.replicatedDataStore.utlis.configs.ServerConfig;
+import click.replicatedDataStore.utils.configs.ConfigFile;
+import click.replicatedDataStore.utils.configs.ServerConfig;
 
 import java.io.*;
 import java.security.MessageDigest;

@@ -14,7 +14,7 @@ import click.replicatedDataStore.connectionLayer.messages.ClientWriteMsg;
 import click.replicatedDataStore.connectionLayer.messages.StateAnswerMsg;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.keyImplementations.StringKey;
-import click.replicatedDataStore.utlis.Key;
+import click.replicatedDataStore.utils.Key;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;

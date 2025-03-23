@@ -4,7 +4,7 @@ import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utlis.DataType;
+import click.replicatedDataStore.utils.DataType;
 
 import java.util.Comparator;
 import java.util.List;

@@ -2,7 +2,7 @@ package click.replicatedDataStore.connectionLayer.connectionThreads;
 
 import click.replicatedDataStore.connectionLayer.connectionManagers.ServerConnectionManager;
 import click.replicatedDataStore.connectionLayer.messages.AbstractMsg;
-import click.replicatedDataStore.utlis.configs.ServerConfig;
+import click.replicatedDataStore.utils.configs.ServerConfig;
 
 import java.io.EOFException;
 import java.io.IOException;
