@@ -1,0 +1,30 @@
+{
+  "localServer": [
+    {
+      "serverName": 2,
+      "address": "127.0.0.1",
+      "serverPort": 4422,
+      "clientPort": 4423
+    }
+  ],
+  "otherServers": [
+    {
+      "serverName": 4,
+      "address": "127.0.0.1",
+      "serverPort": 4416,
+      "clientPort": 4417
+    },
+    {
+      "serverName": 3,
+      "address": "127.0.0.1",
+      "serverPort": 4418,
+      "clientPort": 4419
+    },
+    {
+      "serverName": 1,
+      "address": "127.0.0.1",
+      "serverPort": 4420,
+      "clientPort": 4421
+    }
+  ]
+}

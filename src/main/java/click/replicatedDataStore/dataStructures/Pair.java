@@ -1,6 +1,7 @@
 package click.replicatedDataStore.dataStructures;
 
 /** a pair of objects
+ * @author Paolo Gnefra
  * @param <A> the first object
  * @param <B> the second object
  * @param first the first object

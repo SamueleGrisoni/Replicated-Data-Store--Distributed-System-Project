@@ -4,10 +4,15 @@ import click.replicatedDataStore.applicationLayer.clientComponents.RequestSender
 import click.replicatedDataStore.applicationLayer.clientComponents.view.ClientErrorManager;
 import click.replicatedDataStore.connectionLayer.messages.AnswerState;
 import click.replicatedDataStore.dataStructures.ClientWrite;
+import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.keyImplementations.StringKey;
 
+import java.util.HashMap;
 import java.util.InputMismatchException;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 public class Client {
 
@@ -42,27 +47,49 @@ public class Client {
         RequestSender sender = new RequestSender(ip.isEmpty()? "localhost": ip, port, eMan);
 
         System.out.println("what do you want to do?");
-        while(true){
-            System.out.println("0: read"+ " --- " + "1: write");
+        AtomicBoolean stop = new AtomicBoolean(false);
 
+        Map<Integer, Pair<String, Supplier<Void>>> choiceMap = getChoiceMap(stop, input, sender);
+
+        while(!stop.get()){
+            System.out.println("-------------------------");
+            for(Map.Entry<Integer, Pair<String, Supplier<Void>>> entry : choiceMap.entrySet()) {
+                System.out.println(entry.getKey() + ": " + entry.getValue().first());
+            }
             int choice = nextIntClear();
-            if(choice == 0){
-                System.out.println("key: ");
-                String skey = input.nextLine();
-                System.out.println("reading (" + skey + ") ...");
-                ClientWrite read = sender.read(new StringKey(skey));
-                System.out.println(read.key() + ", " + read.value());
-            } else if (choice == 1) {
-                System.out.println("key: ");
-                String skey = input.nextLine();
-                System.out.println("value: ");
-                Integer val = nextIntClear();
-                System.out.println("writing (" + skey + ", " + val + ") ...");
-                AnswerState state = sender.write(new StringKey(skey), val);
-                System.out.println(state);
+            if(choiceMap.containsKey(choice)){
+                choiceMap.get(choice).second().get();
             }else {
                 System.out.println("Wrong input\n");
             }
         }
+    }
+
+    private static Map<Integer, Pair<String, Supplier<Void>>> getChoiceMap(AtomicBoolean stop, Scanner input, RequestSender sender) {
+        Map<Integer, Pair<String, Supplier<Void>>> choiceMap = new HashMap<>();
+        choiceMap.put(0, new Pair<>("exit", () -> {
+            System.out.println("exiting...");
+            stop.set(true);
+            return null;
+        }));
+        choiceMap.put(1, new Pair<>("read", () -> {
+            System.out.println("key: ");
+            String skey = input.nextLine();
+            System.out.println("reading (" + skey + ") ...");
+            ClientWrite read = sender.read(new StringKey(skey));
+            System.out.println(read.key() + ", " + read.value());
+            return null;
+        }));
+        choiceMap.put(2, new Pair<>("write", () -> {
+            System.out.println("key: ");
+            String skey = input.nextLine();
+            System.out.println("value: ");
+            Integer val = nextIntClear();
+            System.out.println("writing (" + skey + ", " + val + ") ...");
+            AnswerState state = sender.write(new StringKey(skey), val);
+            System.out.println(state);
+            return null;
+        }));
+        return choiceMap;
     }
 }
