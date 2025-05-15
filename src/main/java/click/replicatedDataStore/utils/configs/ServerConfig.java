@@ -7,6 +7,7 @@ public class ServerConfig {
     public static final String SERVER_DATA_FOLDER_NAME = "ReplicatedDataStore-Data";
     public static final String PRIMARY_INDEX_FILE_NAME = "Data-Server-";
     public static final String SECONDARY_INDEX_FILE_NAME = "Data-Secondary-Index-Server-";
+    public static final String VECTOR_CLOCK_FILE_NAME = "Data-Vector-Clock-Server-";
     public static final String CONFIG_FILE_HASH_NAME = "Config-File-Hash";
     public static final String FILES_EXTENSION = ".bin";
 

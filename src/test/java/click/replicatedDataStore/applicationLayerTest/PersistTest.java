@@ -45,7 +45,7 @@ public class PersistTest implements Serializable {
         indexFile.createNewFile();
 
         //Create a new persist object
-        persist = new Persist(folderName, dataFile.getName(), indexFile.getName());
+        persist = new Persist(folderName, dataFile.getName(), indexFile.getName(), "ClockFile");
     }
 
     //After each recursively remove the temporary folder and files

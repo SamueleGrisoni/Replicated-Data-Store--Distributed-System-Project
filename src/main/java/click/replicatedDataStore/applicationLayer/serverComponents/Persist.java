@@ -13,21 +13,25 @@ import java.util.TreeMap;
 public class Persist {
     private final String dataFilePath;
     private final String indexFilePath;
+    private final String clockFilePath;
     //Flag to check if the file is new. If so, the recovery methods will not access the disk to recover an empty file
     private boolean newDataFile;
     private boolean newIndexFile;
+    private boolean newClockFile;
 
-    public Persist(String dataFolderName, String dataFileName, String indexFileName) {
+    public Persist(String dataFolderName, String dataFileName, String indexFileName, String clockFileName) {
         String folderPath = ServerConfig.getGlobalFolderPath() + dataFolderName + File.separator;
         this.dataFilePath = folderPath + dataFileName;
         this.indexFilePath = folderPath + indexFileName;
+        this.clockFilePath = folderPath + clockFileName;
 
         //create the data folder and file if it does not exist
         if (!new File(folderPath).exists()) {
-            createDataFolderAndFile(folderPath, dataFilePath, indexFilePath);
+            createDataFolderAndFile(folderPath, dataFilePath, indexFilePath, clockFilePath);
         } else { //Data folder exists
             checkOrCreateDataFile(dataFilePath);
             checkOrCreateIndexFile(indexFilePath);
+            checkOrCreateClockFile(clockFilePath);
         }
     }
 
@@ -37,9 +41,7 @@ public class Persist {
         if (!dataFile.exists()) {
             throw new IllegalCallerException("Data file does not exist");
         }
-
-        ObjectOutputStream oos = createObjectOutputStream(dataFile);
-
+        ObjectOutputStream oos = createObjectOutputStream(dataFile, true);
         try {
             oos.writeObject(clockedData.key());
             oos.writeObject(clockedData.value());
@@ -54,34 +56,33 @@ public class Persist {
         }
     }
 
-    private ObjectOutputStream createObjectOutputStream(File file){
-        ObjectOutputStream oos = null;
-        if(file.length() == 0){
-            try{
-                oos = new ObjectOutputStream(new FileOutputStream(file));
-            }catch(IOException e){
+    private ObjectOutputStream createObjectOutputStream(File file, boolean append) {
+        if (!append || file.length() == 0) {
+            try {
+                return new ObjectOutputStream(new FileOutputStream(file));
+            } catch (IOException e) {
                 e.printStackTrace();
             }
-        }else { //if the file is not empty create an oos in appended mode
+        } else {
             try {
-                oos = new ObjectOutputStream(new FileOutputStream(file, true)) {
+                return new ObjectOutputStream(new FileOutputStream(file, true)) {
                     @Override
                     protected void writeStreamHeader() {
-                        //Do not write the stream header when appending to the file
+                        // Do not write the stream header when appending to the file
                     }
                 };
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        return oos;
+        System.err.println("ObjectOutputStream is null");
+        return null;
     }
 
     //Save the clocked data to the (primary) data file, compact the primary index and overwrite the secondary index
-    public void persist(ClockedData clockedData, TreeMap<VectorClock, Key> secondaryIndex){
+    public void persist(ClockedData clockedData, TreeMap<VectorClock, Key> secondaryIndex) {
         persist(clockedData);
         compactPrimaryIndex();
-
         //overwrite the index file with the new secondary index
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(indexFilePath))) {
             for (Map.Entry<VectorClock, Key> entry : secondaryIndex.entrySet()) {
@@ -93,10 +94,31 @@ public class Persist {
         }
     }
 
+    //Save the vector clock to the clock file
+    public void persistClock(VectorClock vectorClock) {
+        //System.out.println("Persisting vector clock: " + vectorClock);
+        File clockFile = new File(clockFilePath);
+        if (!clockFile.exists()) {
+            throw new IllegalCallerException("Clock file does not exist");
+        }
+        ObjectOutputStream oos = createObjectOutputStream(clockFile, false);
+        try {
+            oos.writeObject(vectorClock);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                oos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     //Compact the primary index by reading the data file and writing the updated key-value pairs to a new file
     private void compactPrimaryIndex() {
         Map<Key, Serializable> newPrimaryIndex = recoverPrimaryIndex();
-        if(newPrimaryIndex.isEmpty()){
+        if (newPrimaryIndex.isEmpty()) {
             return;
         }
         //overwrite the data file with the new primary index. Because it's a map the key-value is already updated to the latest value
@@ -108,6 +130,28 @@ public class Persist {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public VectorClock recoverVectorClock(String serverName, int serverNumber, int serverIndex) {
+        VectorClock vc;
+        if (!newClockFile) {
+            File clockFile = new File(clockFilePath);
+            if (clockFile.length() == 0) {
+                vc = new VectorClock(serverName, serverNumber, serverIndex);
+                System.out.println("Clock file is empty. Creating a new vector clock " + vc);
+                return vc;
+            }
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(clockFile))) {
+                vc = (VectorClock) ois.readObject();
+                System.out.println("Recovering vector clock: " + vc);
+                return vc;
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        vc = new VectorClock(serverName, serverNumber, serverIndex);
+        System.out.println("Clock file is new. Creating a new vector clock " + vc);
+        return vc;
     }
 
     public LinkedHashMap<Key, Serializable> recoverPrimaryIndex() {
@@ -137,7 +181,7 @@ public class Persist {
         TreeMap<VectorClock, Key> secondaryIndex = new TreeMap<>();
         if (!newIndexFile) {
             File indexFile = new File(indexFilePath);
-            if(indexFile.length() == 0){
+            if (indexFile.length() == 0) {
                 return secondaryIndex;
             }
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(indexFile))) {
@@ -183,14 +227,30 @@ public class Persist {
         }
     }
 
-    private void createDataFolderAndFile(String folderPath, String dataFilePath, String indexFilePath) {
+    private void checkOrCreateClockFile(String clockFilePath) {
+        File clockFile = new File(clockFilePath);
+        if (!clockFile.exists()) {
+            newClockFile = true;
+            try {
+                clockFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            newClockFile = false;
+        }
+    }
+
+    private void createDataFolderAndFile(String folderPath, String dataFilePath, String indexFilePath, String clockFilePath) {
         if (!new File(folderPath).exists()) {
             newDataFile = true;
             newIndexFile = true;
+            newClockFile = true;
             new File(folderPath).mkdir();
             try {
                 new File(dataFilePath).createNewFile();
                 new File(indexFilePath).createNewFile();
+                new File(clockFilePath).createNewFile();
             } catch (IOException e) {
                 e.printStackTrace();
             }

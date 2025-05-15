@@ -27,14 +27,15 @@ public class ServerDataSynchronizer {
         this.persist= persistInitializer();
         this.primaryIndex = persist.recoverPrimaryIndex();
         this.secondaryIndex = persist.recoverSecondaryIndex();
-        this.vectorClock = vectorClockInitializer();
+        this.vectorClock = persist.recoverVectorClock(serverName, serverNumber, serverIndex);
     }
 
     private Persist persistInitializer(){
         String dataFolderName = ServerConfig.SERVER_DATA_FOLDER_NAME + serverIndex;
         String primaryIndexFileName = ServerConfig.PRIMARY_INDEX_FILE_NAME + serverIndex + ServerConfig.FILES_EXTENSION;
         String secondaryIndexFileName = ServerConfig.SECONDARY_INDEX_FILE_NAME + serverIndex + ServerConfig.FILES_EXTENSION;
-        return new Persist(dataFolderName, primaryIndexFileName, secondaryIndexFileName);
+        String vectorClockFileName = ServerConfig.VECTOR_CLOCK_FILE_NAME + serverIndex + ServerConfig.FILES_EXTENSION;
+        return new Persist(dataFolderName, primaryIndexFileName, secondaryIndexFileName, vectorClockFileName);
     }
 
     //If secondaryIndex is not empty, update the vector clock with the latest clock. Useful for recovery
@@ -52,6 +53,7 @@ public class ServerDataSynchronizer {
                 updatePersistPrimaryIndex(clockedData);
             }
             vectorClock.updateClock(clockedDataList.get(clockedDataList.size()-1).vectorClock());
+            persist.persistClock(vectorClock);
         }
     }
 
@@ -69,6 +71,7 @@ public class ServerDataSynchronizer {
                 secondaryIndex.putAll(secondaryIndexUpdated);
             }
             vectorClock.updateClock(lastClockedData.vectorClock());
+            persist.persistClock(vectorClock);
         }
     }
 
