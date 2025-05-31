@@ -25,6 +25,7 @@ public class DataManagerReader{
     // Recover Data return a List of ClockedData.
     // If I have the right VectorClock use that, else, use max vectorClock in secondaryIndex older than the update
     public List<ClockedData> recoverData(VectorClock otherVectorClock){
+        System.out.println("Recovering data for VectorClock: " + otherVectorClock);
         LinkedHashMap<Key, Serializable> primaryIndex = serverDataSynchronizer.getPrimaryIndex();
         TreeMap<VectorClock, Key> secondaryIndex = serverDataSynchronizer.getSecondaryIndex();
         Key startKey = secondaryIndex.get(otherVectorClock);

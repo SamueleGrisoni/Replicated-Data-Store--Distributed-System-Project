@@ -59,6 +59,11 @@ public class TimeTravel {
         || compareRes == VectorClockComparation.LESS_THAN.getCompareResult()){
             outDate = true;
         }
+//        if(outDate){
+//            System.out.println("Server " + serverDataSynchronizer.getServerIndex() + " is out of date. My clock: " + myVectorClock + " Other clock: " + otherVectorClock);
+//        }else{
+//            System.out.println("Server " + serverDataSynchronizer.getServerIndex() + " is up to date. My clock: " + myVectorClock + " Other clock: " + otherVectorClock);
+//        }
         return outDate;
     }
 
@@ -97,7 +102,10 @@ public class TimeTravel {
     }
 
     public Optional<AbstractMsg<?>> handleFetch(ServerFetchMsg fetch){
+        System.out.println("Computing fetch for VectorClock: " + fetch.getPayload());
         List<ClockedData> list = this.computeFetch(fetch.getPayload());
+        //todo the return list is always empty
+        System.out.println("Fetch computed, returning " + list.size() + " ClockedData");
         if(!list.isEmpty())
             return Optional.of(new ServerHeavyPushMsg(list));
         else

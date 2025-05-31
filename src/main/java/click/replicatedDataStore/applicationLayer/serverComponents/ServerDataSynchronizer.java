@@ -38,15 +38,6 @@ public class ServerDataSynchronizer {
         return new Persist(dataFolderName, primaryIndexFileName, secondaryIndexFileName, vectorClockFileName);
     }
 
-    //If secondaryIndex is not empty, update the vector clock with the latest clock. Useful for recovery
-    private VectorClock vectorClockInitializer(){
-        VectorClock vectorClock = new VectorClock(serverName, serverNumber, serverIndex);
-        if(!secondaryIndex.isEmpty()){
-            return secondaryIndex.lastKey();
-        }
-        return vectorClock;
-    }
-
     public void updateAndPersist(List<ClockedData> clockedDataList) {
         synchronized (primaryIndex) {
             for(ClockedData clockedData : clockedDataList){
