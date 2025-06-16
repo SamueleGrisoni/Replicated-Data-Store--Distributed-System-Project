@@ -13,12 +13,12 @@ import java.util.TreeMap;
 public class ServerDataSynchronizer {
     private final int serverNumber;
     private final int serverIndex;
+    private final String serverName;
 
     private final VectorClock vectorClock;
     private final LinkedHashMap<Key, Serializable> primaryIndex;
     private final TreeMap<VectorClock, Key> secondaryIndex;
     private final Persist persist;
-    private final String serverName;
 
     public ServerDataSynchronizer(String serverName, int serverNumber, int serverIndex){
         this.serverName = serverName;
@@ -100,5 +100,13 @@ public class ServerDataSynchronizer {
 
     public int getServerIndex() {
         return serverIndex;
+    }
+
+    public int getServerNumber() {
+        return serverNumber;
+    }
+
+    public String getServerName() {
+        return serverName;
     }
 }
