@@ -36,8 +36,7 @@ public class DataManagerWriter extends Thread {
     @Override
     public void run() {
         //System.out.println("Writer thread of server " + serverDataSynchronizer.getServerIndex() + " started");
-        while (true) {
-            if(stop) break;
+        while (!stop) {
             //Lock the queue so new data cannot be added while writing
             queue.lockQueue();
             try {

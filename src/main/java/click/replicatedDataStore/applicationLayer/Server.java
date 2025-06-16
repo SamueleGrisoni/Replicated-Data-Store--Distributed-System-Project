@@ -85,6 +85,7 @@ public class Server extends Thread{
     public void run() {
         startServerThreads();
         logger.logInfo("Server " + serverName +" (server index " + serverIndex + ") started on " + addresses.get(serverIndex).first() + ":" + addresses.get(serverIndex).second());
+        logger.logInfo("Server on Thread " + Thread.currentThread().getName() );
         while(!stop){
         }
         stopThreads();

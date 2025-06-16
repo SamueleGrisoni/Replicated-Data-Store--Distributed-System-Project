@@ -95,7 +95,7 @@ public class DataManagerReader {
         while (primaryIndexIterator.hasNext()) {
             Map.Entry<Key, Serializable> entry = primaryIndexIterator.next();
             if (entry.getKey().equals(startKey)) {
-                return new Pair<Map.Entry<Key, Serializable>, Iterator<Map.Entry<Key, Serializable>>>(entry, primaryIndexIterator);
+                return new Pair<>(entry, primaryIndexIterator);
             }
         }
         throw new IllegalStateException("startKey " + startKey + " not found in primaryIndex " + primaryIndex);

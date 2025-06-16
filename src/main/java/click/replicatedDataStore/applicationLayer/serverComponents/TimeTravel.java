@@ -102,10 +102,10 @@ public class TimeTravel {
     }
 
     public Optional<AbstractMsg<?>> handleFetch(ServerFetchMsg fetch){
-        System.out.println("Computing fetch for VectorClock: " + fetch.getPayload());
+        //System.out.println("Computing fetch for VectorClock: " + fetch.getPayload());
         List<ClockedData> list = this.computeFetch(fetch.getPayload());
-        //todo the return list is always empty
-        System.out.println("Fetch computed, returning " + list.size() + " ClockedData");
+        //todo check this out, return list after server restart when an update as occurred is empty (it should contain the last update)
+        //System.out.println("Fetch computed, returning " + list.size() + " ClockedData");
         if(!list.isEmpty())
             return Optional.of(new ServerHeavyPushMsg(list));
         else

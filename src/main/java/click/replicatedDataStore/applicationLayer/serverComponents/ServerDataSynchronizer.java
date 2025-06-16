@@ -45,6 +45,7 @@ public class ServerDataSynchronizer {
             }
             vectorClock.updateClock(clockedDataList.get(clockedDataList.size()-1).vectorClock());
             persist.persistClock(vectorClock);
+            System.out.println("Persisted clock: " + vectorClock);
         }
     }
 
