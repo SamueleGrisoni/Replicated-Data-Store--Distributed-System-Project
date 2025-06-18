@@ -41,6 +41,7 @@ public abstract class ServerHandler extends ConnectionHandler{
             }catch (EOFException eof){
                 manager.logger.logErr(this.getClass(), "EOF\n");
             } catch (IOException e) {
+                manager.handleClosingConnection(this);
                 manager.logger.logErr(this.getClass(), "error: sending message: " + msg.getClass() + "\n" + e.getMessage());
             }
         });

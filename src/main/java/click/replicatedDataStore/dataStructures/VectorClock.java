@@ -46,11 +46,11 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
         //System.out.println("Actual clock: " + this);
         try {
             checkIfUpdatable(serverIndex, this, incomingClock);
+            for (int i = 0; i < clock.length; i++) {
+                clock[i] = Math.max(clock[i], incomingClock.clock[i]);
+            }
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
-        }
-        for (int i = 0; i < clock.length; i++) {
-            clock[i] = Math.max(clock[i], incomingClock.clock[i]);
         }
         //System.out.println("Updated clock: " + this);
     }
