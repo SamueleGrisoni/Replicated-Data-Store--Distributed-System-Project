@@ -35,7 +35,7 @@ public class DataManagerReader {
             //System.out.println("Secondary index is empty, returning entire primary index.");
             List<ClockedData> dataToRecover = new ArrayList<>();
             for (Map.Entry<Key, Serializable> entry : primaryIndex.entrySet()) {
-                dataToRecover.add(new ClockedData(new VectorClock(serverDataSynchronizer.getServerName(), serverDataSynchronizer.getServerNumber(), serverDataSynchronizer.getServerIndex()), entry.getKey(), entry.getValue()));
+                dataToRecover.add(new ClockedData(serverDataSynchronizer.getVectorClock(), entry.getKey(), entry.getValue()));
             }
             return dataToRecover;
         } else {
@@ -67,14 +67,14 @@ public class DataManagerReader {
     private List<ClockedData> retrieveDataFromPrimaryIndex(Map<Key, Serializable> primaryIndex, TreeMap<VectorClock, Key> secondaryIndex, Key startKey) {
         Pair<Map.Entry<Key, Serializable>, Iterator<Map.Entry<Key, Serializable>>> startingPoint = computePrimaryIndexStartingPoint(primaryIndex, startKey);
         Iterator<Map.Entry<Key, Serializable>> primaryIndexIterator = startingPoint.second();
-        VectorClock maxSecondaryInClock = computeSecondaryIndexClock(secondaryIndex, startKey);
+        VectorClock maxSecondaryIndexClock = computeSecondaryIndexClock(secondaryIndex, startKey);
         //Add the first entry to the dataToRecover list
         List<ClockedData> dataToRecover = new ArrayList<>();
-        dataToRecover.add(new ClockedData(maxSecondaryInClock, startingPoint.first().getKey(), startingPoint.first().getValue()));
+        dataToRecover.add(new ClockedData(maxSecondaryIndexClock, startingPoint.first().getKey(), startingPoint.first().getValue()));
         //Iterate over the primary index starting from the startKey and add every entry to the dataToRecover list
         while (primaryIndexIterator.hasNext()) {
             Map.Entry<Key, Serializable> entry = primaryIndexIterator.next();
-            dataToRecover.add(new ClockedData(maxSecondaryInClock, entry.getKey(), entry.getValue()));
+            dataToRecover.add(new ClockedData(maxSecondaryIndexClock, entry.getKey(), entry.getValue()));
         }
         return dataToRecover;
     }
