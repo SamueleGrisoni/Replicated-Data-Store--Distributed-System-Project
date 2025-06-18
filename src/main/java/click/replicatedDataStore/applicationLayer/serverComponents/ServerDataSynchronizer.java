@@ -1,6 +1,5 @@
 package click.replicatedDataStore.applicationLayer.serverComponents;
 
-import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.VectorClockComparation;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utils.Key;
@@ -74,8 +73,7 @@ public class ServerDataSynchronizer {
         }
     }
 
-    //As discussed during design, the synchronization is probably not needed here
-    //(Writer and Queue are already synchronized). It is kept just in case
+
     public synchronized VectorClock getVectorClock() {
         return vectorClock;
     }
