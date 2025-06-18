@@ -36,32 +36,36 @@ public class Client {
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
         ClientErrorManager eMan = new ClientErrorManager();
+        boolean stop = false;
 
         System.out.println("Just a simple demo: string -> int");
+        while (!stop) {
+            System.out.println("ip: ");
+            String ip = input.nextLine();
+            System.out.println("port: ");
+            int port = nextIntClear();
 
-        System.out.println("ip: ");
-        String ip = input.nextLine();
-        System.out.println("port: ");
-        int port = nextIntClear();
+            RequestSender sender = new RequestSender(ip.isEmpty() ? "localhost" : ip, port, eMan);
 
-        RequestSender sender = new RequestSender(ip.isEmpty()? "localhost": ip, port, eMan);
+            System.out.println("what do you want to do?");
+            AtomicBoolean restart = new AtomicBoolean(false);
 
-        System.out.println("what do you want to do?");
-        AtomicBoolean stop = new AtomicBoolean(false);
+            Map<Integer, Pair<String, Supplier<Void>>> choiceMap = getChoiceMap(restart, input, sender);
 
-        Map<Integer, Pair<String, Supplier<Void>>> choiceMap = getChoiceMap(stop, input, sender);
-
-        while(!stop.get()){
-            System.out.println("-------------------------");
-            for(Map.Entry<Integer, Pair<String, Supplier<Void>>> entry : choiceMap.entrySet()) {
-                System.out.println(entry.getKey() + ": " + entry.getValue().first());
+            while (!restart.get()) {
+                System.out.println("-------------------------");
+                for (Map.Entry<Integer, Pair<String, Supplier<Void>>> entry : choiceMap.entrySet()) {
+                    System.out.println(entry.getKey() + ": " + entry.getValue().first());
+                }
+                int choice = nextIntClear();
+                if (choiceMap.containsKey(choice)) {
+                    choiceMap.get(choice).second().get();
+                } else {
+                    System.out.println("Wrong input\n");
+                }
             }
-            int choice = nextIntClear();
-            if(choiceMap.containsKey(choice)){
-                choiceMap.get(choice).second().get();
-            }else {
-                System.out.println("Wrong input\n");
-            }
+            //System.out.println("continue? (0 = n / 1 = y): ");
+            //if (nextIntClear() == 0) stop = true;
         }
     }
 
