@@ -16,13 +16,13 @@ public class ServerDataSynchronizer {
     private final VectorClock vectorClock;
     private final LinkedHashMap<Key, Serializable> primaryIndex;
     private final TreeMap<VectorClock, Key> secondaryIndex;
-    private final Persist persist;
+    private Persist persist;
 
     public ServerDataSynchronizer(String serverName, int serverNumber, int serverIndex){
         this.serverName = serverName;
         this.serverNumber = serverNumber;
         this.serverIndex = serverIndex;
-        this.persist= persistInitializer();
+        this.persist = persistInitializer();
         this.primaryIndex = persist.recoverPrimaryIndex();
         this.secondaryIndex = persist.recoverSecondaryIndex();
         this.vectorClock = persist.recoverVectorClock(serverName, serverNumber, serverIndex);

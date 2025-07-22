@@ -5,6 +5,7 @@ import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utils.Key;
+import click.replicatedDataStore.utils.configs.ServerConfig;
 
 import java.io.Serializable;
 import java.util.*;
@@ -59,7 +60,11 @@ public class DataManagerReader {
             if (entry != null) {
                 return entry.getValue();
             } else {
-                throw new IllegalStateException("No lower entry found for VectorClock: " + otherVectorClock + " in secondaryIndex but secondaryIndex is not empty " + secondaryIndex);
+                if (!ServerConfig.debug){
+                    throw new IllegalStateException("Server Name: " + serverDataSynchronizer.getServerName() + "Incoming VectorClock: " + otherVectorClock + " does not have a lower entry in secondaryIndex: " + secondaryIndex);
+                }else{
+                    return null;
+                }
             }
         }
     }
