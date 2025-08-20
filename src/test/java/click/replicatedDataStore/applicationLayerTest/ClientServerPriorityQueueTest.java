@@ -25,7 +25,7 @@ public class ClientServerPriorityQueueTest {
         Map<Integer, Pair<String, Integer>> addresses = Map.of(0, new Pair<>("localhost", 4416), 1, new Pair<>("localhost", 4417), 2, new Pair<>("localhost", 4418));
         serverNumber = addresses.size();
         //return a vector clock [offset, 0, 0]
-        ServerDataSynchronizer mockServerDataSynch = new ServerDataSynchronizer("testedServer", serverNumber, 0) {
+        ServerDataSynchronizer mockServerDataSynch = new ServerDataSynchronizer("testedServer", serverNumber, 0, true) {
             //return a vector clock [offset, 0, 0]
             @Override
             public VectorClock getOffsetVectorClock(int offset) {

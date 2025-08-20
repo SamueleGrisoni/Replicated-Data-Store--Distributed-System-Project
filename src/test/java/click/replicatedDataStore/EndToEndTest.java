@@ -33,7 +33,7 @@ public class EndToEndTest {
         Map<Integer, Server> serverMap = new HashMap<>();
 
         for(int i = 0; i < serverAddresses.size(); i++){
-            Server server = new Server("serverTest_" + i, i, serverAddresses);
+            Server server = new Server("serverTest_" + i, i, serverAddresses, true);
             serverMap.put(i, server);
         }
 

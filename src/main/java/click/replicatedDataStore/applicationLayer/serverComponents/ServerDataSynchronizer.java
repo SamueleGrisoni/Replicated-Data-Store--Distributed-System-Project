@@ -17,23 +17,51 @@ public class ServerDataSynchronizer {
     private final LinkedHashMap<Key, Serializable> primaryIndex;
     private final TreeMap<VectorClock, Key> secondaryIndex;
     private final Persist persist;
-
-    public ServerDataSynchronizer(String serverName, int serverNumber, int serverIndex){
+    private final Boolean isPersistent;
+    public ServerDataSynchronizer(String serverName, int serverNumber, int serverIndex, Boolean isPersistent) {
         this.serverName = serverName;
         this.serverNumber = serverNumber;
         this.serverIndex = serverIndex;
+        this.isPersistent = isPersistent;
         this.persist= persistInitializer();
-        this.primaryIndex = persist.recoverPrimaryIndex();
-        this.secondaryIndex = persist.recoverSecondaryIndex();
-        this.vectorClock = persist.recoverVectorClock(serverName, serverNumber, serverIndex);
+        this.primaryIndex = recoverPrimaryIndex();
+        this.secondaryIndex = recoverSecondaryIndex();
+        this.vectorClock = recoverVectorClock(serverName, serverNumber, serverIndex);
     }
 
     private Persist persistInitializer(){
+        if(!isPersistent) {
+            return null;
+        }
         String dataFolderName = ServerConfig.SERVER_DATA_FOLDER_NAME + serverIndex;
         String primaryIndexFileName = ServerConfig.PRIMARY_INDEX_FILE_NAME + serverIndex + ServerConfig.FILES_EXTENSION;
         String secondaryIndexFileName = ServerConfig.SECONDARY_INDEX_FILE_NAME + serverIndex + ServerConfig.FILES_EXTENSION;
         String vectorClockFileName = ServerConfig.VECTOR_CLOCK_FILE_NAME + serverIndex + ServerConfig.FILES_EXTENSION;
         return new Persist(dataFolderName, primaryIndexFileName, secondaryIndexFileName, vectorClockFileName);
+    }
+
+    private LinkedHashMap<Key, Serializable> recoverPrimaryIndex(){
+        if (isPersistent){
+            return persist.recoverPrimaryIndex();
+        }else{
+            return new LinkedHashMap<>();
+        }
+    }
+
+    private TreeMap<VectorClock, Key> recoverSecondaryIndex(){
+        if (isPersistent){
+            return persist.recoverSecondaryIndex();
+        }else{
+            return new TreeMap<>();
+        }
+    }
+
+    private VectorClock recoverVectorClock(String serverName, int serverNumber, int serverIndex){
+        if (isPersistent) {
+            return persist.recoverVectorClock(serverName, serverNumber, serverIndex);
+        } else {
+            return new VectorClock(serverName, serverNumber, serverIndex);
+        }
     }
 
     public void updateAndPersist(List<ClockedData> clockedDataList) {
@@ -42,8 +70,7 @@ public class ServerDataSynchronizer {
                 updatePersistPrimaryIndex(clockedData);
             }
             vectorClock.updateClock(clockedDataList.get(clockedDataList.size()-1).vectorClock());
-            persist.persistClock(vectorClock);
-            System.out.println("Persisted clock: " + vectorClock);
+            persistVectorClock();
         }
     }
 
@@ -54,22 +81,32 @@ public class ServerDataSynchronizer {
             }
             ClockedData lastClockedData = clockedDataList.get(clockedDataList.size()-1);
             synchronized (secondaryIndex) {
-                persist.persist(lastClockedData, secondaryIndexUpdated);
+                if (isPersistent) {
+                    persist.persist(lastClockedData, secondaryIndexUpdated);
+                }
                 primaryIndex.remove(lastClockedData.key());
                 primaryIndex.put(lastClockedData.key(), lastClockedData.value());
                 secondaryIndex.clear();
                 secondaryIndex.putAll(secondaryIndexUpdated);
             }
-            vectorClock.updateClock(lastClockedData.vectorClock());
-            persist.persistClock(vectorClock);
+            persistVectorClock();
         }
     }
 
     private void updatePersistPrimaryIndex(ClockedData clockedData){
         synchronized (primaryIndex) {
-            persist.persist(clockedData);
+            if (isPersistent) {
+                persist.persist(clockedData);
+            }
             primaryIndex.remove(clockedData.key());
             primaryIndex.put(clockedData.key(), clockedData.value());
+        }
+    }
+
+    private void persistVectorClock(){
+        if (isPersistent){
+            persist.persistClock(vectorClock);
+            System.out.println("Persisted clock: " + vectorClock);
         }
     }
 

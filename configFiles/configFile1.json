@@ -4,7 +4,8 @@
       "serverName": "a",
       "address": "127.0.0.1",
       "serverPort": 4401,
-      "clientPort": 4402
+      "clientPort": 4402,
+      "isPersistent": false
     }
   ],
   "otherServers": [

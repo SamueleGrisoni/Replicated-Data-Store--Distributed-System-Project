@@ -31,8 +31,8 @@ public class DataManagerWriterTest {
 
     @Before
     public void setUp() {
-        mockServer = new Server("Server0", 0, addresses);
-        mockServer2 = new Server("Server1", 1, addresses);
+        mockServer = new Server("Server0", 0, addresses, true);
+        mockServer2 = new Server("Server1", 1, addresses, true);
         Field serverDataSynchronizerField = getField(Server.class, "serverDataSynchronizer");
         try {
             mockServerDataSynchronizer1 = (ServerDataSynchronizer) serverDataSynchronizerField.get(mockServer);

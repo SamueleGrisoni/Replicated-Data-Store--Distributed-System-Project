@@ -32,6 +32,9 @@ public class ConfigFile{
         @JsonProperty("clientPort")
         private int clientPort;
 
+        @JsonProperty
+        private Boolean isPersistent;
+
         public String getServerName(){
             return serverName;
         }
@@ -48,6 +51,10 @@ public class ConfigFile{
             return ip;
         }
 
+        public Boolean isPersistent() {
+            return isPersistent;
+        }
+
         @Override
         public String toString() {
             return "ConfigFileEntry{" +
@@ -55,6 +62,7 @@ public class ConfigFile{
                     ", ip='" + ip + '\'' +
                     ", serverPort=" + serverPort +
                     ", clientPort=" + clientPort +
+                    ", isPersistent=" + isPersistent +
                     '}';
         }
     }
