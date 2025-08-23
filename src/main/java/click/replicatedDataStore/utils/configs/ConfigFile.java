@@ -55,6 +55,23 @@ public class ConfigFile{
             return isPersistent;
         }
 
+        public void setIsPersistent(Boolean isPersistent) {
+            this.isPersistent = isPersistent;
+        }
+
+        public ConfigFileEntry(){
+            // Default constructor for deserialization
+        }
+
+        //deep copy constructor
+        public ConfigFileEntry(ConfigFileEntry entry){
+            this.serverName = entry.serverName;
+            this.ip = entry.ip;
+            this.serverPort = entry.serverPort;
+            this.clientPort = entry.clientPort;
+            this.isPersistent = entry.isPersistent;
+        }
+
         @Override
         public String toString() {
             return "ConfigFileEntry{" +
