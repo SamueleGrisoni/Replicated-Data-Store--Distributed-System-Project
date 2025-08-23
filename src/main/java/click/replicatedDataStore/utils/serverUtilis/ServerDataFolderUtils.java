@@ -28,13 +28,14 @@ public class ServerDataFolderUtils {
             writeList(configFilePath, totalList);
         } else {
             try (InputStream in = new FileInputStream(configFilePath)) {
-                String oldHash = new String(in.readAllBytes());
+                //todo check why the new hash is always different from the old one
+                /*String oldHash = new String(in.readAllBytes());
                 in.close();
                 String newHash = computeHash(totalList);
                 if (!oldHash.equals(newHash)) {
                     System.out.println("Config file has changed, deleting old data folder and creating a new one");
                     recreateGlobalDataFolder(folderPath, configFilePath, totalList);
-                }
+                }*/
             }catch (FileNotFoundException | EOFException e){
                 System.out.println("Config file is corrupted, deleting old data folder and creating a new one");
                 recreateGlobalDataFolder(folderPath, configFilePath, totalList);

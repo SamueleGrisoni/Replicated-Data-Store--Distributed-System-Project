@@ -55,11 +55,15 @@ public class DataManagerWriter extends Thread {
             write(data.second());
         }else if(data.first() == DataType.SERVER){
             try {
-                VectorClock.checkIfUpdatable(serverDataSynchronizer.getServerIndex(), serverDataSynchronizer.getVectorClock(), data.second().get(0).vectorClock());
-                write(data.second());
+                for (ClockedData clockedData : data.second()) {
+                    VectorClock.checkIfUpdatable(serverDataSynchronizer.getServerIndex(), serverDataSynchronizer.getVectorClock(), clockedData.vectorClock());
+                    write(List.of(clockedData));
+                }
             }catch (ClockTooFarAhead e){
                 System.out.println("Server"+serverDataSynchronizer.getServerIndex() + ": incoming data is too far ahead. Discarding Update");
             }
+        }else{
+            throw new IllegalArgumentException("Unknown data type: " + data.first());
         }
     }
 
@@ -71,6 +75,7 @@ public class DataManagerWriter extends Thread {
         } else {
             serverDataSynchronizer.updateAndPersist(clockedDataList);
         }
+        serverDataSynchronizer.addToBackupList(clockedDataList);
     }
 
     private void writeSecondaryIndex(List<ClockedData> clockedDataList) {
@@ -111,14 +116,6 @@ public class DataManagerWriter extends Thread {
         return null;
     }
 
-    public void addClientData(ClientWrite clientWrite) {
-        queue.addClientData(clientWrite);
-    }
-
-    public void addServerData(List<ClockedData> serverData) {
-        queue.addServerData(serverData);
-    }
-
     public void stopThread() {
         stop = true;
         queue.lockQueue();
@@ -134,4 +131,12 @@ public class DataManagerWriter extends Thread {
         return queue;
     }
 
+    //Methods use for tests
+    public void addClientData(ClientWrite clientWrite) {
+        queue.addClientData(clientWrite);
+    }
+
+    public void addServerData(List<ClockedData> serverData) {
+        queue.addServerData(serverData);
+    }
 }
