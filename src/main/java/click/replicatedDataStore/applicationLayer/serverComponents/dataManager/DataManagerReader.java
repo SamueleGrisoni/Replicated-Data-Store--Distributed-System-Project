@@ -11,9 +11,6 @@ import java.util.*;
 
 public class DataManagerReader {
     private final ServerDataSynchronizer serverDataSynchronizer;
-
-    //Se si vuole un DataManagerReader per client, ha senso avere un DataManagerReaderClient per client e un DataManagerReaderServer, entrabe con una queue di richieste.
-    //DataManagerReaderClient ha una queue di Key, DataManagerReaderServer ha una queue di ClockedData (o ServerWrite)
     public DataManagerReader(ServerDataSynchronizer serverDataSynchronizer) {
         this.serverDataSynchronizer = serverDataSynchronizer;
     }
@@ -23,20 +20,37 @@ public class DataManagerReader {
         return serverDataSynchronizer.getPrimaryIndex().get(key);
     }
 
-    // Recover Data return a List of ClockedData starting from a startKey computed from the otherVectorClock and the secondaryIndex.
-    // If the secondary index is empty, it returns the entire primary index.
+    //Recover all data past a given VectorClock
     public List<ClockedData> recoverData(VectorClock otherVectorClock) {
         System.out.println("Recovering data for VectorClock: " + otherVectorClock);
         List<ClockedData> clockedDataList = new ArrayList<>();
         BackupList backupList = serverDataSynchronizer.getBackupList();
+        TreeMap<VectorClock, Integer> secondaryIndex = serverDataSynchronizer.getSecondaryIndex();
 
-        for (ClockedData clockedData : backupList.getClockedDataSinceIndex(0)) {
-            int compareRes = clockedData.compareTo(otherVectorClock);
-            if (compareRes == VectorClockComparation.GREATER_THAN.getCompareResult() ||
-                compareRes == VectorClockComparation.CONCURRENT.getCompareResult()) {
-                clockedDataList.add(clockedData);
+        if (secondaryIndex.isEmpty()) {
+            clockedDataList.addAll(backupList.getAllData());
+        } else {
+            int startIndex = computeStartIndex(otherVectorClock, secondaryIndex);
+            List<ClockedData> dataSinceIndex = backupList.getClockedDataSinceIndex(startIndex);
+
+            for (ClockedData clockedData : dataSinceIndex) {
+                if (isDataNewer(clockedData, otherVectorClock)) {
+                    clockedDataList.add(clockedData);
+                }
             }
         }
+
+        System.out.println("Recovered data: " + BackupList.printClockDataList(clockedDataList));
         return clockedDataList;
+    }
+
+    private boolean isDataNewer(ClockedData clockedData, VectorClock otherVectorClock) {
+        int compareRes = clockedData.compareTo(otherVectorClock);
+        return compareRes != VectorClockComparation.LESS_THAN.getCompareResult() && compareRes != VectorClockComparation.EQUAL.getCompareResult();
+    }
+
+    private int computeStartIndex(VectorClock otherVectorClock, TreeMap<VectorClock, Integer> secondaryIndex) {
+        Map.Entry<VectorClock, Integer> entry = secondaryIndex.lowerEntry(otherVectorClock);
+        return (entry != null) ? entry.getValue() : 0;
     }
 }

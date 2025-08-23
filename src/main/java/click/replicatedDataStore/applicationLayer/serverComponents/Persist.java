@@ -83,18 +83,27 @@ public class Persist {
         return null;
     }
 
-    //Save the clocked data to the (primary) data file, compact the primary index and overwrite the secondary index
-    public void persist(ClockedData clockedData, TreeMap<VectorClock, Key> secondaryIndex) {
-        persist(clockedData);
+    public void persist(TreeMap<VectorClock, Integer> secondaryIndex) {
         compactPrimaryIndex();
         //overwrite the index file with the new secondary index
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(indexFilePath))) {
-            for (Map.Entry<VectorClock, Key> entry : secondaryIndex.entrySet()) {
+        File indexFile = new File(indexFilePath);
+        if (!indexFile.exists()) {
+            throw new IllegalCallerException("Index file does not exist");
+        }
+        ObjectOutputStream oos = createObjectOutputStream(indexFile, false);
+        try {
+            for (Map.Entry<VectorClock, Integer> entry : secondaryIndex.entrySet()) {
                 oos.writeObject(entry.getKey());
                 oos.writeObject(entry.getValue());
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                oos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -223,8 +232,8 @@ public class Persist {
         return primaryIndex;
     }
 
-    public TreeMap<VectorClock, Key> recoverSecondaryIndex() {
-        TreeMap<VectorClock, Key> secondaryIndex = new TreeMap<>();
+    public TreeMap<VectorClock, Integer> recoverSecondaryIndex() {
+        TreeMap<VectorClock, Integer> secondaryIndex = new TreeMap<>();
         if (!newIndexFile) {
             File indexFile = new File(indexFilePath);
             if (indexFile.length() == 0) {
@@ -233,8 +242,8 @@ public class Persist {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(indexFile))) {
                 while (true) {
                     VectorClock vectorClock = (VectorClock) ois.readObject();
-                    Key key = (Key) ois.readObject();
-                    secondaryIndex.put(vectorClock, key);
+                    Integer index = (Integer) ois.readObject();
+                    secondaryIndex.put(vectorClock, index);
                 }
             } catch (EOFException ignored) {
                 //Either the file was empty or the end of the file was reached. Normal behavior no action needed

@@ -15,7 +15,7 @@ public class ServerDataSynchronizer {
 
     private final VectorClock vectorClock;
     private final LinkedHashMap<Key, Serializable> primaryIndex;
-    private final TreeMap<VectorClock, Key> secondaryIndex;
+    private final TreeMap<VectorClock, Integer> secondaryIndex;
     private final BackupList backupList;
     private final Persist persist;
     private final Boolean isPersistent;
@@ -31,38 +31,30 @@ public class ServerDataSynchronizer {
         this.vectorClock = recoverVectorClock(serverName, serverNumber, serverIndex);
     }
 
-    public void updateAndPersist(List<ClockedData> clockedDataList) {
+    public void updateAndPersistPrimaryIndex(ClockedData clockedData) {
         synchronized (primaryIndex) {
-            for(ClockedData clockedData : clockedDataList){
-                updateAndPersistPrimaryIndex(clockedData);
+            primaryIndex.remove(clockedData.key());
+            primaryIndex.put(clockedData.key(), clockedData.value());
+            if (isPersistent) {
+                persist.persist(clockedData);
             }
-            vectorClock.updateClock(clockedDataList.get(clockedDataList.size()-1).vectorClock());
+            vectorClock.updateClock(clockedData.vectorClock());
             persistVectorClock();
         }
     }
 
-    public void updateAndPersist(List<ClockedData> clockedDataList, TreeMap<VectorClock, Key> secondaryIndexUpdated) {
-        synchronized (primaryIndex) {
-            for(int i = 0; i<clockedDataList.size()-1; i++){
-                updateAndPersistPrimaryIndex(clockedDataList.get(i));
+    public void updateAndPersistSecondaryIndex(ClockedData clockedData) {
+        synchronized (secondaryIndex) {
+            secondaryIndex.put(clockedData.vectorClock(), backupList.size());
+            if (isPersistent) {
+                persist.persist(secondaryIndex);
             }
-            ClockedData lastClockedData = clockedDataList.get(clockedDataList.size()-1);
-            synchronized (secondaryIndex) {
-                if (isPersistent) {
-                    persist.persist(lastClockedData, secondaryIndexUpdated);
-                }
-                primaryIndex.remove(lastClockedData.key());
-                primaryIndex.put(lastClockedData.key(), lastClockedData.value());
-                secondaryIndex.clear();
-                secondaryIndex.putAll(secondaryIndexUpdated);
-            }
-            persistVectorClock();
         }
     }
 
-    public void addToBackupList(List<ClockedData> clockedDataList) {
+    public void addToBackupList(ClockedData clockedData) {
         synchronized (backupList) {
-            backupList.add(clockedDataList);
+            backupList.add(clockedData);
         }
         if (isPersistent) {
             persist.persist(backupList);
@@ -97,7 +89,7 @@ public class ServerDataSynchronizer {
         }
     }
 
-    private TreeMap<VectorClock, Key> recoverSecondaryIndex(){
+    private TreeMap<VectorClock, Integer> recoverSecondaryIndex(){
         if (isPersistent){
             return persist.recoverSecondaryIndex();
         }else{
@@ -110,16 +102,6 @@ public class ServerDataSynchronizer {
             return persist.recoverVectorClock(serverName, serverNumber, serverIndex);
         } else {
             return new VectorClock(serverName, serverNumber, serverIndex);
-        }
-    }
-
-    private void updateAndPersistPrimaryIndex(ClockedData clockedData){
-        synchronized (primaryIndex) {
-            if (isPersistent) {
-                persist.persist(clockedData);
-            }
-            primaryIndex.remove(clockedData.key());
-            primaryIndex.put(clockedData.key(), clockedData.value());
         }
     }
 
@@ -147,7 +129,7 @@ public class ServerDataSynchronizer {
     }
 
     //return a COPY of the secondary index
-    public TreeMap<VectorClock, Key> getSecondaryIndex() {
+    public TreeMap<VectorClock, Integer> getSecondaryIndex() {
         synchronized (secondaryIndex){
             return new TreeMap<>(secondaryIndex);
         }

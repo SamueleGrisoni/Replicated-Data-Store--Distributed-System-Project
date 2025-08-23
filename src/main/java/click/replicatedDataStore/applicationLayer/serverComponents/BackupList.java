@@ -43,12 +43,16 @@ public class BackupList implements Serializable {
         return list.size();
     }
 
-    public boolean isEmpty() {
-        return list.isEmpty();
+    public List<ClockedData> getAllData() {
+        return List.copyOf(list);
     }
 
     @Override
     public String toString() {
+        return printClockDataList(list);
+    }
+
+    public static String printClockDataList(List<ClockedData> list) {
         StringBuilder sb = new StringBuilder("BackupList{ \n");
         int i = 0;
         for (ClockedData clockedData : list) {
