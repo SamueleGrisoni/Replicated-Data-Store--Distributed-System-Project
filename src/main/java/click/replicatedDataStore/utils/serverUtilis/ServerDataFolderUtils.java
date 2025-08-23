@@ -18,7 +18,7 @@ public class ServerDataFolderUtils {
         totalList.addAll(addressesListPair.first());
         totalList.addAll(addressesListPair.second());
         totalList.sort(Comparator.comparing(ConfigFile.ConfigFileEntry::getServerName));
-        //System.out.println("TotalList:" + totalList);
+        System.out.println("TotalList:" + totalList);
 
         String folderPath = getOSFolderPath() + ServerConfig.GLOBAL_FOLDER_NAME + File.separator;
         String configFilePath = folderPath + ServerConfig.CONFIG_FILE_HASH_NAME + ServerConfig.FILES_EXTENSION;

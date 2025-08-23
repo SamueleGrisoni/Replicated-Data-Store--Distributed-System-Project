@@ -17,14 +17,14 @@ public class ServerDataSynchronizer {
     private final LinkedHashMap<Key, Serializable> primaryIndex;
     private final TreeMap<VectorClock, Integer> secondaryIndex;
     private final BackupList backupList;
-    private final Persist persist;
+    private Persist persist;
     private final Boolean isPersistent;
     public ServerDataSynchronizer(String serverName, int serverNumber, int serverIndex, Boolean isPersistent) {
         this.serverName = serverName;
         this.serverNumber = serverNumber;
         this.serverIndex = serverIndex;
         this.isPersistent = isPersistent;
-        this.persist= persistInitializer();
+        this.persist = persistInitializer();
         this.primaryIndex = recoverPrimaryIndex();
         this.secondaryIndex = recoverSecondaryIndex();
         this.backupList = recoverBackupList();
