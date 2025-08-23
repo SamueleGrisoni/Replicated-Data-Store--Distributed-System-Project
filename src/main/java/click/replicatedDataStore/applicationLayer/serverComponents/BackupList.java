@@ -16,6 +16,12 @@ public class BackupList implements Serializable {
         this.comparator = Comparator.comparing(ClockedData::vectorClock);
     }
 
+    // Copy constructor to create a new BackupList from an existing one
+    public BackupList(BackupList other) {
+        this.list = new java.util.ArrayList<>(other.list);
+        this.comparator = Comparator.comparing(ClockedData::vectorClock);
+    }
+
     public void add(ClockedData clockedData) {
         list.add(clockedData);
         list.sort(comparator);

@@ -153,6 +153,13 @@ public class ServerDataSynchronizer {
         }
     }
 
+    //return a COPY of the backup list
+    public BackupList getBackupList() {
+        synchronized (backupList) {
+            return new BackupList(backupList);
+        }
+    }
+
     public int getServerIndex() {
         return serverIndex;
     }
