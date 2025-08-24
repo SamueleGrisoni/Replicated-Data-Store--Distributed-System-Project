@@ -105,9 +105,24 @@ public class ServerInitializerUtils {
             System.out.println("Server " + serverName + " stopped successfully");
         } else {
             try {
-                Server restartedServer = new Server(serverName, serverIndex, addresses, addressesPair.first().get(serverIndex).second());
+                System.out.println("Do u want to enable persistence for server '" + serverName + "'? (y/n)");
+                Scanner scanner = new Scanner(System.in);
+                Boolean isPersistent;
+                while(true){
+                    String input = scanner.nextLine().trim().toLowerCase();
+                    if (input.equals("y")) {
+                        isPersistent = true;
+                        break;
+                    } else if (input.equals("n")) {
+                        isPersistent = false;
+                        break;
+                    } else {
+                        System.out.println("Invalid input. Please enter 'y' or 'n'.");
+                    }
+                }
+                Server restartedServer = new Server(serverName, serverIndex, addresses, isPersistent);
                 restartedServer.start();
-                System.out.println("Server " + serverName + " restarted successfully with persistence: " + addressesPair.first().get(serverIndex).second());
+                System.out.println("Server " + serverName + " restarted successfully with persistence: " + isPersistent);
                 localServerStatus.put(serverIndex, new Pair<>(restartedServer, true));
             } catch (RuntimeException e) {
                 e.printStackTrace();
