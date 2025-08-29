@@ -87,50 +87,61 @@ public class ServerInitializerUtils {
         System.out.println("Servers stopped successfully");
     }
 
-    public void stopOrStartLocalServer(String serverName) {
+    public boolean isLocalServer(String serverName) {
+        Integer serverIndex = serverNameToIndex.get(serverName);
+        return serverIndex != null && addressesPair.first().containsKey(serverIndex);
+    }
+
+    public boolean isServerRunning(String serverName) {
         Integer serverIndex = serverNameToIndex.get(serverName);
         if (serverIndex == null || !addressesPair.first().containsKey(serverIndex)) {
-            System.out.println("Server " + serverName + " is not a name of a local server");
-            return;
+            throw new IllegalArgumentException("Server " + serverName + " is not a name of a local server");
         }
         Pair<Server, Boolean> serverStatus = localServerStatus.get(serverIndex);
-        if (serverStatus.second()) { //server is on
-            serverStatus.first().stopServer();
-            try {
-                serverStatus.first().join();
-            } catch (InterruptedException e) {
-                System.out.println("An error occurred while stopping the server: " + serverName + " " + e.getMessage());
-            }
-            localServerStatus.put(serverIndex, new Pair<>(serverStatus.first(), false));
-            System.out.println("Server " + serverName + " stopped successfully");
-        } else {
-            try {
-                System.out.println("Do you want to enable persistence for server '" + serverName + "'? (y/n)");
-                Scanner scanner = new Scanner(System.in);
-                Boolean isPersistent;
-                while(true){
-                    String input = scanner.nextLine().trim().toLowerCase();
-                    if (input.equals("y")) {
-                        isPersistent = true;
-                        break;
-                    } else if (input.equals("n")) {
-                        isPersistent = false;
-                        break;
-                    } else {
-                        System.out.println("Invalid input. Please enter 'y' or 'n'.");
-                    }
+        return serverStatus.second();
+    }
+
+    public void startLocalServer(String serverName) {
+        Integer serverIndex = serverNameToIndex.get(serverName);
+        try {
+            System.out.println("Do you want to enable persistence for server '" + serverName + "'? (y/n)");
+            Scanner scanner = new Scanner(System.in);
+            Boolean isPersistent;
+            while(true){
+                String input = scanner.nextLine().trim().toLowerCase();
+                if (input.equals("y")) {
+                    isPersistent = true;
+                    break;
+                } else if (input.equals("n")) {
+                    isPersistent = false;
+                    break;
+                } else {
+                    System.out.println("Invalid input. Please enter 'y' or 'n'.");
                 }
-                Server restartedServer = new Server(serverName, serverIndex, addresses, isPersistent);
-                restartedServer.start();
-                System.out.println("Server " + serverName + " restarted successfully with persistence: " + isPersistent);
-                localServerStatus.put(serverIndex, new Pair<>(restartedServer, true));
-            } catch (RuntimeException e) {
-                e.printStackTrace();
-                System.out.println("Server " + serverName + " socket port is still in use, try again in a few moment");
-            } catch (Exception e) {
-                System.out.println("Server " + serverName + " failed to restart");
             }
+            Server restartedServer = new Server(serverName, serverIndex, addresses, isPersistent);
+            restartedServer.start();
+            System.out.println("Server " + serverName + " restarted successfully with persistence: " + isPersistent);
+            localServerStatus.put(serverIndex, new Pair<>(restartedServer, true));
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            System.out.println("Server " + serverName + " socket port is still in use, try again in a few moment");
+        } catch (Exception e) {
+            System.out.println("Server " + serverName + " failed to restart");
         }
+    }
+
+    public void stopLocalServer(String serverName){
+        Integer serverIndex = serverNameToIndex.get(serverName);
+        Pair<Server, Boolean> serverStatus = localServerStatus.get(serverIndex);
+        serverStatus.first().stopServer();
+        try {
+            serverStatus.first().join();
+        } catch (InterruptedException e) {
+            System.out.println("An error occurred while stopping the server: " + serverName + " " + e.getMessage());
+        }
+        localServerStatus.put(serverIndex, new Pair<>(serverStatus.first(), false));
+        System.out.println("Server " + serverName + " stopped successfully");
     }
 
     private Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> readJson(String filePath) {
