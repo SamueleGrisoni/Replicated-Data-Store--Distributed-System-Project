@@ -27,13 +27,13 @@ public class Server extends Thread{
     private volatile boolean stop = false;
     private final Logger logger = new Logger(this);
 
-    public Server(String serverName, int serverIndex, Map<Integer, Pair<String, ServerPorts>> addresses) {
+    public Server(String serverName, int serverIndex, Map<Integer, Pair<String, ServerPorts>> addresses, Boolean isPersistent) {
         this.serverName = serverName;
         this.serverIndex = serverIndex;
         this.addresses = addresses;
         this.serverNumber = addresses.size();
 
-        this.serverDataSynchronizer = new ServerDataSynchronizer(serverName, serverNumber, serverIndex);
+        this.serverDataSynchronizer = new ServerDataSynchronizer(serverName, serverNumber, serverIndex, isPersistent);
         this.dataManagerWriter = new DataManagerWriter(serverDataSynchronizer);
         DataManagerReader dataManagerReader = new DataManagerReader(serverDataSynchronizer);
 
@@ -84,12 +84,14 @@ public class Server extends Thread{
     @Override
     public void run() {
         startServerThreads();
-        logger.logInfo("Server " + serverName +" (server index " + serverIndex + ") started on " + addresses.get(serverIndex).first() + ":" + addresses.get(serverIndex).second());
-        logger.logInfo("Server on Thread " + Thread.currentThread().getName() );
+        //logger.logInfo("Server " + serverName +" (server index " + serverIndex + ") started on " + addresses.get(serverIndex).first() + ":" + addresses.get(serverIndex).second());
+        logger.logInfo("Server '" + serverName +"' started on " + addresses.get(serverIndex).first() + ":" + addresses.get(serverIndex).second());
+        logger.logInfo("Server '" + serverName +"' started on Thread " + Thread.currentThread().getName() );
         while(!stop){
         }
         stopThreads();
-        logger.logInfo("Server " + serverName +" (server index " + serverIndex + ") stopped");
+        //logger.logInfo("Server " + serverName +" (server index " + serverIndex + ") stopped");
+        logger.logInfo("Server " + serverName +" stopped");
     }
 
     public void stopServer(){

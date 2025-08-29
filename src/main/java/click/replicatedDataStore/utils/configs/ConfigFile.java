@@ -32,6 +32,9 @@ public class ConfigFile{
         @JsonProperty("clientPort")
         private int clientPort;
 
+        @JsonProperty
+        private Boolean isPersistent;
+
         public String getServerName(){
             return serverName;
         }
@@ -48,6 +51,27 @@ public class ConfigFile{
             return ip;
         }
 
+        public Boolean isPersistent() {
+            return isPersistent;
+        }
+
+        public void setIsPersistent(Boolean isPersistent) {
+            this.isPersistent = isPersistent;
+        }
+
+        public ConfigFileEntry(){
+            // Default constructor for deserialization
+        }
+
+        //deep copy constructor
+        public ConfigFileEntry(ConfigFileEntry entry){
+            this.serverName = entry.serverName;
+            this.ip = entry.ip;
+            this.serverPort = entry.serverPort;
+            this.clientPort = entry.clientPort;
+            this.isPersistent = entry.isPersistent;
+        }
+
         @Override
         public String toString() {
             return "ConfigFileEntry{" +
@@ -55,6 +79,7 @@ public class ConfigFile{
                     ", ip='" + ip + '\'' +
                     ", serverPort=" + serverPort +
                     ", clientPort=" + clientPort +
+                    ", isPersistent=" + isPersistent +
                     '}';
         }
     }

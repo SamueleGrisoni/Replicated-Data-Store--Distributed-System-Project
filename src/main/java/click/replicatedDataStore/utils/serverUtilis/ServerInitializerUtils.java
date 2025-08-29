@@ -13,16 +13,20 @@ public class ServerInitializerUtils {
     //Map passed to each Server object, it contains all addresses of all servers. Integer is server index
     private final Map<Integer, Pair<String, ServerPorts>> addresses = new LinkedHashMap<>();
     //Pair of maps used internally to differentiate local and other server. Integer is server index
-    private Pair<Map<Integer, Pair<String, ServerPorts>>, Map<Integer, Pair<String, ServerPorts>>> addressesPair;
+    private Pair<Map<Integer, Pair<Pair<String, ServerPorts>, Boolean>>, Map<Integer, Pair<String, ServerPorts>>> addressesPair;
     private final Map<String, Integer> serverNameToIndex = new HashMap<>();
-    private final Map<Integer, String> serverIndexToName = new HashMap<>();
+    private static final Map<Integer, String> serverIndexToName = new HashMap<>();
     private final Map<Integer, Pair<Server, Boolean>> localServerStatus = new HashMap<>();
 
     public Map<Integer, Pair<String, ServerPorts>> computeAddress(String filePath) {
         Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> addressesListPair = readJson(filePath);
         ServerDataFolderUtils.checkConfigFileHasChanged(addressesListPair);
         fillAddressPairMap(addressesListPair);
-        addresses.putAll(addressesPair.first());
+        for (Map.Entry<Integer, Pair<Pair<String, ServerPorts>, Boolean>> entry : addressesPair.first().entrySet()) {
+            String ip = entry.getValue().first().first();
+            ServerPorts ports = entry.getValue().first().second();
+            addresses.put(entry.getKey(), new Pair<>(ip, ports));
+        }
         addresses.putAll(addressesPair.second());
         if (!isMapCorrect(addresses)) {
             System.exit(1);
@@ -37,9 +41,13 @@ public class ServerInitializerUtils {
 
         if (!addressesPair.first().isEmpty()) {
             System.out.println(LOCAL_COLOR + "---------LOCAL SERVERS-----------" + RESET);
-            for (Map.Entry<Integer, Pair<String, ServerPorts>> entry : addressesPair.first().entrySet()) {
-                System.out.printf("Server %s at %s (Server port: %d, Client port: %d)%n",
-                        serverIndexToName.get(entry.getKey()), entry.getValue().first(), entry.getValue().second().serverPort(), entry.getValue().second().clientPort());
+            for (Map.Entry<Integer, Pair<Pair<String, ServerPorts>, Boolean>> entry : addressesPair.first().entrySet()) {
+                String serverName = serverIndexToName.get(entry.getKey());
+                int serverPort = entry.getValue().first().second().serverPort();
+                int clientPort = entry.getValue().first().second().clientPort();
+                Boolean isPersistent = entry.getValue().second();
+                System.out.printf("Server %s at %s (Server port: %d, Client port: %d, Persistent: %b)%n",
+                        serverName, entry.getValue().first().first(), serverPort, clientPort, isPersistent);
             }
             System.out.println(LOCAL_COLOR + "-------------------------------" + RESET);
         }
@@ -54,8 +62,8 @@ public class ServerInitializerUtils {
     }
 
     public void startAllLocalServer() {
-        for (Map.Entry<Integer, Pair<String, ServerPorts>> entry : addressesPair.first().entrySet()) {
-            Server server = new Server(serverIndexToName.get(entry.getKey()) , entry.getKey(), addresses);
+        for (Map.Entry<Integer, Pair<Pair<String, ServerPorts>, Boolean>> entry : addressesPair.first().entrySet()) {
+            Server server = new Server(serverIndexToName.get(entry.getKey()), entry.getKey(), addresses, entry.getValue().second());
             server.start();
             localServerStatus.put(entry.getKey(), new Pair<>(server, true));
         }
@@ -79,35 +87,61 @@ public class ServerInitializerUtils {
         System.out.println("Servers stopped successfully");
     }
 
-    public void stopOrStartLocalServer(String serverName) {
+    public boolean isLocalServer(String serverName) {
+        Integer serverIndex = serverNameToIndex.get(serverName);
+        return serverIndex != null && addressesPair.first().containsKey(serverIndex);
+    }
+
+    public boolean isServerRunning(String serverName) {
         Integer serverIndex = serverNameToIndex.get(serverName);
         if (serverIndex == null || !addressesPair.first().containsKey(serverIndex)) {
-            System.out.println("Server " + serverName + " is not a name of a local server");
-            return;
+            throw new IllegalArgumentException("Server " + serverName + " is not a name of a local server");
         }
         Pair<Server, Boolean> serverStatus = localServerStatus.get(serverIndex);
-        if (serverStatus.second()) { //server is on
-            serverStatus.first().stopServer();
-            try {
-                serverStatus.first().join();
-            } catch (InterruptedException e) {
-                System.out.println("An error occurred while stopping the server: " + serverName + " " + e.getMessage());
+        return serverStatus.second();
+    }
+
+    public void startLocalServer(String serverName) {
+        Integer serverIndex = serverNameToIndex.get(serverName);
+        try {
+            System.out.println("Do you want to enable persistence for server '" + serverName + "'? (y/n)");
+            Scanner scanner = new Scanner(System.in);
+            Boolean isPersistent;
+            while(true){
+                String input = scanner.nextLine().trim().toLowerCase();
+                if (input.equals("y")) {
+                    isPersistent = true;
+                    break;
+                } else if (input.equals("n")) {
+                    isPersistent = false;
+                    break;
+                } else {
+                    System.out.println("Invalid input. Please enter 'y' or 'n'.");
+                }
             }
-            localServerStatus.put(serverIndex, new Pair<>(serverStatus.first(), false));
-            System.out.println("Server " + serverName + " stopped successfully");
-        } else {
-            try {
-                Server restartedServer = new Server(serverName, serverIndex, addresses);
-                restartedServer.start();
-                System.out.println("Server " + serverName + " restarted successfully");
-                localServerStatus.put(serverIndex, new Pair<>(restartedServer, true));
-            } catch (RuntimeException e) {
-                e.printStackTrace();
-                System.out.println("Server " + serverName + " socket port is still in use, try again in a few moment");
-            } catch (Exception e) {
-                System.out.println("Server " + serverName + " failed to restart");
-            }
+            Server restartedServer = new Server(serverName, serverIndex, addresses, isPersistent);
+            restartedServer.start();
+            System.out.println("Server " + serverName + " restarted successfully with persistence: " + isPersistent);
+            localServerStatus.put(serverIndex, new Pair<>(restartedServer, true));
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            System.out.println("Server " + serverName + " socket port is still in use, try again in a few moment");
+        } catch (Exception e) {
+            System.out.println("Server " + serverName + " failed to restart");
         }
+    }
+
+    public void stopLocalServer(String serverName){
+        Integer serverIndex = serverNameToIndex.get(serverName);
+        Pair<Server, Boolean> serverStatus = localServerStatus.get(serverIndex);
+        serverStatus.first().stopServer();
+        try {
+            serverStatus.first().join();
+        } catch (InterruptedException e) {
+            System.out.println("An error occurred while stopping the server: " + serverName + " " + e.getMessage());
+        }
+        localServerStatus.put(serverIndex, new Pair<>(serverStatus.first(), false));
+        System.out.println("Server " + serverName + " stopped successfully");
     }
 
     private Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> readJson(String filePath) {
@@ -145,6 +179,19 @@ public class ServerInitializerUtils {
             System.out.println("To correctly run the system, at least 2 servers are required");
             return false;
         }
+        for (ConfigFile.ConfigFileEntry entry : configFile.getOtherServers()) {
+            if (entry.isPersistent() != null) {
+                System.out.println("Error: 'isPersistent' is only allowed for local servers, but was found in \"other\" Server: " + entry.getServerName());
+                return false;
+            }
+        }
+        for (ConfigFile.ConfigFileEntry entry : configFile.getLocalServer()) {
+            if (entry.isPersistent() == null) {
+                System.out.println("Error: 'isPersistent' is required for local servers, but was not found in \"local\" Server: " + entry.getServerName());
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -169,14 +216,15 @@ public class ServerInitializerUtils {
             totalListLocal.add(new Pair<>(entry, false));
         }
         totalListLocal.sort(Comparator.comparing(entry -> entry.first().getServerName()));
-        Map<Integer, Pair<String, ServerPorts>> localServer = new LinkedHashMap<>();
+        //Map: serverID, Pair<ServerAddress(IP, ServerPorts), isPersistent>
+        Map<Integer, Pair<Pair<String, ServerPorts>, Boolean>> localServer = new LinkedHashMap<>();
         Map<Integer, Pair<String, ServerPorts>> otherServers = new LinkedHashMap<>();
         int serverIndex = 0;
         for (Pair<ConfigFile.ConfigFileEntry, Boolean> entry : totalListLocal) {
             if (entry.second()) { //Local server
                 serverNameToIndex.put(entry.first().getServerName(), serverIndex);
                 serverIndexToName.put(serverIndex, entry.first().getServerName());
-                localServer.put(serverIndex, new Pair<>(entry.first().getIp(), new ServerPorts(entry.first().getServerPort(), entry.first().getClientPort())));
+                localServer.put(serverIndex, new Pair<> (new Pair<>(entry.first().getIp(), new ServerPorts(entry.first().getServerPort(), entry.first().getClientPort())), entry.first().isPersistent()));
             } else {
                 serverNameToIndex.put(entry.first().getServerName(), serverIndex);
                 serverIndexToName.put(serverIndex, entry.first().getServerName());
@@ -212,5 +260,9 @@ public class ServerInitializerUtils {
             }
         }
         return true;
+    }
+
+    public static String getNameFromIndex(int index) {
+        return serverIndexToName.get(index);
     }
 }

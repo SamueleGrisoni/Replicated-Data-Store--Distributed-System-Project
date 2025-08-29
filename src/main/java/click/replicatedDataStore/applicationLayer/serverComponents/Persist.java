@@ -14,16 +14,19 @@ public class Persist {
     private final String dataFilePath;
     private final String indexFilePath;
     private final String clockFilePath;
+    private final String backupListFilePath;
     //Flag to check if the file is new. If so, the recovery methods will not access the disk to recover an empty file
     private boolean newDataFile;
     private boolean newIndexFile;
     private boolean newClockFile;
+    private boolean newBackupListFile;
 
-    public Persist(String dataFolderName, String dataFileName, String indexFileName, String clockFileName) {
+    public Persist(String dataFolderName, String dataFileName, String indexFileName, String clockFileName, String backupListFileName) {
         String folderPath = ServerConfig.getGlobalFolderPath() + dataFolderName + File.separator;
         this.dataFilePath = folderPath + dataFileName;
         this.indexFilePath = folderPath + indexFileName;
         this.clockFilePath = folderPath + clockFileName;
+        this.backupListFilePath = folderPath + backupListFileName;
 
         //create the data folder and file if it does not exist
         if (!new File(folderPath).exists()) {
@@ -32,6 +35,7 @@ public class Persist {
             checkOrCreateDataFile(dataFilePath);
             checkOrCreateIndexFile(indexFilePath);
             checkOrCreateClockFile(clockFilePath);
+            checkOrCreateBackupListFile(backupListFilePath);
         }
     }
 
@@ -79,23 +83,32 @@ public class Persist {
         return null;
     }
 
-    //Save the clocked data to the (primary) data file, compact the primary index and overwrite the secondary index
-    public void persist(ClockedData clockedData, TreeMap<VectorClock, Key> secondaryIndex) {
-        persist(clockedData);
+    public void persist(TreeMap<VectorClock, Integer> secondaryIndex) {
         compactPrimaryIndex();
         //overwrite the index file with the new secondary index
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(indexFilePath))) {
-            for (Map.Entry<VectorClock, Key> entry : secondaryIndex.entrySet()) {
+        File indexFile = new File(indexFilePath);
+        if (!indexFile.exists()) {
+            throw new IllegalCallerException("Index file does not exist");
+        }
+        ObjectOutputStream oos = createObjectOutputStream(indexFile, false);
+        try {
+            for (Map.Entry<VectorClock, Integer> entry : secondaryIndex.entrySet()) {
                 oos.writeObject(entry.getKey());
                 oos.writeObject(entry.getValue());
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                oos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     //Save the vector clock to the clock file
-    public void persistClock(VectorClock vectorClock) {
+    public void persist(VectorClock vectorClock) {
         //System.out.println("Persisting vector clock: " + vectorClock);
         File clockFile = new File(clockFilePath);
         if (!clockFile.exists()) {
@@ -104,6 +117,26 @@ public class Persist {
         ObjectOutputStream oos = createObjectOutputStream(clockFile, false);
         try {
             oos.writeObject(vectorClock);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                oos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    //Overwrite the backup list file with the new backup list
+    public void persist(BackupList backupList){
+        File backupListFile = new File(backupListFilePath);
+        if (!backupListFile.exists()) {
+            throw new IllegalCallerException("Backup list file does not exist");
+        }
+        ObjectOutputStream oos = createObjectOutputStream(backupListFile, false);
+        try {
+            oos.writeObject(backupList);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -154,6 +187,28 @@ public class Persist {
         return vc;
     }
 
+    public BackupList recoverBackupList() {
+        BackupList backupList = new BackupList();
+        if (!newBackupListFile) {
+            File backupListFile = new File(backupListFilePath);
+            if (backupListFile.length() == 0) {
+                // File is empty; return an empty BackupList without opening the stream.
+                return backupList;
+            }
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(backupListFile))) {
+                backupList = (BackupList) ois.readObject();
+                System.out.println("Recovering backup list: " + backupList);
+                return backupList;
+            } catch (EOFException ignored) {
+                // Either the file was empty or the end of the file was reached. Normal behavior, no action needed.
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("Backup list is new. Returning an empty BackupList.");
+        return backupList;
+    }
+
     public LinkedHashMap<Key, Serializable> recoverPrimaryIndex() {
         LinkedHashMap<Key, Serializable> primaryIndex = new LinkedHashMap<>();
         if (!newDataFile) {
@@ -177,8 +232,8 @@ public class Persist {
         return primaryIndex;
     }
 
-    public TreeMap<VectorClock, Key> recoverSecondaryIndex() {
-        TreeMap<VectorClock, Key> secondaryIndex = new TreeMap<>();
+    public TreeMap<VectorClock, Integer> recoverSecondaryIndex() {
+        TreeMap<VectorClock, Integer> secondaryIndex = new TreeMap<>();
         if (!newIndexFile) {
             File indexFile = new File(indexFilePath);
             if (indexFile.length() == 0) {
@@ -187,8 +242,8 @@ public class Persist {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(indexFile))) {
                 while (true) {
                     VectorClock vectorClock = (VectorClock) ois.readObject();
-                    Key key = (Key) ois.readObject();
-                    secondaryIndex.put(vectorClock, key);
+                    Integer index = (Integer) ois.readObject();
+                    secondaryIndex.put(vectorClock, index);
                 }
             } catch (EOFException ignored) {
                 //Either the file was empty or the end of the file was reached. Normal behavior no action needed
@@ -246,14 +301,30 @@ public class Persist {
             newDataFile = true;
             newIndexFile = true;
             newClockFile = true;
+            newBackupListFile = true;
             new File(folderPath).mkdir();
             try {
                 new File(dataFilePath).createNewFile();
                 new File(indexFilePath).createNewFile();
                 new File(clockFilePath).createNewFile();
+                new File(backupListFilePath).createNewFile();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void checkOrCreateBackupListFile(String backupListFilePath) {
+        File backupListFile = new File(backupListFilePath);
+        if (!backupListFile.exists()) {
+            newBackupListFile = true;
+            try {
+                backupListFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            newBackupListFile = false;
         }
     }
 }

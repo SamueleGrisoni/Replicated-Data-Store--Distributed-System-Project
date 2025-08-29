@@ -10,4 +10,8 @@ public record ClockedData(VectorClock vectorClock, Key key, Serializable value) 
     public int compareTo(ClockedData o) {
         return vectorClock.compareTo(o.vectorClock);
     }
+
+    public int compareTo(VectorClock o) {
+        return vectorClock.compareTo(o);
+    }
 }
