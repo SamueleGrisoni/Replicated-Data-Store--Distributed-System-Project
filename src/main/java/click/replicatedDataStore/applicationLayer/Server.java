@@ -84,12 +84,14 @@ public class Server extends Thread{
     @Override
     public void run() {
         startServerThreads();
-        logger.logInfo("Server " + serverName +" (server index " + serverIndex + ") started on " + addresses.get(serverIndex).first() + ":" + addresses.get(serverIndex).second());
-        logger.logInfo("Server on Thread " + Thread.currentThread().getName() );
+        //logger.logInfo("Server " + serverName +" (server index " + serverIndex + ") started on " + addresses.get(serverIndex).first() + ":" + addresses.get(serverIndex).second());
+        logger.logInfo("Server '" + serverName +"' started on " + addresses.get(serverIndex).first() + ":" + addresses.get(serverIndex).second());
+        logger.logInfo("Server '" + serverName +"' started on Thread " + Thread.currentThread().getName() );
         while(!stop){
         }
         stopThreads();
-        logger.logInfo("Server " + serverName +" (server index " + serverIndex + ") stopped");
+        //logger.logInfo("Server " + serverName +" (server index " + serverIndex + ") stopped");
+        logger.logInfo("Server " + serverName +" stopped");
     }
 
     public void stopServer(){

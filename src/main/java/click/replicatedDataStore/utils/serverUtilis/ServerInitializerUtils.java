@@ -15,7 +15,7 @@ public class ServerInitializerUtils {
     //Pair of maps used internally to differentiate local and other server. Integer is server index
     private Pair<Map<Integer, Pair<Pair<String, ServerPorts>, Boolean>>, Map<Integer, Pair<String, ServerPorts>>> addressesPair;
     private final Map<String, Integer> serverNameToIndex = new HashMap<>();
-    private final Map<Integer, String> serverIndexToName = new HashMap<>();
+    private static final Map<Integer, String> serverIndexToName = new HashMap<>();
     private final Map<Integer, Pair<Server, Boolean>> localServerStatus = new HashMap<>();
 
     public Map<Integer, Pair<String, ServerPorts>> computeAddress(String filePath) {
@@ -63,7 +63,7 @@ public class ServerInitializerUtils {
 
     public void startAllLocalServer() {
         for (Map.Entry<Integer, Pair<Pair<String, ServerPorts>, Boolean>> entry : addressesPair.first().entrySet()) {
-            Server server = new Server(serverIndexToName.get(entry.getKey()) , entry.getKey(), addresses, entry.getValue().second());
+            Server server = new Server(serverIndexToName.get(entry.getKey()), entry.getKey(), addresses, entry.getValue().second());
             server.start();
             localServerStatus.put(entry.getKey(), new Pair<>(server, true));
         }
@@ -234,5 +234,9 @@ public class ServerInitializerUtils {
             }
         }
         return true;
+    }
+
+    public static String getNameFromIndex(int index) {
+        return serverIndexToName.get(index);
     }
 }
