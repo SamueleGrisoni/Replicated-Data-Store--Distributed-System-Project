@@ -4,10 +4,12 @@ import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.ServerPorts;
 import click.replicatedDataStore.utils.configs.ConfigFile;
+import click.replicatedDataStore.utils.configs.NetworkFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ServerInitializerUtils {
     //Map passed to each Server object, it contains all addresses of all servers. Integer is server index
@@ -17,9 +19,12 @@ public class ServerInitializerUtils {
     private final Map<String, Integer> serverNameToIndex = new HashMap<>();
     private final Map<Integer, String> serverIndexToName = new HashMap<>();
     private final Map<Integer, Pair<Server, Boolean>> localServerStatus = new HashMap<>();
+    private final Map<String, Set<Integer>> heavyPushNet = new HashMap<>();
+    private final Map<String, Set<Integer>> lightPushNet = new HashMap<>();
+    private boolean heavyPushPropagationPolicy;
 
-    public Map<Integer, Pair<String, ServerPorts>> computeAddress(String filePath) {
-        Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> addressesListPair = readJson(filePath);
+    public Map<Integer, Pair<String, ServerPorts>> loadConfigFilesAndComputeAddress(String addressFilePath, String networkFilePath) {
+        Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> addressesListPair = loadAddressConfigFromJson(addressFilePath);
         ServerDataFolderUtils.checkConfigFileHasChanged(addressesListPair);
         fillAddressPairMap(addressesListPair);
         addresses.putAll(addressesPair.first());
@@ -27,7 +32,22 @@ public class ServerInitializerUtils {
         if (!isMapCorrect(addresses)) {
             System.exit(1);
         }
+
+
+        NetworkFile netConf = loadNetworkConfigFileJson(networkFilePath);
+        heavyPushNet.putAll(convertNetworkTopologyMapNameToIndex(netConf.getHeavyPushOverlayNet()));
+        lightPushNet.putAll(convertNetworkTopologyMapNameToIndex(netConf.getLightPushOverlayNet()));
+        heavyPushPropagationPolicy = netConf.getHeavyPushPropagationPolicy();
+
         return addresses;
+    }
+
+    private Map<String, Set<Integer>> convertNetworkTopologyMapNameToIndex(Map<String, List<String>> netMap){
+        Map<String, Set<Integer>> res = new HashMap<>();
+        for(Map.Entry<String, List<String>> entry : netMap.entrySet()){
+            res.put(entry.getKey(), entry.getValue().stream().map((this.serverNameToIndex::get)).collect(Collectors.toSet()));
+        }
+        return res;
     }
 
     public void printServerList() {
@@ -55,7 +75,9 @@ public class ServerInitializerUtils {
 
     public void startAllLocalServer() {
         for (Map.Entry<Integer, Pair<String, ServerPorts>> entry : addressesPair.first().entrySet()) {
-            Server server = new Server(serverIndexToName.get(entry.getKey()) , entry.getKey(), addresses);
+            String serverName = serverIndexToName.get(entry.getKey());
+            Server server = new Server(serverName, entry.getKey(), addresses, heavyPushNet.get(serverName),
+                    lightPushNet.get(serverName), this.heavyPushPropagationPolicy);
             server.start();
             localServerStatus.put(entry.getKey(), new Pair<>(server, true));
         }
@@ -97,7 +119,8 @@ public class ServerInitializerUtils {
             System.out.println("Server " + serverName + " stopped successfully");
         } else {
             try {
-                Server restartedServer = new Server(serverName, serverIndex, addresses);
+                Server restartedServer = new Server(serverName, serverIndex, addresses,
+                        heavyPushNet.get(serverName), lightPushNet.get(serverName), this.heavyPushPropagationPolicy);
                 restartedServer.start();
                 System.out.println("Server " + serverName + " restarted successfully");
                 localServerStatus.put(serverIndex, new Pair<>(restartedServer, true));
@@ -110,18 +133,17 @@ public class ServerInitializerUtils {
         }
     }
 
-    private Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> readJson(String filePath) {
+    private Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> loadAddressConfigFromJson(String filePath) {
         ObjectMapper objectMapper = new ObjectMapper();
         ConfigFile configFile = null;
         try {
             try {
                 configFile = objectMapper.readValue(new File(filePath), ConfigFile.class);
             } catch (IOException e) {
-                System.out.println("Config file not found at " + filePath);
-                System.out.println("Usage: java -jar Server.jar configFilePath");
+                System.out.println("address config file not found at " + filePath);
                 System.exit(1);
             }
-            if (!jsonHealthCheck(configFile)) {
+            if (!addressConfigJsonHealthCheck(configFile)) {
                 System.exit(1);
             }
             return new Pair<>(getServerList(configFile, true), getServerList(configFile, false));
@@ -132,7 +154,31 @@ public class ServerInitializerUtils {
         }
     }
 
-    private boolean jsonHealthCheck(ConfigFile configFile) {
+    private NetworkFile loadNetworkConfigFileJson(String filePath){
+        ObjectMapper objectMapper = new ObjectMapper();
+        NetworkFile netFile = null;
+
+        try {
+            try {
+                netFile = objectMapper.readValue(new File(filePath), NetworkFile.class);
+            }catch (IOException e){
+                System.out.println("network config file not found at " + filePath);
+                System.exit(1);
+            }
+
+            if (!networkConfigJsonHealthCheck(netFile)) {
+                System.exit(1);
+            }
+
+            return netFile;
+        }catch (Exception e){
+            System.out.println("An error occurred while reading the network file: " + e.getMessage());
+            System.exit((1));
+            return null;
+        }
+    }
+
+    private boolean addressConfigJsonHealthCheck(ConfigFile configFile) {
         if (configFile == null) {
             System.out.println("An error occurred while reading the config file");
             return false;
@@ -143,6 +189,18 @@ public class ServerInitializerUtils {
         }
         if ((configFile.getLocalServer().size() + configFile.getOtherServers().size()) < 2) {
             System.out.println("To correctly run the system, at least 2 servers are required");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean networkConfigJsonHealthCheck(NetworkFile configFile) {
+        if (configFile == null) {
+            System.out.println("An error occurred while reading the network config file");
+            return false;
+        }
+        if (configFile.getHeavyPushOverlayNet() == null && configFile.getLightPushOverlayNet() == null) {
+            System.out.println("No network topology found in the network config file");
             return false;
         }
         return true;

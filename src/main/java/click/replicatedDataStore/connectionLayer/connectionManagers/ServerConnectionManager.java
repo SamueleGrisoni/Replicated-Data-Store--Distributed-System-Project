@@ -27,7 +27,7 @@ public class ServerConnectionManager extends ConnectionManager{
         this.sync = sync;
         this.server = server;
         initializeServerHandlerAndLocksMap();
-        this.createConnections();
+        this.connect();
     }
 
     @Override
@@ -71,7 +71,7 @@ public class ServerConnectionManager extends ConnectionManager{
         }
     }
 
-    private void createConnections(){
+    public void connect(){
         IntStream serverIndexes = IntStream.range(0, server.getNumberOfServers())
                 .filter(index -> index != server.getServerIndex());
         serverIndexes.forEach(index -> {
@@ -131,5 +131,9 @@ public class ServerConnectionManager extends ConnectionManager{
             this.serverHandlersMap.put(index, Optional.of(serverHandler));
             logger.logInfo("new connection with server " + index);
         }
+    }
+
+    public void disconnect(){
+        this.serverHandlersMap.values().forEach(serverHandler -> serverHandler.ifPresent(ServerHandler::stopRunning));
     }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 public class ConfigFile{
     @JsonProperty("localServer")
@@ -47,7 +48,7 @@ public class ConfigFile{
         public String getIp() {
             return ip;
         }
-
+        
         @Override
         public String toString() {
             return "ConfigFileEntry{" +

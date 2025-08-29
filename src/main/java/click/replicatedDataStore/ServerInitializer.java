@@ -13,14 +13,14 @@ public class ServerInitializer {
         if(ServerConfig.debug)
             showWorkingDirectory();
 
-        if(args.length != 1){
-            System.out.println("Usage: java -jar Server.jar configFilePath");
+        if(args.length != 2){
+            System.out.println("Usage: java -jar Server.jar addressConfigFilePath networkConfigFIlePath");
             System.exit(1);
         }
 
         ServerInitializerUtils SIU = new ServerInitializerUtils();
 
-        Map<Integer, Pair<String, ServerPorts>> addresses = SIU.computeAddress(args[0]);
+        Map<Integer, Pair<String, ServerPorts>> addresses = SIU.loadConfigFilesAndComputeAddress(args[0], args[1]);
         System.out.println("Found a config file for " + addresses.size() + " servers");
         SIU.printServerList();
 

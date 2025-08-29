@@ -10,7 +10,6 @@ import click.replicatedDataStore.connectionLayer.messages.ServerHeavyPushMsg;
 import click.replicatedDataStore.connectionLayer.messages.ServerLightPushMsg;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
-import click.replicatedDataStore.utils.Key;
 import click.replicatedDataStore.utils.configs.ServerConfig;
 
 import java.util.*;
@@ -19,6 +18,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class TimeTravel {
+    private final Set<Integer> heavyConnections;
+    private final Set<Integer> lightConnections;
+    private final boolean heavyPushPropagationPolicy;
     private final ServerDataSynchronizer serverDataSynchronizer;
     private ServerConnectionManager serverConnectionManager;
     private final DataManagerReader dataManagerReader;
@@ -26,10 +28,16 @@ public class TimeTravel {
     private final ScheduledExecutorService lightPusher = Executors.newScheduledThreadPool(1);
     private boolean stopLightPusher = false;
 
-    public TimeTravel(ServerDataSynchronizer serverDataSynchronizer, DataManagerReader dataManagerReader, DataManagerWriter dataManagerWriter) {
+    public TimeTravel(ServerDataSynchronizer serverDataSynchronizer, DataManagerReader dataManagerReader,
+                      DataManagerWriter dataManagerWriter, Set<Integer> heavyConnection, Set<Integer> lightConnection,
+                      boolean heavyPushPropagationPolicy) {
         this.serverDataSynchronizer = serverDataSynchronizer;
         this.dataManagerReader = dataManagerReader;
         this.dataManagerWriter = dataManagerWriter;
+
+        this.heavyConnections = heavyConnection;
+        this.lightConnections = lightConnection;
+        this.heavyPushPropagationPolicy = heavyPushPropagationPolicy;
 
         this.startLightPusher();
     }
@@ -50,7 +58,6 @@ public class TimeTravel {
         }
     }
 
-    //Function call each time I receive a LightPushMsg
     public boolean checkOutOfDate(VectorClock otherVectorClock) {
         boolean outDate = false;
         VectorClock myVectorClock = serverDataSynchronizer.getVectorClock();
@@ -59,11 +66,6 @@ public class TimeTravel {
         || compareRes == VectorClockComparation.LESS_THAN.getCompareResult()){
             outDate = true;
         }
-//        if(outDate){
-//            System.out.println("Server " + serverDataSynchronizer.getServerIndex() + " is out of date. My clock: " + myVectorClock + " Other clock: " + otherVectorClock);
-//        }else{
-//            System.out.println("Server " + serverDataSynchronizer.getServerIndex() + " is up to date. My clock: " + myVectorClock + " Other clock: " + otherVectorClock);
-//        }
         return outDate;
     }
 
@@ -73,15 +75,21 @@ public class TimeTravel {
     }
 
     public void heavyPush(List<ClockedData> heavy){
-        serverConnectionManager.broadcastMessage(new ServerHeavyPushMsg(heavy));
+        heavyConnections.forEach(connection -> serverConnectionManager.sendMessage(new ServerHeavyPushMsg(heavy), connection));
+        // serverConnectionManager.broadcastMessage(new ServerHeavyPushMsg(heavy));
     }
 
     public void lightPush(VectorClock light){
-        serverConnectionManager.broadcastMessage(new ServerLightPushMsg(light));
+        lightConnections.forEach(connection -> serverConnectionManager.sendMessage(new ServerLightPushMsg(light), connection));
+        // serverConnectionManager.broadcastMessage(new ServerLightPushMsg(light));
     }
 
     public Optional<AbstractMsg<?>> handleHeavyPush(ServerHeavyPushMsg hPush){
         dataManagerWriter.addServerData(hPush.getPayload());
+        if(heavyPushPropagationPolicy){
+            heavyPush(hPush.getPayload());
+        }
+
         return Optional.empty();
     }
 
@@ -92,7 +100,6 @@ public class TimeTravel {
     }
 
     public Optional<AbstractMsg<?>> handleFetch(ServerFetchMsg fetch){
-        //System.out.println("Computing fetch for VectorClock: " + fetch.getPayload());
         List<ClockedData> list = this.computeFetch(fetch.getPayload());
         //todo check this out, return list after server restart when an update as occurred is empty (it should contain the last update)
         //System.out.println("Fetch computed, returning " + list.size() + " ClockedData");

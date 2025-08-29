@@ -27,7 +27,8 @@ public class Server extends Thread{
     private volatile boolean stop = false;
     private final Logger logger = new Logger(this);
 
-    public Server(String serverName, int serverIndex, Map<Integer, Pair<String, ServerPorts>> addresses) {
+    public Server(String serverName, int serverIndex, Map<Integer, Pair<String, ServerPorts>> addresses,
+                  Set<Integer> heavyConnections, Set<Integer> lightConnections, boolean heavyPropagationPolicy) {
         this.serverName = serverName;
         this.serverIndex = serverIndex;
         this.addresses = addresses;
@@ -37,7 +38,8 @@ public class Server extends Thread{
         this.dataManagerWriter = new DataManagerWriter(serverDataSynchronizer);
         DataManagerReader dataManagerReader = new DataManagerReader(serverDataSynchronizer);
 
-        this.timeTravel = new TimeTravel(serverDataSynchronizer, dataManagerReader, dataManagerWriter);
+        this.timeTravel = new TimeTravel(serverDataSynchronizer, dataManagerReader, dataManagerWriter,
+                heavyConnections, lightConnections, heavyPropagationPolicy);
         dataManagerWriter.setTimeTravel(timeTravel);
 
         this.serverConnectionManager = new ServerConnectionManager(timeTravel, logger, this);
