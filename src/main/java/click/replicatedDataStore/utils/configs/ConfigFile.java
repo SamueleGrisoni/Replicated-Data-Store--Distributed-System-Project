@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 public class ConfigFile{
     @JsonProperty("localServer")
@@ -33,6 +32,9 @@ public class ConfigFile{
         @JsonProperty("clientPort")
         private int clientPort;
 
+        @JsonProperty
+        private Boolean isPersistent;
+
         public String getServerName(){
             return serverName;
         }
@@ -48,7 +50,28 @@ public class ConfigFile{
         public String getIp() {
             return ip;
         }
-        
+
+        public Boolean isPersistent() {
+            return isPersistent;
+        }
+
+        public void setIsPersistent(Boolean isPersistent) {
+            this.isPersistent = isPersistent;
+        }
+
+        public ConfigFileEntry(){
+            // Default constructor for deserialization
+        }
+
+        //deep copy constructor
+        public ConfigFileEntry(ConfigFileEntry entry){
+            this.serverName = entry.serverName;
+            this.ip = entry.ip;
+            this.serverPort = entry.serverPort;
+            this.clientPort = entry.clientPort;
+            this.isPersistent = entry.isPersistent;
+        }
+
         @Override
         public String toString() {
             return "ConfigFileEntry{" +
@@ -56,6 +79,7 @@ public class ConfigFile{
                     ", ip='" + ip + '\'' +
                     ", serverPort=" + serverPort +
                     ", clientPort=" + clientPort +
+                    ", isPersistent=" + isPersistent +
                     '}';
         }
     }

@@ -4,13 +4,15 @@
       "serverName": "b",
       "address": "127.0.0.1",
       "serverPort": 4403,
-      "clientPort": 4404
+      "clientPort": 4404,
+      "isPersistent": true
     },
     {
       "serverName": "c",
       "address": "127.0.0.1",
       "serverPort": 4405,
-      "clientPort": 4406
+      "clientPort": 4406,
+      "isPersistent": true
     }
   ],
   "otherServers": [

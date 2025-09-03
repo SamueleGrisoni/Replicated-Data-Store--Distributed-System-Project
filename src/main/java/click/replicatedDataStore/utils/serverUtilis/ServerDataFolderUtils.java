@@ -14,10 +14,7 @@ import java.util.List;
 public class ServerDataFolderUtils {
 
     protected static void checkConfigFileHasChanged(Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> addressesListPair) {
-        List<ConfigFile.ConfigFileEntry> totalList = new ArrayList<>();
-        totalList.addAll(addressesListPair.first());
-        totalList.addAll(addressesListPair.second());
-        totalList.sort(Comparator.comparing(ConfigFile.ConfigFileEntry::getServerName));
+        List<ConfigFile.ConfigFileEntry> totalList = copyAndSanitizeList(addressesListPair);
         System.out.println("TotalList:" + totalList);
 
         String folderPath = getOSFolderPath() + ServerConfig.GLOBAL_FOLDER_NAME + File.separator;
@@ -28,6 +25,7 @@ public class ServerDataFolderUtils {
             writeList(configFilePath, totalList);
         } else {
             try (InputStream in = new FileInputStream(configFilePath)) {
+                //todo check why the new hash is always different from the old one
                 String oldHash = new String(in.readAllBytes());
                 in.close();
                 String newHash = computeHash(totalList);
@@ -134,5 +132,21 @@ public class ServerDataFolderUtils {
             //In a Unix system, data will be saved in the home directory as a hidden folder
             return System.getProperty("user.home") + File.separator + ".";
         }
+    }
+
+    private static List<ConfigFile.ConfigFileEntry> copyAndSanitizeList(Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> addressesListPair) {
+        List<ConfigFile.ConfigFileEntry> totalList = new ArrayList<>();
+        for (ConfigFile.ConfigFileEntry entry : addressesListPair.first()) {
+            ConfigFile.ConfigFileEntry newEntry = new ConfigFile.ConfigFileEntry(entry);
+            newEntry.setIsPersistent(null);
+            totalList.add(newEntry);
+        }
+        for (ConfigFile.ConfigFileEntry entry : addressesListPair.second()) {
+            ConfigFile.ConfigFileEntry newEntry = new ConfigFile.ConfigFileEntry(entry);
+            newEntry.setIsPersistent(null);
+            totalList.add(newEntry);
+        }
+        totalList.sort(Comparator.comparing(ConfigFile.ConfigFileEntry::getServerName));
+        return totalList;
     }
 }

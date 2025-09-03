@@ -8,6 +8,8 @@ import click.replicatedDataStore.connectionLayer.connectionThreads.*;
 import click.replicatedDataStore.connectionLayer.messages.*;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.ServerPorts;
+import click.replicatedDataStore.utils.serverUtilis.ServerInitializerUtils;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
@@ -129,7 +131,7 @@ public class ServerConnectionManager extends ConnectionManager{
         synchronized (handlerLocksMap.get(index)) {
             serverHandlersMap.get(index).ifPresent(ServerHandler::stopRunning);
             this.serverHandlersMap.put(index, Optional.of(serverHandler));
-            logger.logInfo("new connection with server " + index);
+            logger.logInfo("new connection with server '" + ServerInitializerUtils.getNameFromIndex(index) + "' established" );
         }
     }
 

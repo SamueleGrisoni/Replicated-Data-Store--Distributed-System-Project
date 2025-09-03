@@ -37,7 +37,7 @@ public class EndToEndTest {
     private Map<Integer, Server> initializeNServers(Map<Integer, Pair<String, ServerPorts>> serverAddresses){
         Map<Integer, Server> serverMap = new HashMap<>();
         for(int i = 0; i < serverAddresses.size(); i++){
-            Server server = new Server("serverTest_" + i, i, serverAddresses);
+            Server server = new Server("serverTest_" + i, i, serverAddresses, true);
             serverMap.put(i, server);
         }
 
@@ -145,7 +145,7 @@ public class EndToEndTest {
 
     private void turnOnServer(int serverID) {
         addresses.put(serverID, new Pair<>(this.ip, new ServerPorts(TestUtils.getPort(), TestUtils.getPort())));
-        Server restartedServer = new Server("serverTest_" + serverID, serverID, addresses);
+        Server restartedServer = new Server("serverTest_" + serverID, serverID, addresses, true);
         restartedServer.start();
         serverMap.put(serverID, restartedServer);
 

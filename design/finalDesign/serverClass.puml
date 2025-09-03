@@ -1,0 +1,153 @@
+@startuml
+class Server {
+    - Map<Integer, Pair<String, ServerPorts>> addresses
+    - String serverName
+    - int serverIndex
+    - int serverNumber
+    - ServerDataSynchronizer serverDataSynchronizer
+    - DataManagerWriter dataManagerWriter
+    - ServerConnectionManager serverConnectionManager
+    - ClientConnectionManager clientConnectionManager
+    - TimeTravel timeTravel
+    - volatile boolean stop
+    + int getNumberOfServers()
+    + int getServerIndex()
+    + void addClientData(ClientWrite)
+    + void addServerData(List<ClockedData>)
+}
+
+class DataManagerWriter extends Thread {
+    + void addClientData(ClientWrite)
+    + void addServerData(List<ClockedData>)
+}
+
+class DataManagerReader extends Thread{
+    + Serializable clientRead(Key)
+    + List<ClockedData> recoverData(VectorClock)
+}
+
+class ServerDataSynchronizer {
+    - VectorClock vectorClock
+    - LinkedHashMap<Key, Serializable> primaryIndex
+    - TreeMap<VectorClock, Key> secondaryIndex
+    + void updateAndPersist(List<ClockedData>)
+    + synchronized VectorClock getVectorClock()
+    + synchronized VectorClock getOffsetVectorClock(int)
+}
+
+class Persist {
+        - dataFilePath : String
+        + persist(clockedData: ClockedData)
+        + persistClock(vectorClock: VectorClock)
+        + recoverVectorClock(serverName: String, serverNumber: int, serverIndex: int) : VectorClock
+        + recoverPrimaryIndex() : LinkedHashMap<Key, Serializable>
+        + recoverSecondaryIndex() : TreeMap<VectorClock, Key>
+}
+
+class TimeTravel extends Thread{
+    + void setServerConnectionManager(ServerConnectionManager)
+    + List<ClockedData> computeFetch(VectorClock)
+    + void heavyPush(List<ClockedData>)
+    + void lightPush(VectorClock)
+    + Optional<AbstractMsg<?>> handleHeavyPush(ServerHeavyPushMsg)
+    + Optional<AbstractMsg<?>> handleLightPush(ServerLightPushMsg)
+    + Optional<AbstractMsg<?>> handleFetch(ServerFetchMsg)
+}
+
+class ClientServerPriorityQueue {
+    - PriorityQueue<ClockedData> clientQueue
+    - PriorityQueue<List<ClockedData>> serversQueue
+    'put data
+    + boolean addClientData(ClientWrite)
+    + void addServerData(List<ClockedData>)
+    'retrieve data
+    + Pair<DataType, List<ClockedData>> pollData()
+}
+
+class VectorClock{
+        - int[] clock
+        - int serverIndex
+        - String serverName
+        + void incrementSelfClock()
+        + void updateClock(VectorClock incomingClock)
+        + int compareTo(VectorClock incomingClock)
+}
+
+enum DataType{
+    CLIENT
+    SERVER
+}
+
+enum VectorClockComparation {
+        + static final GREATER_THAN
+        + static final LESS_THAN
+        + static final EQUAL
+        + static final CONCURRENT
+        + int getCompareResult()
+}
+'the graph is really confused if we put client/manager as thread. I think we should prioritize. This is not a complete UML but a major feature overview
+class ServerConnectionManager {
+    - Map<Integer, Optional<ServerHandler>> serverHandlersMap
+    - Map<Integer, Object> handlerLocksMap
+    + void setupRouting()
+    + void handleNewConnection(Socket)
+    + void handleClosingConnection(ConnectionHandler)
+    + void sendMessage(AbstractMsg, int)
+    + void broadcastMessage(AbstractMsg)
+    + Optional<AbstractMsg> handleHeavyPush(AbstractMsg)
+    + Optional<AbstractMsg> handleLightPush(AbstractMsg)
+    + Optional<AbstractMsg> handleFetch(AbstractMsg)
+}
+
+class ClientConnectionManager {
+    - List<ClientsHandler> clientsHandlerList
+    + void setupRouting()
+    + void handleNewConnection(Socket)
+    + void handleClosingConnection(ConnectionHandler)
+    + Optional<AbstractMsg> readData(AbstractMsg)
+    + Optional<AbstractMsg> writeData(AbstractMsg)
+}
+
+class ClockedData{
+        - vectorClock : VectorClock
+        - key : Key
+        - value : Serializable
+        + compareTo(o : ClockedData) : int
+}
+class Key {}
+class DataType {}
+class AbstractMsg<T> {
+    + boolean equals(Object obj)
+}
+class ServerHeavyPushMsg extends AbstractMsg{
+    + VectorClock getPayload()
+}
+class ServerLightPushMsg extends AbstractMsg{
+    + VectorClock getPayload()
+}
+class ServerFetchMsg extends AbstractMsg{
+    + VectorClock getPayload()
+}
+
+Server --> ServerDataSynchronizer
+Server --> DataManagerWriter
+Server --> DataManagerReader
+Server --> ServerConnectionManager
+Server --> ClientConnectionManager
+Server --> TimeTravel
+
+ServerDataSynchronizer --> VectorClock
+ServerDataSynchronizer --> Persist
+ServerDataSynchronizer --> Key
+ServerDataSynchronizer --> ClockedData
+
+DataManagerWriter --> ClientServerPriorityQueue
+
+TimeTravel --> AbstractMsg
+ServerConnectionManager --> AbstractMsg
+ClientConnectionManager --> AbstractMsg
+
+ClientServerPriorityQueue --> DataType
+
+VectorClock --> VectorClockComparation
+@enduml
