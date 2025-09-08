@@ -71,6 +71,20 @@ public class Synchronizer {
         return outDate;
     }
 
+    public boolean alreadySeen(VectorClock otherVectorClock) {
+        boolean seen = false;
+        VectorClock myVectorClock = serverDataSynchronizer.getVectorClock();
+
+        int compareRes = myVectorClock.compareTo(otherVectorClock);
+
+        if(compareRes == VectorClockComparation.GREATER_THAN.getCompareResult() ||
+           compareRes == VectorClockComparation.EQUAL.getCompareResult()){
+            seen = true;
+        }
+
+        return seen;
+    }
+
     public List<ClockedData> computeFetch(VectorClock otherVectorClock) {
        List<ClockedData> recovered = dataManagerReader.recoverData(otherVectorClock);
        return recovered;
@@ -87,11 +101,12 @@ public class Synchronizer {
     }
 
     public Optional<AbstractMsg<?>> handleHeavyPush(ServerHeavyPushMsg hPush){
-        dataManagerWriter.addServerData(hPush.getPayload());
 
-        if(heavyPushPropagationPolicy){
+        ClockedData lastUpdate = hPush.getPayload().get(hPush.getPayload().size() - 1);
+        if(heavyPushPropagationPolicy && !alreadySeen(lastUpdate.vectorClock())){
             heavyPush(hPush.getPayload());
         }
+        dataManagerWriter.addServerData(hPush.getPayload());
 
         return Optional.empty();
     }
