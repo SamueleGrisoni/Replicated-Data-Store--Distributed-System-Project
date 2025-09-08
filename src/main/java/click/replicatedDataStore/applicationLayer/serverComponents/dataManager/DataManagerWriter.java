@@ -71,6 +71,7 @@ public class DataManagerWriter extends Thread {
                 numberOfWrites = 0;
             }
             serverDataSynchronizer.updateAndPersistPrimaryIndex(clockedData);
+            serverDataSynchronizer.updateAndPersistVectorClock(clockedData.vectorClock());
             serverDataSynchronizer.addToBackupList(clockedData);
         }
     }

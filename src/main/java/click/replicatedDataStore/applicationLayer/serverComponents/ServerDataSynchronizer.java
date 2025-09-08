@@ -38,8 +38,16 @@ public class ServerDataSynchronizer {
             if (isPersistent) {
                 persist.persist(clockedData);
             }
-            vectorClock.updateClock(clockedData.vectorClock());
-            persistVectorClock();
+        }
+    }
+
+    public void updateAndPersistVectorClock(VectorClock incomingClock) {
+        synchronized (vectorClock) {
+            vectorClock.updateClock(incomingClock);
+            if (isPersistent){
+                persist.persist(vectorClock);
+                //System.out.println("Persisted clock: " + vectorClock);
+            }
         }
     }
 
@@ -102,13 +110,6 @@ public class ServerDataSynchronizer {
             return persist.recoverVectorClock(serverName, serverNumber, serverIndex);
         } else {
             return new VectorClock(serverName, serverNumber, serverIndex);
-        }
-    }
-
-    private void persistVectorClock(){
-        if (isPersistent){
-            persist.persist(vectorClock);
-            System.out.println("Persisted clock: " + vectorClock);
         }
     }
 
