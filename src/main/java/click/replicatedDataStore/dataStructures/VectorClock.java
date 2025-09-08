@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class VectorClock implements Comparable<VectorClock>, Serializable {
-    private final int[] clock;
+    protected final int[] clock;
     private final int serverIndex;
     private final String serverName;
 
@@ -74,7 +74,7 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
         int delta = 0;
         for (int i = 0; i < serverVectorClock.clock.length; i++) {
             if (serverVectorClock.clock[i] < incomingVectorClock.clock[i]) {
-                delta = incomingVectorClock.clock[i] - serverVectorClock.clock[i];
+                delta = Math.max(delta, incomingVectorClock.clock[i] - serverVectorClock.clock[i]);
             }
             if (delta > 1) {
                 System.out.println("Server's clock: " + serverVectorClock);

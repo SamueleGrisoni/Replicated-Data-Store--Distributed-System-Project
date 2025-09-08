@@ -5,6 +5,7 @@ import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
 import click.replicatedDataStore.dataStructures.*;
 import click.replicatedDataStore.utils.Key;
+import click.replicatedDataStore.utils.configs.LoadedLocalServerConfig;
 import click.replicatedDataStore.utils.configs.ServerConfig;
 import org.junit.After;
 import org.junit.Before;
@@ -15,6 +16,7 @@ import java.lang.reflect.Field;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -31,8 +33,12 @@ public class DataManagerWriterTest {
 
     @Before
     public void setUp() {
-        mockServer = new Server("Server0", 0, addresses, true);
-        mockServer2 = new Server("Server1", 1, addresses, true);
+        LoadedLocalServerConfig config0 = new LoadedLocalServerConfig("Server0", "localhost", addresses.get(0).second(),
+                true, true, Set.of(0,1), Set.of(0,1));
+        LoadedLocalServerConfig config1 = new LoadedLocalServerConfig("Server1", "localhost", addresses.get(1).second(),
+                true, true, Set.of(0,1), Set.of(0,1));
+        mockServer = new Server("Server0", 0, addresses, config0);
+        mockServer2 = new Server("Server1", 1, addresses, config1);
         Field serverDataSynchronizerField = getField(Server.class, "serverDataSynchronizer");
         try {
             mockServerDataSynchronizer1 = (ServerDataSynchronizer) serverDataSynchronizerField.get(mockServer);

@@ -7,10 +7,7 @@ import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.D
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerWriter;
 import click.replicatedDataStore.connectionLayer.connectionManagers.ClientConnectionManager;
 import click.replicatedDataStore.connectionLayer.connectionManagers.ServerConnectionManager;
-import click.replicatedDataStore.dataStructures.ClientWrite;
-import click.replicatedDataStore.dataStructures.ClockedData;
-import click.replicatedDataStore.dataStructures.Pair;
-import click.replicatedDataStore.dataStructures.ServerPorts;
+import click.replicatedDataStore.dataStructures.*;
 import click.replicatedDataStore.utils.configs.LoadedLocalServerConfig;
 
 import java.util.*;
@@ -111,5 +108,9 @@ public class Server extends Thread{
 
     public void reconnect(){
         serverConnectionManager.reconnect();
+    }
+
+    public VectorClock getVectorClock(){
+        return serverDataSynchronizer.getVectorClock();
     }
 }
