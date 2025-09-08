@@ -134,14 +134,15 @@ public class ServerDataFolderUtils {
         }
     }
 
-    private static List<ConfigFile.ConfigFileEntry> copyAndSanitizeList(Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> addressesListPair) {
+    private static List<ConfigFile.ConfigFileEntry> copyAndSanitizeList(Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> configListPair) {
         List<ConfigFile.ConfigFileEntry> totalList = new ArrayList<>();
-        for (ConfigFile.ConfigFileEntry entry : addressesListPair.first()) {
+
+        for (ConfigFile.ConfigFileEntry entry : configListPair.first()) {
             ConfigFile.ConfigFileEntry newEntry = new ConfigFile.ConfigFileEntry(entry);
             newEntry.setIsPersistent(null);
             totalList.add(newEntry);
         }
-        for (ConfigFile.ConfigFileEntry entry : addressesListPair.second()) {
+        for (ConfigFile.ConfigFileEntry entry : configListPair.second()) {
             ConfigFile.ConfigFileEntry newEntry = new ConfigFile.ConfigFileEntry(entry);
             newEntry.setIsPersistent(null);
             totalList.add(newEntry);

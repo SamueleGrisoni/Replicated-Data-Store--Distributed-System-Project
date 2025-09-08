@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class TimeTravel {
+public class Synchronizer {
     private final Set<Integer> heavyConnections;
     private final Set<Integer> lightConnections;
     private final boolean heavyPushPropagationPolicy;
@@ -28,9 +28,10 @@ public class TimeTravel {
     private final ScheduledExecutorService lightPusher = Executors.newScheduledThreadPool(1);
     private boolean stopLightPusher = false;
 
-    public TimeTravel(ServerDataSynchronizer serverDataSynchronizer, DataManagerReader dataManagerReader,
-                      DataManagerWriter dataManagerWriter, Set<Integer> heavyConnection, Set<Integer> lightConnection,
-                      boolean heavyPushPropagationPolicy) {
+    public Synchronizer(ServerDataSynchronizer serverDataSynchronizer, DataManagerReader dataManagerReader,
+                        DataManagerWriter dataManagerWriter,
+                        boolean heavyPushPropagationPolicy, Set<Integer> heavyConnection,
+                        Set<Integer> lightConnection) {
         this.serverDataSynchronizer = serverDataSynchronizer;
         this.dataManagerReader = dataManagerReader;
         this.dataManagerWriter = dataManagerWriter;
@@ -39,7 +40,8 @@ public class TimeTravel {
         this.lightConnections = lightConnection;
         this.heavyPushPropagationPolicy = heavyPushPropagationPolicy;
 
-        this.startLightPusher();
+        if(!this.lightConnections.isEmpty())
+            this.startLightPusher();
     }
 
     private void startLightPusher(){
@@ -86,6 +88,7 @@ public class TimeTravel {
 
     public Optional<AbstractMsg<?>> handleHeavyPush(ServerHeavyPushMsg hPush){
         dataManagerWriter.addServerData(hPush.getPayload());
+
         if(heavyPushPropagationPolicy){
             heavyPush(hPush.getPayload());
         }
@@ -94,6 +97,7 @@ public class TimeTravel {
     }
 
     public Optional<AbstractMsg<?>> handleLightPush(ServerLightPushMsg lPush){
+
         return this.checkOutOfDate(lPush.getPayload())?
                 Optional.of(new ServerFetchMsg(this.serverDataSynchronizer.getVectorClock())) :
                 Optional.empty();

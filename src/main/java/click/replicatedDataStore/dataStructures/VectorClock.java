@@ -21,6 +21,13 @@ public class VectorClock implements Comparable<VectorClock>, Serializable {
         this.serverIndex = serverIndex;
     }
 
+    public VectorClock(VectorClock other) {
+        this.clock = new int[other.clock.length];
+        System.arraycopy(other.clock, 0, this.clock, 0, other.clock.length);
+        this.serverIndex = other.serverIndex;
+        this.serverName = other.serverName;
+    }
+
     //Build a new vector clock, offsetting the incoming clock by the given offset. Offset is added to the server's own clock
     public VectorClock(VectorClock incomingClock, int offset) {
         this.serverName = incomingClock.serverName;

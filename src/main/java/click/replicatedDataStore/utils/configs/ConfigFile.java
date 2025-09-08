@@ -3,6 +3,7 @@ package click.replicatedDataStore.utils.configs;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ConfigFile{
@@ -35,6 +36,15 @@ public class ConfigFile{
         @JsonProperty
         private Boolean isPersistent;
 
+        @JsonProperty("heavyPropagate")
+        private Boolean heavyPropagationPolicy;
+
+        @JsonProperty("heavyConnect")
+        List<String> overlayNetHeavy = new ArrayList<>();
+
+        @JsonProperty("lightConnect")
+        List<String> overlayNetLight = new ArrayList<>();
+
         public String getServerName(){
             return serverName;
         }
@@ -59,6 +69,24 @@ public class ConfigFile{
             this.isPersistent = isPersistent;
         }
 
+        public List<String> getOverlayNetHeavy(){
+            return new ArrayList<>(this.overlayNetHeavy);
+        }
+
+        public void setDefaultNetworking(){
+            this.overlayNetHeavy = new ArrayList<>();
+            this.overlayNetLight = new ArrayList<>();
+            this.heavyPropagationPolicy = null;
+        }
+
+        public Boolean getHeavyPropagationPolicy() {
+            return heavyPropagationPolicy;
+        }
+
+        public List<String> getOverlayNetLight() {
+            return new ArrayList<>(this.overlayNetLight);
+        }
+
         public ConfigFileEntry(){
             // Default constructor for deserialization
         }
@@ -70,6 +98,9 @@ public class ConfigFile{
             this.serverPort = entry.serverPort;
             this.clientPort = entry.clientPort;
             this.isPersistent = entry.isPersistent;
+            this.overlayNetHeavy = entry.getOverlayNetHeavy();
+            this.heavyPropagationPolicy = entry.getHeavyPropagationPolicy();
+            this.overlayNetLight = entry.getOverlayNetLight();
         }
 
         @Override
@@ -80,6 +111,9 @@ public class ConfigFile{
                     ", serverPort=" + serverPort +
                     ", clientPort=" + clientPort +
                     ", isPersistent=" + isPersistent +
+                    ", heavyPropagationPolicy=" + heavyPropagationPolicy +
+                    ", overlayNetHeavy=" + overlayNetHeavy +
+                    ", overlayNetLight=" + overlayNetLight +
                     '}';
         }
     }

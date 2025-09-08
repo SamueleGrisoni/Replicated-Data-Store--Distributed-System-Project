@@ -5,7 +5,10 @@
       "address": "127.0.0.1",
       "serverPort": 4401,
       "clientPort": 4402,
-      "isPersistent": false
+      "isPersistent": false,
+      "heavyPropagate": false,
+      "heavyConnect": ["b", "c"],
+      "lightConnect": ["b", "c"]
     }
   ],
   "otherServers": [

@@ -1,7 +1,4 @@
 package click.replicatedDataStore;
-
-import click.replicatedDataStore.dataStructures.Pair;
-import click.replicatedDataStore.dataStructures.ServerPorts;
 import click.replicatedDataStore.utils.configs.ServerConfig;
 import click.replicatedDataStore.utils.serverUtilis.ServerInitializerUtils;
 
@@ -13,16 +10,17 @@ public class ServerInitializer {
         if(ServerConfig.debug)
             showWorkingDirectory();
 
-        if(args.length != 2){
-            System.out.println("Usage: java -jar Server.jar addressConfigFilePath networkConfigFIlePath");
+        if(args.length != 1){
+            System.out.println("Usage: java -jar Server.jar configFilePath");
             System.exit(1);
         }
 
         ServerInitializerUtils SIU = new ServerInitializerUtils();
 
-        Map<Integer, Pair<String, ServerPorts>> addresses = SIU.loadConfigFilesAndComputeAddress(args[0], args[1]);
-        System.out.println("Found a config file for " + addresses.size() + " servers");
-        SIU.printServerList();
+        int nServers = SIU.loadConfigFilesAndComputeAddress(args[0]);
+        System.out.println("Found a config file for " + nServers + " servers");
+        if(ServerConfig.debug)
+            SIU.printServerList();
 
         SIU.startAllLocalServer();
 

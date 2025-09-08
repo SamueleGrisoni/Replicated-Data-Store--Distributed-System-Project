@@ -2,26 +2,22 @@ package click.replicatedDataStore.applicationLayer.serverComponents.dataManager;
 
 import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;
 import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
-import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
+import click.replicatedDataStore.applicationLayer.serverComponents.Synchronizer;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.VectorClock;
 import click.replicatedDataStore.utils.ClockTooFarAhead;
 import click.replicatedDataStore.utils.DataType;
-import click.replicatedDataStore.utils.Key;
 import click.replicatedDataStore.utils.configs.ServerConfig;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 public class DataManagerWriter extends Thread {
     private final ServerDataSynchronizer serverDataSynchronizer;
     private final ClientServerPriorityQueue queue;
     private int numberOfWrites = 0;
-    private TimeTravel timeTravel;
+    private Synchronizer synchronizer;
     private boolean stop = false;
 
     public DataManagerWriter(ServerDataSynchronizer serverDataSynchronizer) {
@@ -29,8 +25,8 @@ public class DataManagerWriter extends Thread {
         this.queue = new ClientServerPriorityQueue(this.serverDataSynchronizer);
     }
 
-    public void setTimeTravel(TimeTravel timeTravel) {
-        this.timeTravel = timeTravel;
+    public void setTimeTravel(Synchronizer synchronizer) {
+        this.synchronizer = synchronizer;
     }
 
     @Override
@@ -51,7 +47,7 @@ public class DataManagerWriter extends Thread {
     private void processPopData(Pair<DataType, List<ClockedData>> data) {
         if(data.first() == DataType.CLIENT){
             System.out.println("Sending data to other servers" + data.second());
-            timeTravel.heavyPush(data.second());
+            synchronizer.heavyPush(data.second());
             write(data.second());
         }else if(data.first() == DataType.SERVER){
             try {

@@ -2,15 +2,16 @@ package click.replicatedDataStore.applicationLayer;
 
 import click.replicatedDataStore.applicationLayer.serverComponents.Logger;
 import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
+import click.replicatedDataStore.applicationLayer.serverComponents.Synchronizer;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerWriter;
-import click.replicatedDataStore.applicationLayer.serverComponents.TimeTravel;
 import click.replicatedDataStore.connectionLayer.connectionManagers.ClientConnectionManager;
 import click.replicatedDataStore.connectionLayer.connectionManagers.ServerConnectionManager;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
 import click.replicatedDataStore.dataStructures.ServerPorts;
+import click.replicatedDataStore.utils.configs.LoadedLocalServerConfig;
 
 import java.util.*;
 
@@ -23,28 +24,27 @@ public class Server extends Thread{
     private final DataManagerWriter dataManagerWriter;
     private final ServerConnectionManager serverConnectionManager;
     private final ClientConnectionManager clientConnectionManager;
-    private final TimeTravel timeTravel;
+    private final Synchronizer synchronizer;
     private volatile boolean stop = false;
     private final Logger logger = new Logger(this);
 
-    public Server(String serverName, int serverIndex, Map<Integer, Pair<String, ServerPorts>> addresses, Boolean isPersistent) {
-    public Server(String serverName, int serverIndex, Map<Integer, Pair<String, ServerPorts>> addresses,
-                  Set<Integer> heavyConnections, Set<Integer> lightConnections, boolean heavyPropagationPolicy) {
+    public Server(String serverName, int serverIndex,
+                  Map<Integer, Pair<String, ServerPorts>> addresses, LoadedLocalServerConfig config) {
         this.serverName = serverName;
         this.serverIndex = serverIndex;
         this.addresses = addresses;
         this.serverNumber = addresses.size();
 
-        this.serverDataSynchronizer = new ServerDataSynchronizer(serverName, serverNumber, serverIndex, isPersistent);
+        this.serverDataSynchronizer = new ServerDataSynchronizer(serverName, serverNumber, serverIndex, config.isPersistent);
         this.dataManagerWriter = new DataManagerWriter(serverDataSynchronizer);
         DataManagerReader dataManagerReader = new DataManagerReader(serverDataSynchronizer);
 
-        this.timeTravel = new TimeTravel(serverDataSynchronizer, dataManagerReader, dataManagerWriter,
-                heavyConnections, lightConnections, heavyPropagationPolicy);
-        dataManagerWriter.setTimeTravel(timeTravel);
+        this.synchronizer = new Synchronizer(serverDataSynchronizer, dataManagerReader, dataManagerWriter,
+                config.heavyPropagationPolicy, config.heavyConnections, config.lightConnections);
+        dataManagerWriter.setTimeTravel(synchronizer);
 
-        this.serverConnectionManager = new ServerConnectionManager(timeTravel, logger, this);
-        this.timeTravel.setServerConnectionManager(serverConnectionManager);
+        this.serverConnectionManager = new ServerConnectionManager(synchronizer, logger, this);
+        this.synchronizer.setServerConnectionManager(serverConnectionManager);
 
         this.clientConnectionManager = new ClientConnectionManager(addresses.get(serverIndex).second().clientPort(),
                                             dataManagerWriter.getQueue(), dataManagerReader, logger);
@@ -57,7 +57,7 @@ public class Server extends Thread{
         dataManagerWriter.stopThread();
         serverConnectionManager.stop();
         clientConnectionManager.stop();
-        timeTravel.stop();
+        synchronizer.stop();
     }
 
     public Pair<String, ServerPorts> getMyAddressAndPorts(){

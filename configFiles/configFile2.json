@@ -5,14 +5,20 @@
       "address": "127.0.0.1",
       "serverPort": 4403,
       "clientPort": 4404,
-      "isPersistent": true
+      "isPersistent": true,
+      "heavyPropagate": false,
+      "heavyConnect": ["a", "c"],
+      "lightConnect": ["a", "c"]
     },
     {
       "serverName": "c",
       "address": "127.0.0.1",
       "serverPort": 4405,
       "clientPort": 4406,
-      "isPersistent": true
+      "isPersistent": true,
+      "heavyPropagate": false,
+      "heavyConnect": ["a", "b"],
+      "lightConnect": ["a", "b"]
     }
   ],
   "otherServers": [

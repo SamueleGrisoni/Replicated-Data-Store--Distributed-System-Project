@@ -15,6 +15,6 @@ public class ServerHeavyPushMsg extends AbstractMsg<List<ClockedData>> {
     }
 
     public List<ClockedData> getPayload(){
-        return  payLoad;
+        return payLoad;
     }
 }
