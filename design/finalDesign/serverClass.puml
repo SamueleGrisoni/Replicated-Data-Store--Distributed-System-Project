@@ -8,7 +8,7 @@ class Server {
     - DataManagerWriter dataManagerWriter
     - ServerConnectionManager serverConnectionManager
     - ClientConnectionManager clientConnectionManager
-    - TimeTravel synchronizer
+    - Synchronizer synchronizer
     - volatile boolean stop
     + int getNumberOfServers()
     + int getServerIndex()
@@ -35,6 +35,13 @@ class ServerDataSynchronizer {
     + synchronized VectorClock getOffsetVectorClock(int)
 }
 
+class BackupList{
+    - List<ClockData>
+    - Comparator<ClockData>
+    + void add(ClockedData clockedData)
+    + List<ClockedData> getClockedDataSinceIndex(int index)
+}
+
 class Persist {
         - dataFilePath : String
         + persist(clockedData: ClockedData)
@@ -44,7 +51,7 @@ class Persist {
         + recoverSecondaryIndex() : TreeMap<VectorClock, Key>
 }
 
-class TimeTravel extends Thread{
+class Synchronizer extends Thread{
     + void setServerConnectionManager(ServerConnectionManager)
     + List<ClockedData> computeFetch(VectorClock)
     + void heavyPush(List<ClockedData>)
@@ -134,16 +141,17 @@ Server --> DataManagerWriter
 Server --> DataManagerReader
 Server --> ServerConnectionManager
 Server --> ClientConnectionManager
-Server --> TimeTravel
+Server --> Synchronizer
 
 ServerDataSynchronizer --> VectorClock
 ServerDataSynchronizer --> Persist
 ServerDataSynchronizer --> Key
 ServerDataSynchronizer --> ClockedData
+ServerDataSynchronizer --> BackupList
 
 DataManagerWriter --> ClientServerPriorityQueue
 
-TimeTravel --> AbstractMsg
+Synchronizer --> AbstractMsg
 ServerConnectionManager --> AbstractMsg
 ClientConnectionManager --> AbstractMsg
 
