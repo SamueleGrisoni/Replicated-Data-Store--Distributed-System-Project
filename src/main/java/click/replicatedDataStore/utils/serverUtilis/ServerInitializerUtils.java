@@ -18,7 +18,8 @@ public class ServerInitializerUtils {
     private Pair<Map<Integer, LoadedLocalServerConfig>, Map<Integer, LoadedConfig>> serverConfigs;
     private final Map<String, Integer> serverNameToIndex = new HashMap<>();
     private static final Map<Integer, String> serverIndexToName = new HashMap<>();
-    private final Map<Integer, Pair<Server, Boolean>> localServerStatus = new HashMap<>();
+    private final Map<Integer, Pair<Server, Boolean>> localServerTurnedOnStatus = new HashMap<>();
+    private final Map<Integer, Pair<Server, Boolean>> localServerDisconnectedStatus = new HashMap<>();
 
     public int loadConfigFilesAndComputeAddress(String addressFilePath) {
         Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> addressesListPair = loadAddressConfigFromJson(addressFilePath);
@@ -67,19 +68,20 @@ public class ServerInitializerUtils {
             Server server = new Server(serverIndexToName.get(entry.getKey()), entry.getKey(),
                     getAllServersAddresses(), entry.getValue());
             server.start();
-            localServerStatus.put(entry.getKey(), new Pair<>(server, true));
+            localServerTurnedOnStatus.put(entry.getKey(), new Pair<>(server, true));
+            localServerDisconnectedStatus.put(entry.getKey(), new Pair<>(server, false));
         }
-        System.out.println("Successfully started " + localServerStatus.size() + " servers");
+        System.out.println("Successfully started " + localServerTurnedOnStatus.size() + " local servers");
     }
 
     public void closeAllLocalServer() {
         System.out.println("Stopping servers...");
-        for (Map.Entry<Integer, Pair<Server, Boolean>> entry : localServerStatus.entrySet()) {
+        for (Map.Entry<Integer, Pair<Server, Boolean>> entry : localServerTurnedOnStatus.entrySet()) {
             if (entry.getValue().second()) { //If the server is running
                 entry.getValue().first().stopServer();
             }
         }
-        for (Map.Entry<Integer, Pair<Server, Boolean>> entry : localServerStatus.entrySet()) {
+        for (Map.Entry<Integer, Pair<Server, Boolean>> entry : localServerTurnedOnStatus.entrySet()) {
             try {
                 entry.getValue().first().join();
             } catch (InterruptedException e) {
@@ -95,11 +97,19 @@ public class ServerInitializerUtils {
     }
 
     public boolean isServerRunning(String serverName) {
+        return inputNameChecker(serverName, localServerTurnedOnStatus);
+    }
+
+    public boolean isServerDisconnected(String serverName) {
+        return inputNameChecker(serverName, localServerDisconnectedStatus);
+    }
+
+    private boolean inputNameChecker(String serverName, Map<Integer, Pair<Server, Boolean>> mapToCheck) {
         Integer serverIndex = serverNameToIndex.get(serverName);
         if (serverIndex == null || !serverConfigs.first().containsKey(serverIndex)) {
             throw new IllegalArgumentException("Server " + serverName + " is not a name of a local server");
         }
-        Pair<Server, Boolean> serverStatus = localServerStatus.get(serverIndex);
+        Pair<Server, Boolean> serverStatus = mapToCheck.get(serverIndex);
         return serverStatus.second();
     }
 
@@ -124,7 +134,8 @@ public class ServerInitializerUtils {
             Server restartedServer = new Server(serverName, serverIndex, getAllServersAddresses(), serverConfigs.first().get(serverIndex));
             restartedServer.start();
             System.out.println("Server " + serverName + " restarted successfully with persistence: " + isPersistent);
-            localServerStatus.put(serverIndex, new Pair<>(restartedServer, true));
+            localServerTurnedOnStatus.put(serverIndex, new Pair<>(restartedServer, true));
+            localServerDisconnectedStatus.put(serverIndex, new Pair<>(restartedServer, false));
         } catch (RuntimeException e) {
             e.printStackTrace();
             System.out.println("Server " + serverName + " socket port is still in use, try again in a few moment");
@@ -135,15 +146,30 @@ public class ServerInitializerUtils {
 
     public void stopLocalServer(String serverName){
         Integer serverIndex = serverNameToIndex.get(serverName);
-        Pair<Server, Boolean> serverStatus = localServerStatus.get(serverIndex);
+        Pair<Server, Boolean> serverStatus = localServerTurnedOnStatus.get(serverIndex);
         serverStatus.first().stopServer();
         try {
             serverStatus.first().join();
         } catch (InterruptedException e) {
             System.out.println("An error occurred while stopping the server: " + serverName + " " + e.getMessage());
         }
-        localServerStatus.put(serverIndex, new Pair<>(serverStatus.first(), false));
+        localServerTurnedOnStatus.put(serverIndex, new Pair<>(serverStatus.first(), false));
         System.out.println("Server " + serverName + " stopped successfully");
+    }
+
+    public void disconnectOrReconnectLocalServer(String serverName){
+        Integer serverIndex = serverNameToIndex.get(serverName);
+        Pair<Server, Boolean> serverStatus = localServerDisconnectedStatus.get(serverIndex);
+        if (!serverStatus.second()) { //If the server is connected
+            serverStatus.first().disconnect();
+            localServerDisconnectedStatus.put(serverIndex, new Pair<>(serverStatus.first(), true));
+            System.out.println("Server " + serverName + " disconnected successfully");
+        } else { //If the server is disconnected
+            //todo check reconnect method
+            serverStatus.first().reconnect(); //Reconnect
+            localServerDisconnectedStatus.put(serverIndex, new Pair<>(serverStatus.first(), false));
+            System.out.println("Server " + serverName + " reconnected successfully");
+        }
     }
 
     private Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> loadAddressConfigFromJson(String filePath) {

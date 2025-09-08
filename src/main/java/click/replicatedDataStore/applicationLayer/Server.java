@@ -104,4 +104,12 @@ public class Server extends Thread{
     public String getServerName(){
         return serverName;
     }
+
+    public void disconnect(){
+        serverConnectionManager.disconnect();
+    }
+
+    public void reconnect(){
+        serverConnectionManager.reconnect();
+    }
 }

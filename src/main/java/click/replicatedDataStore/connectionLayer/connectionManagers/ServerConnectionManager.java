@@ -138,4 +138,9 @@ public class ServerConnectionManager extends ConnectionManager{
     public void disconnect(){
         this.serverHandlersMap.values().forEach(serverHandler -> serverHandler.ifPresent(ServerHandler::stopRunning));
     }
+
+    //todo check correctness of this method
+    public void reconnect(){
+        this.serverHandlersMap.values().forEach(serverHandler -> serverHandler.ifPresent(ServerHandler::run));
+    }
 }

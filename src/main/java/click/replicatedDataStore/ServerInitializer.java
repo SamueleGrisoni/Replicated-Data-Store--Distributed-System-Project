@@ -36,15 +36,21 @@ public class ServerInitializer {
                 System.out.println("Server " + userInput + " is not a name of a local server");
             }else{
                 if (SIU.isServerRunning(userInput)) {
-                    System.out.println("Server " + userInput + " is running. Do you want to disconnect (d) or stop (s) it?");
+                    System.out.println("Server " + userInput + " is running. Do you want to " + (SIU.isServerDisconnected(userInput) ? "reconnect(d) or stop (s) it?" : "disconnect(d) or stop (s) it?"));
+
                     String actionSelect = scanner.nextLine();
                     while (!actionSelect.equals("d") && !actionSelect.equals("s")) {
                         System.out.println("Please enter 'd' to disconnect or 's' to stop the server.");
                         actionSelect = scanner.nextLine();
                     }
+
                     if (actionSelect.equals("d")) {
-                        //Todo add here server disconnect
-                        System.out.println("TODO disconnect server " + userInput);
+                        if(!SIU.isServerDisconnected(userInput)){
+                            System.out.println("Disconnecting server " + userInput);
+                        }else{
+                            System.out.println("Reconnecting server " + userInput);
+                        }
+                        SIU.disconnectOrReconnectLocalServer(userInput);
                     }else {
                         System.out.println("Stopping server " + userInput);
                         SIU.stopLocalServer(userInput);
