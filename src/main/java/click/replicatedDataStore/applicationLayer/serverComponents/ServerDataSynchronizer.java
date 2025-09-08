@@ -114,7 +114,7 @@ public class ServerDataSynchronizer {
 
 
     public synchronized VectorClock getVectorClock() {
-        return vectorClock;
+        return new VectorClock(this.vectorClock);
     }
 
     public synchronized VectorClock getOffsetVectorClock(int offset) {

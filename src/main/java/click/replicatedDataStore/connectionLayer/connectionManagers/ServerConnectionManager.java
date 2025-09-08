@@ -90,7 +90,7 @@ public class ServerConnectionManager extends ConnectionManager{
                     this.logger.logErr(this.getClass(), timeOut.getMessage());
                 }catch (IOException e){
                     this.logger.logErr(this.getClass(),
-                            "error cant open socket on" + ipPort.first() + ":" + ipPort.second() + "\n" +
+                            "Error: cant open socket with server " + ServerInitializerUtils.getNameFromIndex(index) + " on " + ipPort.first() + ":" + ipPort.second() + "\n-> " +
                                     e.getMessage());
                     }
             });
@@ -137,10 +137,5 @@ public class ServerConnectionManager extends ConnectionManager{
 
     public void disconnect(){
         this.serverHandlersMap.values().forEach(serverHandler -> serverHandler.ifPresent(ServerHandler::stopRunning));
-    }
-
-    //todo check correctness of this method
-    public void reconnect(){
-        this.serverHandlersMap.values().forEach(serverHandler -> serverHandler.ifPresent(ServerHandler::run));
     }
 }

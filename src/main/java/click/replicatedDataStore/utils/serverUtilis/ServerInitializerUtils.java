@@ -17,9 +17,27 @@ public class ServerInitializerUtils {
     //A Pair of maps used internally to differentiate local and other server. Integer is server index
     private Pair<Map<Integer, LoadedLocalServerConfig>, Map<Integer, LoadedConfig>> serverConfigs;
     private final Map<String, Integer> serverNameToIndex = new HashMap<>();
-    private static final Map<Integer, String> serverIndexToName = new HashMap<>();
+    private static Map<Integer, String> serverIndexToName = new HashMap<>();
     private final Map<Integer, Pair<Server, Boolean>> localServerTurnedOnStatus = new HashMap<>();
     private final Map<Integer, Pair<Server, Boolean>> localServerDisconnectedStatus = new HashMap<>();
+
+    public void setServerConfigs(Pair<Map<Integer, LoadedLocalServerConfig>, Map<Integer, LoadedConfig>> serverConfigs){
+        this.serverConfigs = serverConfigs;
+    }
+
+    public Map<Integer, Pair<Server, Boolean>> getLocalServers(){
+        return localServerTurnedOnStatus;
+    }
+
+    public void setServerNameToIndex(Map<String, Integer> serverNameToIndex){
+        this.serverNameToIndex.clear();
+        this.serverNameToIndex.putAll(serverNameToIndex);
+    }
+
+    public void setServerIndexToName(Map<Integer, String> newServerIndexToName){
+        serverIndexToName.clear();
+        serverIndexToName.putAll(newServerIndexToName);
+    }
 
     public int loadConfigFilesAndComputeAddress(String addressFilePath) {
         Pair<List<ConfigFile.ConfigFileEntry>, List<ConfigFile.ConfigFileEntry>> addressesListPair = loadAddressConfigFromJson(addressFilePath);

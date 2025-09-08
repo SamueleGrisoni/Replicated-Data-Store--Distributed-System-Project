@@ -104,10 +104,12 @@ public class Server extends Thread{
 
     public void disconnect(){
         serverConnectionManager.disconnect();
+        logger.logInfo("disconnected from all servers" );
     }
 
     public void reconnect(){
-        serverConnectionManager.reconnect();
+        logger.logInfo("reconnecting to all servers" );
+        serverConnectionManager.connect();
     }
 
     public VectorClock getVectorClock(){

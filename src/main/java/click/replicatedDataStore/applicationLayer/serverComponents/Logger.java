@@ -7,6 +7,7 @@ public class Logger {
     private final String RESET = "\u001B[0m";
     private final String YELLOW = "\u001B[33m";
     private final String RED = "\u001B[31m";
+    private final String DARK_RED = "\u001B[38;5;88m"; // Darker red
     private final String WHITE = "\u001B[37m";
     private final Server server;
 
@@ -23,8 +24,8 @@ public class Logger {
         if (ServerConfig.debug) {
             throw new RuntimeException(YELLOW + "SERVER-" + server.getServerName() + ": "+ RED + "ERROR: source: " + classSource + "\n" + msg + RESET);
         } else {
-            // Log this on the view with some generic error message
-            System.out.println(YELLOW + "SERVER-" + server.getServerName() + ": " + RED + "ERROR: source: " + classSource + "\n" + msg + RESET);
+            // Log this on the view with some generic "ERROR: source: " + classSource r message
+            System.out.println(YELLOW + "SERVER-" + server.getServerName() + ": " + DARK_RED + msg.replace("\n", " ") + RESET);
         }
     }
 

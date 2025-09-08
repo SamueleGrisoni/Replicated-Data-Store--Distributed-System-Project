@@ -12,11 +12,11 @@ public class ServerConfig {
     public static final String CONFIG_FILE_HASH_NAME = "Config-File-Hash";
     public static final String FILES_EXTENSION = ".bin";
 
-    public static final int LIGHT_PUSH_DELAY_MILLIS = 10000;
+    public static final int LIGHT_PUSH_DELAY_MILLIS = 5000;
     public static final int LIGHT_PUSH_RANDOM_DELAY_MILLIS = 1000;
 
     public static int NUMBER_OF_WRITE_BETWEEN_SECONDARY_INDEX_UPDATE = 5;
-    public static final boolean debug = true;
+    public static final boolean debug = false;
     public static final int OPEN_OCCUPIED_SERVER_SOCKET_RETRY_MILLIS = 1000;
     public static final int WAIT_FOR_OTHER_SERVER_RESPONSE_MILLIS = 2000;
 

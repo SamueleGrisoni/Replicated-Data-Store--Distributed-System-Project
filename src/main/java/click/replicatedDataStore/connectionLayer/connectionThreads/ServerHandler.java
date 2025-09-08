@@ -33,19 +33,21 @@ public abstract class ServerHandler extends ConnectionHandler{
     }
 
     public void sendMessage(AbstractMsg<?> msg){
-        Thread t = new Thread(() -> {
-            try {
-                out.writeObject(msg);
-            } catch (NotSerializableException notSer) {
-                manager.logger.logErr(this.getClass(), "error: message not serializable\n" + notSer.getMessage());
-            }catch (EOFException eof){
-                manager.logger.logErr(this.getClass(), "EOF\n");
-            } catch (IOException e) {
-                manager.handleClosingConnection(this);
-                manager.logger.logErr(this.getClass(), "error: sending message: " + msg.getClass() + "\n" + e.getMessage());
-            }
-        });
-        t.start();
+        if(running && connectionEstablished) {
+            Thread t = new Thread(() -> {
+                try {
+                    out.writeObject(msg);
+                } catch (NotSerializableException notSer) {
+                    manager.logger.logErr(this.getClass(), "error: message not serializable\n" + notSer.getMessage());
+                } catch (EOFException eof) {
+                    manager.logger.logErr(this.getClass(), "EOF\n");
+                } catch (IOException e) {
+                    manager.handleClosingConnection(this);
+                    manager.logger.logErr(this.getClass(), "error: sending message: " + msg.getClass() + "\n" + e.getMessage());
+                }
+            });
+            t.start();
+        }
     }
 
     public void stopRunning(){
