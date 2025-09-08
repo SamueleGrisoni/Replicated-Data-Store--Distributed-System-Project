@@ -40,7 +40,7 @@ public class DataManagerReader {
             }
         }
 
-        System.out.println("Recovered data: " + BackupList.printClockDataList(clockedDataList));
+        System.out.println("Recovered data for not sync server: " + BackupList.printClockDataList(clockedDataList));
         return clockedDataList;
     }
 

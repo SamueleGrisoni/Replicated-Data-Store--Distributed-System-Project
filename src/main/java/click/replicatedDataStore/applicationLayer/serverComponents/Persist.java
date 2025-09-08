@@ -197,7 +197,7 @@ public class Persist {
             }
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(backupListFile))) {
                 backupList = (BackupList) ois.readObject();
-                System.out.println("Recovering backup list: " + backupList);
+                System.out.println("Recovering backup list from disk: " + backupList);
                 return backupList;
             } catch (EOFException ignored) {
                 // Either the file was empty or the end of the file was reached. Normal behavior, no action needed.
