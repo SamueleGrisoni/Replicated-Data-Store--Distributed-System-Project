@@ -69,6 +69,16 @@ public class ConfigFile{
             this.isPersistent = isPersistent;
         }
 
+        public void setOverlayNetHeavy(List<String> overlayNetHeavy) {
+            this.overlayNetHeavy = overlayNetHeavy;
+        }
+        public void setOverlayNetLight(List<String> overlayNetLight) {
+            this.overlayNetLight = overlayNetLight;
+        }
+        public void setHeavyPropagationPolicy(Boolean heavyPropagationPolicy) {
+            this.heavyPropagationPolicy = heavyPropagationPolicy;
+        }
+
         public List<String> getOverlayNetHeavy(){
             return new ArrayList<>(this.overlayNetHeavy);
         }

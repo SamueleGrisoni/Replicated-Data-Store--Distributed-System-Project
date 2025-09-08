@@ -140,11 +140,17 @@ public class ServerDataFolderUtils {
         for (ConfigFile.ConfigFileEntry entry : configListPair.first()) {
             ConfigFile.ConfigFileEntry newEntry = new ConfigFile.ConfigFileEntry(entry);
             newEntry.setIsPersistent(null);
+            newEntry.setHeavyPropagationPolicy(null);
+            newEntry.setOverlayNetHeavy(null);
+            newEntry.setOverlayNetLight(null);
             totalList.add(newEntry);
         }
         for (ConfigFile.ConfigFileEntry entry : configListPair.second()) {
             ConfigFile.ConfigFileEntry newEntry = new ConfigFile.ConfigFileEntry(entry);
             newEntry.setIsPersistent(null);
+            newEntry.setHeavyPropagationPolicy(null);
+            newEntry.setOverlayNetHeavy(null);
+            newEntry.setOverlayNetLight(null);
             totalList.add(newEntry);
         }
         totalList.sort(Comparator.comparing(ConfigFile.ConfigFileEntry::getServerName));
