@@ -20,14 +20,15 @@ public class Persist {
     private boolean newIndexFile;
     private boolean newClockFile;
     private boolean newBackupListFile;
+    private final Logger logger;
 
-    public Persist(String dataFolderName, String dataFileName, String indexFileName, String clockFileName, String backupListFileName) {
+    public Persist(String dataFolderName, String dataFileName, String indexFileName, String clockFileName, String backupListFileName, Logger logger) {
         String folderPath = ServerConfig.getGlobalFolderPath() + dataFolderName + File.separator;
         this.dataFilePath = folderPath + dataFileName;
         this.indexFilePath = folderPath + indexFileName;
         this.clockFilePath = folderPath + clockFileName;
         this.backupListFilePath = folderPath + backupListFileName;
-
+        this.logger = logger;
         //create the data folder and file if it does not exist
         if (!new File(folderPath).exists()) {
             createDataFolderAndFile(folderPath, dataFilePath, indexFilePath, clockFilePath);
@@ -171,19 +172,22 @@ public class Persist {
             File clockFile = new File(clockFilePath);
             if (clockFile.length() == 0) {
                 vc = new VectorClock(serverName, serverNumber, serverIndex);
-                System.out.println("Clock file is empty. Creating a new vector clock " + vc);
+                logger.logInfo("Clock file is empty. Creating a new vector clock " + vc);
+                //System.out.println("Clock file is empty. Creating a new vector clock " + vc);
                 return vc;
             }
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(clockFile))) {
                 vc = (VectorClock) ois.readObject();
-                System.out.println("Recovering vector clock: " + vc);
+                logger.logInfo("Recovering vector clock: " + vc);
+                //System.out.println("Recovering vector clock: " + vc);
                 return vc;
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
         vc = new VectorClock(serverName, serverNumber, serverIndex);
-        System.out.println("Clock file is new. Creating a new vector clock " + vc);
+        logger.logInfo("Clock file is new. Creating a new vector clock " + vc);
+        //System.out.println("Clock file is new. Creating a new vector clock " + vc);
         return vc;
     }
 
@@ -197,7 +201,8 @@ public class Persist {
             }
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(backupListFile))) {
                 backupList = (BackupList) ois.readObject();
-                System.out.println("Recovering backup list from disk: " + backupList);
+                logger.logInfo("Recovering backup list from disk: " + backupList);
+                //System.out.println("Recovering backup list from disk: " + backupList);
                 return backupList;
             } catch (EOFException ignored) {
                 // Either the file was empty or the end of the file was reached. Normal behavior, no action needed.
@@ -205,7 +210,8 @@ public class Persist {
                 e.printStackTrace();
             }
         }
-        System.out.println("Backup list is new. Returning an empty BackupList.");
+        logger.logInfo("Backup list is new. Returning an empty BackupList.");
+        //System.out.println("Backup list is new. Returning an empty BackupList.");
         return backupList;
     }
 

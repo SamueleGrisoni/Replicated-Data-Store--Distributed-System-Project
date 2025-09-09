@@ -1,6 +1,7 @@
 package click.replicatedDataStore.applicationLayer.serverComponents.dataManager;
 
 import click.replicatedDataStore.applicationLayer.serverComponents.BackupList;
+import click.replicatedDataStore.applicationLayer.serverComponents.Logger;
 import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.VectorClock;
@@ -11,8 +12,10 @@ import java.util.*;
 
 public class DataManagerReader {
     private final ServerDataSynchronizer serverDataSynchronizer;
-    public DataManagerReader(ServerDataSynchronizer serverDataSynchronizer) {
+    private final Logger logger;
+    public DataManagerReader(ServerDataSynchronizer serverDataSynchronizer, Logger logger) {
         this.serverDataSynchronizer = serverDataSynchronizer;
+        this.logger = logger;
     }
 
     //A client request to read a key
@@ -22,7 +25,8 @@ public class DataManagerReader {
 
     //Recover all data past a given VectorClock
     public List<ClockedData> recoverData(VectorClock otherVectorClock) {
-        System.out.println("Recovering data for VectorClock: " + otherVectorClock);
+        logger.logInfo("Recovering data for VectorClock: " + otherVectorClock);
+        //System.out.println("Recovering data for VectorClock: " + otherVectorClock);
         List<ClockedData> clockedDataList = new ArrayList<>();
         BackupList backupList = serverDataSynchronizer.getBackupList();
         TreeMap<VectorClock, Integer> secondaryIndex = serverDataSynchronizer.getSecondaryIndex();
@@ -39,8 +43,8 @@ public class DataManagerReader {
                 }
             }
         }
-
-        System.out.println("Recovered data for not sync server: " + BackupList.printClockDataList(clockedDataList));
+        logger.logInfo("Recovered data for not sync server: " + BackupList.printClockDataList(clockedDataList));
+        //System.out.println("Recovered data for not sync server: " + BackupList.printClockDataList(clockedDataList));
         return clockedDataList;
     }
 

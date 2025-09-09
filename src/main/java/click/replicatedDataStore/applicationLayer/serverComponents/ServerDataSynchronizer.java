@@ -19,12 +19,12 @@ public class ServerDataSynchronizer {
     private final BackupList backupList;
     private Persist persist;
     private final Boolean isPersistent;
-    public ServerDataSynchronizer(String serverName, int serverNumber, int serverIndex, Boolean isPersistent) {
+    public ServerDataSynchronizer(String serverName, int serverNumber, int serverIndex, Boolean isPersistent, Logger logger) {
         this.serverName = serverName;
         this.serverNumber = serverNumber;
         this.serverIndex = serverIndex;
         this.isPersistent = isPersistent;
-        this.persist = persistInitializer();
+        this.persist = persistInitializer(logger);
         this.primaryIndex = recoverPrimaryIndex();
         this.secondaryIndex = recoverSecondaryIndex();
         this.backupList = recoverBackupList();
@@ -69,7 +69,7 @@ public class ServerDataSynchronizer {
         }
     }
 
-    private Persist persistInitializer(){
+    private Persist persistInitializer(Logger logger){
         if(!isPersistent) {
             return null;
         }
@@ -78,7 +78,7 @@ public class ServerDataSynchronizer {
         String secondaryIndexFileName = ServerConfig.SECONDARY_INDEX_FILE_NAME + serverIndex + ServerConfig.FILES_EXTENSION;
         String vectorClockFileName = ServerConfig.VECTOR_CLOCK_FILE_NAME + serverIndex + ServerConfig.FILES_EXTENSION;
         String backupListFileName = ServerConfig.BACKUP_LIST_FILE_NAME + serverIndex + ServerConfig.FILES_EXTENSION;
-        return new Persist(dataFolderName, primaryIndexFileName, secondaryIndexFileName, vectorClockFileName, backupListFileName);
+        return new Persist(dataFolderName, primaryIndexFileName, secondaryIndexFileName, vectorClockFileName, backupListFileName, logger);
     }
 
     private LinkedHashMap<Key, Serializable> recoverPrimaryIndex(){

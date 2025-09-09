@@ -32,9 +32,9 @@ public class Server extends Thread{
         this.addresses = addresses;
         this.serverNumber = addresses.size();
 
-        this.serverDataSynchronizer = new ServerDataSynchronizer(serverName, serverNumber, serverIndex, config.isPersistent);
+        this.serverDataSynchronizer = new ServerDataSynchronizer(serverName, serverNumber, serverIndex, config.isPersistent, logger);
         this.dataManagerWriter = new DataManagerWriter(serverDataSynchronizer);
-        DataManagerReader dataManagerReader = new DataManagerReader(serverDataSynchronizer);
+        DataManagerReader dataManagerReader = new DataManagerReader(serverDataSynchronizer, logger);
 
         this.externalConsistencySynchronizer = new ExternalConsistencySynchronizer(serverDataSynchronizer, dataManagerReader, dataManagerWriter,
                 config.heavyPropagationPolicy, config.heavyConnections, config.lightConnections);
