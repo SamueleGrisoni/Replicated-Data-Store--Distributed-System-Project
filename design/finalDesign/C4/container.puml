@@ -1,0 +1,18 @@
+@startuml container_diagram
+!include <C4/C4_Container>
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!include DEVICONS/java.puml
+!include FONTAWESOME/users.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(user, "Users", "", $sprite="users")
+System_Boundary(c1, "") {
+    Container(client, "Cliet Interface", "java", "simple CLI interface", $sprite="java")
+    System(server, "Replicated Data Storage Servers", "java", "", $sprite="java")
+}
+Rel(user, client, "Uses", "TCP")
+Rel(client, server, "Reads/Writes", "TCP")
+@enduml

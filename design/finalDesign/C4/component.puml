@@ -1,0 +1,55 @@
+@startuml server_component_diagram
+!include <C4/C4_Component>
+
+!$ICONURL = "https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/v3.0.0/icons"
+!include $ICONURL/common.puml
+!include $ICONURL/devicons/terminal.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Container_Boundary(c1, "Client") {
+    Component(client_view, "View", "terminal", $sprite="terminal")
+    Component(client_request_sender, "Request Sender")
+}
+Rel(client_view, client_request_sender, "translate user inputs")
+
+Container_Boundary(s1, "Server") {
+    Component(c_con_man, "Client Connection Manager")
+
+    Container_Boundary(s2, "Data Controllers") {
+        Component(dm_read, "Data Manager Reader")
+        Component(dm_write, "Data Manager Writer")
+        ComponentQueue(d_sync, "Server Data Synchronizer")       
+    }
+    Rel(c_con_man, dm_read, "read opeations")
+    Rel(c_con_man, dm_write, "write operations")
+
+    Rel(dm_read, d_sync, "read sync")
+    Rel(dm_write, d_sync,  "write sync")
+
+    ComponentDb(d_persist, "Persist")
+    Rel(d_sync, d_persist,  "store on disk")
+
+    Container_Boundary(s3, "Data Indexes") {
+        Component(prim, "Primary Index")  
+        Component(back, "Backup List")  
+        Component(sec, "Secondary Index")
+    }
+    Rel(d_sync, prim, "update index")
+    Rel(d_sync, back, "update list")
+    Rel(d_sync, sec, "update index")
+    
+    Container_Boundary(s4, "External Consistency") {
+        Component(ext_sync, "External Consistency Synchronizer")  
+        Component(s_con_man, "Server Connection Manager")
+    }
+    Rel(ext_sync, dm_write, "new write notification")
+    Rel(d_sync, ext_sync, "update write")
+    Rel(ext_sync, s_con_man, "notify others")
+    Rel(s_con_man, ext_sync, "recieve notifications")
+
+
+}
+Rel(client_request_sender, c_con_man, "sends read/write requests")
+
+@enduml 
