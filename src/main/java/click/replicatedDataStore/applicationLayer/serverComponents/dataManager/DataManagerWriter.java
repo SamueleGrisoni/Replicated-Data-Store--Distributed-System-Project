@@ -1,8 +1,8 @@
 package click.replicatedDataStore.applicationLayer.serverComponents.dataManager;
 
 import click.replicatedDataStore.applicationLayer.serverComponents.ClientServerPriorityQueue;
+import click.replicatedDataStore.applicationLayer.serverComponents.ExternalConsistencySynchronizer;
 import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
-import click.replicatedDataStore.applicationLayer.serverComponents.Synchronizer;
 import click.replicatedDataStore.dataStructures.ClientWrite;
 import click.replicatedDataStore.dataStructures.ClockedData;
 import click.replicatedDataStore.dataStructures.Pair;
@@ -17,7 +17,7 @@ public class DataManagerWriter extends Thread {
     private final ServerDataSynchronizer serverDataSynchronizer;
     private final ClientServerPriorityQueue queue;
     private int numberOfWrites = 0;
-    private Synchronizer synchronizer;
+    private ExternalConsistencySynchronizer externalConsistencySynchronizer;
     private boolean stop = false;
 
     public DataManagerWriter(ServerDataSynchronizer serverDataSynchronizer) {
@@ -25,8 +25,8 @@ public class DataManagerWriter extends Thread {
         this.queue = new ClientServerPriorityQueue(this.serverDataSynchronizer);
     }
 
-    public void setTimeTravel(Synchronizer synchronizer) {
-        this.synchronizer = synchronizer;
+    public void setTimeTravel(ExternalConsistencySynchronizer externalConsistencySynchronizer) {
+        this.externalConsistencySynchronizer = externalConsistencySynchronizer;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class DataManagerWriter extends Thread {
     private void processPopData(Pair<DataType, List<ClockedData>> data) {
         if(data.first() == DataType.CLIENT){
             System.out.println("Sending data to other servers" + data.second());
-            synchronizer.heavyPush(data.second());
+            externalConsistencySynchronizer.heavyPush(data.second());
             write(data.second());
         }else if(data.first() == DataType.SERVER){
             try {

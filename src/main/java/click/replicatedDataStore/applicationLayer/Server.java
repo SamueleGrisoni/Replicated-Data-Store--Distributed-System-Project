@@ -1,8 +1,8 @@
 package click.replicatedDataStore.applicationLayer;
 
+import click.replicatedDataStore.applicationLayer.serverComponents.ExternalConsistencySynchronizer;
 import click.replicatedDataStore.applicationLayer.serverComponents.Logger;
 import click.replicatedDataStore.applicationLayer.serverComponents.ServerDataSynchronizer;
-import click.replicatedDataStore.applicationLayer.serverComponents.Synchronizer;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerReader;
 import click.replicatedDataStore.applicationLayer.serverComponents.dataManager.DataManagerWriter;
 import click.replicatedDataStore.connectionLayer.connectionManagers.ClientConnectionManager;
@@ -21,7 +21,7 @@ public class Server extends Thread{
     private final DataManagerWriter dataManagerWriter;
     private final ServerConnectionManager serverConnectionManager;
     private final ClientConnectionManager clientConnectionManager;
-    private final Synchronizer synchronizer;
+    private final ExternalConsistencySynchronizer externalConsistencySynchronizer;
     private volatile boolean stop = false;
     private final Logger logger = new Logger(this);
 
@@ -36,12 +36,12 @@ public class Server extends Thread{
         this.dataManagerWriter = new DataManagerWriter(serverDataSynchronizer);
         DataManagerReader dataManagerReader = new DataManagerReader(serverDataSynchronizer);
 
-        this.synchronizer = new Synchronizer(serverDataSynchronizer, dataManagerReader, dataManagerWriter,
+        this.externalConsistencySynchronizer = new ExternalConsistencySynchronizer(serverDataSynchronizer, dataManagerReader, dataManagerWriter,
                 config.heavyPropagationPolicy, config.heavyConnections, config.lightConnections);
-        dataManagerWriter.setTimeTravel(synchronizer);
+        dataManagerWriter.setTimeTravel(externalConsistencySynchronizer);
 
-        this.serverConnectionManager = new ServerConnectionManager(synchronizer, logger, this);
-        this.synchronizer.setServerConnectionManager(serverConnectionManager);
+        this.serverConnectionManager = new ServerConnectionManager(externalConsistencySynchronizer, logger, this);
+        this.externalConsistencySynchronizer.setServerConnectionManager(serverConnectionManager);
 
         this.clientConnectionManager = new ClientConnectionManager(addresses.get(serverIndex).second().clientPort(),
                                             dataManagerWriter.getQueue(), dataManagerReader, logger);
@@ -54,7 +54,7 @@ public class Server extends Thread{
         dataManagerWriter.stopThread();
         serverConnectionManager.stop();
         clientConnectionManager.stop();
-        synchronizer.stop();
+        externalConsistencySynchronizer.stop();
     }
 
     public Pair<String, ServerPorts> getMyAddressAndPorts(){

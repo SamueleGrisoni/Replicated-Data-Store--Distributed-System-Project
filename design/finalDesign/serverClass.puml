@@ -8,7 +8,7 @@ class Server {
     - DataManagerWriter dataManagerWriter
     - ServerConnectionManager serverConnectionManager
     - ClientConnectionManager clientConnectionManager
-    - Synchronizer synchronizer
+    - Synchronizer externalConsistencySynchronizer
     - volatile boolean stop
     + int getNumberOfServers()
     + int getServerIndex()

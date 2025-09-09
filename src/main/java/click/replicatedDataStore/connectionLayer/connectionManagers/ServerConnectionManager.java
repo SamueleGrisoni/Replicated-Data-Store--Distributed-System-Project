@@ -2,7 +2,7 @@ package click.replicatedDataStore.connectionLayer.connectionManagers;
 
 import click.replicatedDataStore.applicationLayer.Server;
 import click.replicatedDataStore.applicationLayer.serverComponents.Logger;
-import click.replicatedDataStore.applicationLayer.serverComponents.Synchronizer;
+import click.replicatedDataStore.applicationLayer.serverComponents.ExternalConsistencySynchronizer;
 import click.replicatedDataStore.connectionLayer.CommunicationMethods;
 import click.replicatedDataStore.connectionLayer.connectionThreads.*;
 import click.replicatedDataStore.connectionLayer.messages.*;
@@ -18,12 +18,12 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 public class ServerConnectionManager extends ConnectionManager{
-    private final Synchronizer sync;
+    private final ExternalConsistencySynchronizer sync;
     private final Server server;
     private final Map<Integer, Optional<ServerHandler>> serverHandlersMap = new HashMap<>();
     private final Map<Integer, Object> handlerLocksMap = new HashMap<>();
 
-    public ServerConnectionManager(Synchronizer sync,
+    public ServerConnectionManager(ExternalConsistencySynchronizer sync,
                                    Logger logger, Server server) {
         super(server.getMyAddressAndPorts().second().serverPort(), logger);
         this.sync = sync;

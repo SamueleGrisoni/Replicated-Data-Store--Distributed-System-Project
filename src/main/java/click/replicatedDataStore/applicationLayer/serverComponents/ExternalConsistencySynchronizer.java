@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class Synchronizer {
+public class ExternalConsistencySynchronizer {
     private final Set<Integer> heavyConnections;
     private final Set<Integer> lightConnections;
     private final boolean heavyPushPropagationPolicy;
@@ -28,10 +28,10 @@ public class Synchronizer {
     private final ScheduledExecutorService lightPusher = Executors.newScheduledThreadPool(1);
     private boolean stopLightPusher = false;
 
-    public Synchronizer(ServerDataSynchronizer serverDataSynchronizer, DataManagerReader dataManagerReader,
-                        DataManagerWriter dataManagerWriter,
-                        boolean heavyPushPropagationPolicy, Set<Integer> heavyConnection,
-                        Set<Integer> lightConnection) {
+    public ExternalConsistencySynchronizer(ServerDataSynchronizer serverDataSynchronizer, DataManagerReader dataManagerReader,
+                                           DataManagerWriter dataManagerWriter,
+                                           boolean heavyPushPropagationPolicy, Set<Integer> heavyConnection,
+                                           Set<Integer> lightConnection) {
         this.serverDataSynchronizer = serverDataSynchronizer;
         this.dataManagerReader = dataManagerReader;
         this.dataManagerWriter = dataManagerWriter;
