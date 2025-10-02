@@ -20,8 +20,8 @@ The assumption under which the system is able to operate is that:
 
 The system is implemented in Java. To see an examples on how it works it is sufficient to do as follows: 
 
-<code> java -jar Server.jar configFilePath </code> examples of configFiles can be found in [configFiles](./configFiles/)
+<code> java -jar Server.jar configFilePath </code> examples of configFiles can be found in [here](./configFiles/)
 
 <code> java -jar Client.jar </code>
 
-Additinal documentation on the design of the project can be found in the [[desing/finalDesign]] folder
+Additinal documentation on the design of the project can be found in the [desing](./desing/finalDesign) folder
