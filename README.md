@@ -24,4 +24,4 @@ The system is implemented in Java. To see an examples on how it works it is suff
 
 <code> java -jar Client.jar </code>
 
-Additinal documentation on the design of the project can be found in the [desing](./design/finalDesign) folder
+Additinal documentation on the design of the project can be found in the [desing](./design/finalDesign/) folder
