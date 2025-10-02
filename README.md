@@ -5,7 +5,7 @@ This repo implements a highly-available, replicated key value store, that offers
 - read(key)
 - write(key, value)
 
-![context C4 diagram](./design/finalDesign/C4/context.png)
+![context C4 diagram](./design/finalDesign/C4/render/context.png)
 
 
 The store is implemented by N servers. Each of them contains a copy of the entire store and cooperate to keep a consistent view of this replicated store. In particular, the system provide a causal consistency model.
